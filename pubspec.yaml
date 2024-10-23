@@ -9,6 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  image_picker: ^1.1.2 # so the user can add a profile picture in their profile 
+  google_fonts: ^6.2.1
+  delightful_toast: ^1.1.0
+  get_it: ^8.0.0
 
 dev_dependencies:
   flutter_test:
