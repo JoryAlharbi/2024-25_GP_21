@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "476733666624",
+    "firebase_url": "https://rawae-167dd-default-rtdb.firebaseio.com",
+    "project_id": "rawae-167dd",
+    "storage_bucket": "rawae-167dd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:476733666624:android:9ffa3f2b1824f4c83a76a5",
+        "android_client_info": {
+          "package_name": "com.Rawae.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJ53ks6Ekh6AK4XHDa_SEMXkdO4GB_e5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:476733666624:android:4f4a91347a3dc8563a76a5",
+        "android_client_info": {
+          "package_name": "com.example.rawae_gp24"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJ53ks6Ekh6AK4XHDa_SEMXkdO4GB_e5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
