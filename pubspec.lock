@@ -73,6 +73,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.1"
+<<<<<<< HEAD
   ffi:
     dependency: transitive
     description:
@@ -113,6 +114,32 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+3"
+=======
+  firebase_core:
+    dependency: "direct main"
+    description:
+      name: firebase_core
+      sha256: "51dfe2fbf3a984787a2e7b8592f2f05c986bfedd6fdacea3f9e0a7beb334de96"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.6.0"
+  firebase_core_platform_interface:
+    dependency: transitive
+    description:
+      name: firebase_core_platform_interface
+      sha256: e30da58198a6d4b49d5bce4e852f985c32cb10db329ebef9473db2b9f09ce810
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.3.0"
+  firebase_core_web:
+    dependency: transitive
+    description:
+      name: firebase_core_web
+      sha256: f967a7138f5d2ffb1ce15950e2a382924239eaa521150a8f144af34e68b3b3e5
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.18.1"
+>>>>>>> 489ce5542e7122c7784ec402e34bae1465310eee
   flutter:
     dependency: "direct main"
     description: flutter
@@ -160,6 +187,7 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+<<<<<<< HEAD
   get_it:
     dependency: "direct main"
     description:
@@ -256,6 +284,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1+1"
+=======
+>>>>>>> 489ce5542e7122c7784ec402e34bae1465310eee
   leak_tracker:
     dependency: transitive
     description:
@@ -328,6 +358,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.0"
+<<<<<<< HEAD
   path_provider:
     dependency: transitive
     description:
@@ -384,6 +415,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.6"
+=======
+>>>>>>> 489ce5542e7122c7784ec402e34bae1465310eee
   plugin_platform_interface:
     dependency: transitive
     description:
@@ -477,6 +510,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
+<<<<<<< HEAD
   xdg_directories:
     dependency: transitive
     description:
@@ -488,3 +522,8 @@ packages:
 sdks:
   dart: ">=3.5.3 <4.0.0"
   flutter: ">=3.24.0"
+=======
+sdks:
+  dart: ">=3.5.3 <4.0.0"
+  flutter: ">=3.22.0"
+>>>>>>> 489ce5542e7122c7784ec402e34bae1465310eee
