@@ -73,7 +73,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.1"
-<<<<<<< HEAD
   ffi:
     dependency: transitive
     description:
@@ -114,7 +113,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+3"
-=======
   firebase_core:
     dependency: "direct main"
     description:
@@ -139,7 +137,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.18.1"
->>>>>>> 489ce5542e7122c7784ec402e34bae1465310eee
   flutter:
     dependency: "direct main"
     description: flutter
@@ -187,7 +184,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-<<<<<<< HEAD
   get_it:
     dependency: "direct main"
     description:
@@ -284,8 +280,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1+1"
-=======
->>>>>>> 489ce5542e7122c7784ec402e34bae1465310eee
   leak_tracker:
     dependency: transitive
     description:
@@ -358,7 +352,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.0"
-<<<<<<< HEAD
   path_provider:
     dependency: transitive
     description:
@@ -415,8 +408,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.6"
-=======
->>>>>>> 489ce5542e7122c7784ec402e34bae1465310eee
   plugin_platform_interface:
     dependency: transitive
     description:
@@ -510,7 +501,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
-<<<<<<< HEAD
   xdg_directories:
     dependency: transitive
     description:
@@ -522,8 +512,3 @@ packages:
 sdks:
   dart: ">=3.5.3 <4.0.0"
   flutter: ">=3.24.0"
-=======
-sdks:
-  dart: ">=3.5.3 <4.0.0"
-  flutter: ">=3.22.0"
->>>>>>> 489ce5542e7122c7784ec402e34bae1465310eee
