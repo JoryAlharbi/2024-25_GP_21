@@ -1,10 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth
+import 'package:flutter/material.dart'; // for Navigation between pages
+import 'package:google_fonts/google_fonts.dart'; //fonts we used in our app
+import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth to authenticate every user that signs in
 import 'package:firebase_storage/firebase_storage.dart'; // Firebase Storage
 import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore for saving user data
+import 'package:firebase_app_check/firebase_app_check.dart';
+
 import 'package:image_picker/image_picker.dart'; // Image picker for profile picture
 import 'dart:io'; // To handle image files
+import 'homepage.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -58,8 +61,13 @@ class _SignUpPageState extends State<SignUpPage> {
           'profilePicture': downloadURL,
         });
 
-        // Navigate to another screen or show success message
-        print('User signed up and image uploaded!');
+        // Navigate to the homepage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  HomePage()), // Replace with your HomePage widget
+        );
       }
     } catch (e) {
       print('Error during sign-up: $e');

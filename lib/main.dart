@@ -4,15 +4,17 @@ import 'package:firebase_core/firebase_core.dart'; // Firebase core
 import 'login_page.dart';
 import 'signup_page.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(); // Ensure Firebase is initialized
+  await FirebaseAppCheck.instance.activate(); // initialize app check
 
- FirebaseAuth.instance.setLanguageCode('en'); // Or any other language code
+  FirebaseAuth.instance.setLanguageCode('en'); // Or any other language code
   runApp(MyApp());
-} 
+}
 
 class MyApp extends StatelessWidget {
   @override
