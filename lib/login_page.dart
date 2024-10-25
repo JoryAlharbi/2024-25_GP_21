@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'homepage.dart';
+
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -10,10 +12,13 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool _isObscured = true;
   final _auth = FirebaseAuth.instance;
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _usernameController =
+      TextEditingController(); //To manage user input from the email field
+  final TextEditingController _passwordController =
+      TextEditingController(); // To manage user input from and password fields.
 
   void _login() async {
+    //To handle the login process and authenticate the user.
     try {
       final userCredential = await _auth.signInWithEmailAndPassword(
         email: _usernameController.text.trim(),
@@ -21,7 +26,8 @@ class _LoginPageState extends State<LoginPage> {
       );
       if (userCredential.user != null) {
         // Successfully logged in
-        Navigator.pushReplacementNamed(context, '/home'); // Navigate to home
+        Navigator.pushReplacementNamed(
+            context, '/homepage'); // Navigate to home
       }
     } catch (e) {
       // Display error message
