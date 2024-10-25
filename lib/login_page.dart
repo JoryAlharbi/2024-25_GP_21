@@ -25,7 +25,11 @@ class _LoginPageState extends State<LoginPage> {
         password: _passwordController.text.trim(),
       );
       if (userCredential.user != null) {
-        // Successfully logged in
+        // Navigate to HomePage directly
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      ); // Successfully logged in
         Navigator.pushReplacementNamed(
             context, '/homepage'); // Navigate to home
       }
