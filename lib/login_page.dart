@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LoginPage extends StatefulWidget {
@@ -8,6 +9,37 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool _isObscured = true;
+  final _auth = FirebaseAuth.instance;
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  void _login() async {
+    try {
+      final userCredential = await _auth.signInWithEmailAndPassword(
+        email: _usernameController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      if (userCredential.user != null) {
+        // Successfully logged in
+        Navigator.pushReplacementNamed(context, '/home'); // Navigate to home
+      }
+    } catch (e) {
+      // Display error message
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Login Failed"),
+          content: Text(e.toString()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +47,6 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: Color(0xFF1B2835), // Dark background color
       body: Stack(
         children: [
-          // Radial gradient background layer
           Positioned(
             top: 108, // Adjust Y position as needed
             left: -2, // Adjust X position as needed
@@ -25,9 +56,9 @@ class _LoginPageState extends State<LoginPage> {
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    Color(0xFFA2DED0).withOpacity(0.2), // Light mint
-                    Color(0xFFD35400).withOpacity(0.2), // Orange
-                    Color(0xFFA2DED0).withOpacity(0.2), // Light mint
+                    Color(0xFFA2DED0).withOpacity(0.2),
+                    Color(0xFFD35400).withOpacity(0.2),
+                    Color(0xFFA2DED0).withOpacity(0.2),
                   ],
                   radius: 1.5,
                   center: Alignment.topCenter,
@@ -37,7 +68,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-          // Main content positioned in the center
           Align(
             alignment: Alignment.center,
             child: FractionallySizedBox(
@@ -66,13 +96,13 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 25),
-                    // Username Input
                     Container(
                       decoration: BoxDecoration(
                         color: Color.fromRGBO(0, 0, 0, 0.25),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: TextField(
+                        controller: _usernameController,
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -93,13 +123,13 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 20),
-                    // Password Input
                     Container(
                       decoration: BoxDecoration(
                         color: Color.fromRGBO(0, 0, 0, 0.25),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: TextField(
+                        controller: _passwordController,
                         obscureText: _isObscured,
                         style: GoogleFonts.poppins(
                           fontSize: 14,
@@ -133,11 +163,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 25),
-                    // Log in Button
                     GestureDetector(
-                      onTap: () {
-                        // Add your login logic here
-                      },
+                      onTap: _login,
                       child: Container(
                         width: double.infinity,
                         height: 50,
@@ -166,7 +193,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 10),
-                    // Sign Up Section
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -180,8 +206,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            Navigator.pushNamed(
-                                context, '/signup'); // Navigate to SignUpPage
+                            Navigator.pushNamed(context, '/signup');
                           },
                           child: Text(
                             'Sign up',
