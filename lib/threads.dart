@@ -28,7 +28,7 @@ class StoryView extends StatelessWidget {
       username: '@LucySmith',
       content: 'Another example of a timeline item.',
       timeAgo: '10m ago',
-      avatarPath: 'assets/h.png',
+      avatarPath: 'assets/cat.png',
       avatarName: 'Lucy',
     ),
     TimelineItem(
@@ -36,7 +36,7 @@ class StoryView extends StatelessWidget {
       username: '@OliverTwist',
       content: 'This is yet another timeline entry.',
       timeAgo: '30m ago',
-      avatarPath: 'assets/h.png',
+      avatarPath: 'assets/catm.png',
       avatarName: 'Oliver',
     ),
   ];

@@ -112,10 +112,10 @@ class LibraryPage extends StatelessWidget {
                   icon: Icon(Icons.search, color: const Color(0xFF9DB2CE)),
                   iconSize: 30,
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SearchPage()),
-                    );
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(builder: (context) => SearchPage()),
+                    // );
                   },
                 ),
               ],

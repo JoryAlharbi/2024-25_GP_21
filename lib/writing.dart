@@ -58,9 +58,9 @@ class _WritingPageState extends State<WritingPage> {
             alignment: WrapAlignment.center,
             children: [
               _buildCharacterAvatar('Evelyn', 'assets/h.png'),
-              _buildCharacterAvatar('Lucy', 'assets/h.png'),
-              _buildCharacterAvatar('Oliver', 'assets/h.png'),
-              _buildCharacterAvatar('Lucas', 'assets/h.png'),
+              _buildCharacterAvatar('Lucy', 'assets/cat.png'),
+              _buildCharacterAvatar('Oliver', 'assets/catm.png'),
+              _buildCharacterAvatar('Lucas', 'assets/hunter.png'),
             ],
           ),
           const SizedBox(height: 20),
@@ -110,7 +110,7 @@ class _WritingPageState extends State<WritingPage> {
         children: [
           const CircleAvatar(
             radius: 25,
-            backgroundImage: AssetImage('assets/h.png'),
+            backgroundImage: AssetImage('assets/profile.png'),
           ),
           const SizedBox(width: 16),
           Column(
