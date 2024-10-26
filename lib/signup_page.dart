@@ -1,12 +1,10 @@
-import 'package:flutter/material.dart'; // for Navigation between pages
-import 'package:google_fonts/google_fonts.dart'; //fonts we used in our app
-import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth to authenticate every user that signs in
-import 'package:firebase_storage/firebase_storage.dart'; // Firebase Storage
-import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore for saving user data
-import 'package:firebase_app_check/firebase_app_check.dart';
-
-import 'package:image_picker/image_picker.dart'; // Image picker for profile picture
-import 'dart:io'; // To handle image files
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'homepage.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -18,14 +16,13 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   FirebaseAuth auth = FirebaseAuth.instance;
-  final ImagePicker _picker = ImagePicker(); // Image picker instance
-  XFile? _image; // Selected image
+  final ImagePicker _picker = ImagePicker();
+  XFile? _image;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   bool _isObscured = true;
 
-  // Function to pick an image so the user can add a profile picture
   Future<void> _pickImage() async {
     final XFile? selectedImage =
         await _picker.pickImage(source: ImageSource.gallery);
@@ -34,10 +31,8 @@ class _SignUpPageState extends State<SignUpPage> {
     });
   }
 
-  // Function to handle user sign-up and upload image
   void signUpAction() async {
     try {
-      // Sign up with Firebase Auth
       UserCredential userCredential = await auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -46,7 +41,6 @@ class _SignUpPageState extends State<SignUpPage> {
       User? user = userCredential.user;
 
       if (user != null && _image != null) {
-        // Upload image to Firebase Storage
         File imageFile = File(_image!.path);
         String fileName = '${user.uid}/profile_picture.jpg';
         Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
@@ -54,19 +48,15 @@ class _SignUpPageState extends State<SignUpPage> {
         await storageRef.putFile(imageFile);
         String downloadURL = await storageRef.getDownloadURL();
 
-        // Save user info to Firestore at the writer document
         FirebaseFirestore.instance.collection('Writer').doc(user.uid).set({
           'username': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
           'profilePicture': downloadURL,
         });
 
-        // Navigate to the homepage
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  HomePage()), // Replace with your HomePage widget
+          MaterialPageRoute(builder: (context) => HomePage()),
         );
       }
     } catch (e) {
@@ -77,32 +67,31 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1B2835), // Dark background color
+      backgroundColor: const Color(0xFF1B2835),
       body: Stack(
         children: [
-          // Radial gradient background layer
           Positioned(
-            top: 108, // Adjust Y position as needed
-            left: -2, // Adjust X position as needed
+            top: 108,
+            left: -2,
             child: Container(
               width: 447,
               height: 803,
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFA2DED0).withOpacity(0.2), // Light mint
-                    const Color(0xFFD35400).withOpacity(0.2), // Orange
-                    const Color(0xFFA2DED0).withOpacity(0.2), // Light mint
+                    const Color(0xFFA2DED0).withOpacity(0.1),
+                    const Color(0xFF1B2835).withOpacity(0.15),
+                    const Color(0xFFD35400).withOpacity(0.2),
+                    const Color(0xFF1B2835).withOpacity(0.1),
                   ],
                   radius: 1.5,
-                  center: Alignment.topCenter,
-                  stops: const [0.0, 0.7, 1.0],
+                  center: Alignment.centerRight,
+                  stops: const [0.0, 0.2, 0.85, 1],
                 ),
                 borderRadius: BorderRadius.circular(59),
               ),
             ),
           ),
-          // Main content positioned in the center
           Align(
             alignment: Alignment.center,
             child: FractionallySizedBox(
@@ -131,7 +120,6 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                     ),
                     const SizedBox(height: 25),
-                    // Profile picture picker
                     GestureDetector(
                       onTap: _pickImage,
                       child: CircleAvatar(
@@ -147,7 +135,6 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Username Input
                     Container(
                       decoration: BoxDecoration(
                         color: const Color.fromRGBO(0, 0, 0, 0.25),
@@ -176,7 +163,6 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Email Input
                     Container(
                       decoration: BoxDecoration(
                         color: const Color.fromRGBO(0, 0, 0, 0.25),
@@ -205,7 +191,6 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Password Input
                     Container(
                       decoration: BoxDecoration(
                         color: const Color.fromRGBO(0, 0, 0, 0.25),
@@ -248,9 +233,8 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                     ),
                     const SizedBox(height: 25),
-                    // Sign up Button
                     GestureDetector(
-                      onTap: signUpAction, // Call sign-up action here
+                      onTap: signUpAction,
                       child: Container(
                         width: double.infinity,
                         height: 50,

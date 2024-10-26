@@ -1,28 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:rawae_gp24/makethread.dart';
 import 'package:rawae_gp24/homepage.dart';
 import 'package:rawae_gp24/library.dart';
-import 'package:rawae_gp24/makethread.dart';
+import 'package:rawae_gp24/bookmark.dart';
 import 'package:rawae_gp24/profile_page.dart';
+import 'package:rawae_gp24/book.dart'; // Ensure this path is correct for your existing book.dart file
 
-class BookmarkPage extends StatelessWidget {
+class GenreLibraryPage extends StatelessWidget {
+  final String genre;
+
+  GenreLibraryPage({required this.genre});
+
   final List<Map<String, String>> books = [
-    {
-      'title': 'memories of the sea',
-      'image': 'assets/book.png',
-    },
-    {
-      'title': 'Meet Mr. Mulliner',
-      'image': 'assets/book2.png',
-    },
-    {
-      'title': 'P.G Wodehouse',
-      'image': 'assets/book.png',
-    },
-    {
-      'title': 'P.G Wodehouse',
-      'image': 'assets/book2.png',
-    },
+    {'title': 'Memories of the Sea', 'image': 'assets/book.png'},
+    {'title': 'Meet Mr. Mulliner', 'image': 'assets/book2.png'},
+    {'title': 'P.G Wodehouse', 'image': 'assets/book.png'},
+    {'title': 'P.G Wodehouse', 'image': 'assets/book2.png'},
   ];
 
   @override
@@ -32,66 +26,68 @@ class BookmarkPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(0, 112, 28, 28),
         elevation: 0,
+        title: Text(
+          genre,
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'To read',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 20),
-            Expanded(
-              child: GridView.builder(
-                itemCount: books.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 19.0,
-                  crossAxisSpacing: 22.0,
-                  childAspectRatio: 0.7,
-                ),
-                itemBuilder: (context, index) {
-                  final book = books[index];
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Book cover image
-                      Container(
-                        height: 190,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4.0),
-                          image: DecorationImage(
-                            image: AssetImage(book['image']!),
-                            fit: BoxFit.fill,
-                          ),
-                        ),
+        child: GridView.builder(
+          itemCount: books.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 19.0,
+            crossAxisSpacing: 22.0,
+            childAspectRatio: 0.7,
+          ),
+          itemBuilder: (context, index) {
+            final book = books[index];
+            return GestureDetector(
+              onTap: () {
+                // Navigate to the existing book page when a book is tapped
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookDetailsPage(),
+                  ),
+                );
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Book cover image
+                  Container(
+                    height: 190,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4.0),
+                      image: DecorationImage(
+                        image: AssetImage(book['image']!),
+                        fit: BoxFit.fill,
                       ),
-                      SizedBox(height: 8.0),
-                      // Book title
-                      Text(
-                        book['title']!,
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  );
-                },
+                    ),
+                  ),
+                  SizedBox(height: 8.0),
+                  // Book title
+                  Text(
+                    book['title']!,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
-      // Floating action button and bottom navigation bar
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 10.0),
         child: Container(
@@ -121,7 +117,6 @@ class BookmarkPage extends StatelessWidget {
           ),
         ),
       ),
-
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
@@ -141,8 +136,8 @@ class BookmarkPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 IconButton(
-                  icon: Icon(Icons.home_rounded),
-                  color: Color(0xFFA2DED0),
+                  icon: Icon(Icons.home),
+                  color: Color(0xFF9DB2CE),
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
@@ -151,7 +146,7 @@ class BookmarkPage extends StatelessWidget {
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.library_books_rounded),
+                  icon: Icon(Icons.library_books),
                   color: Color(0xFF9DB2CE),
                   onPressed: () {
                     Navigator.pushReplacement(
@@ -160,7 +155,7 @@ class BookmarkPage extends StatelessWidget {
                     );
                   },
                 ),
-                SizedBox(width: 40), // Space for the FAB
+                SizedBox(width: 40),
                 IconButton(
                   icon: Icon(Icons.bookmark),
                   color: Color(0xFF9DB2CE),
@@ -173,7 +168,7 @@ class BookmarkPage extends StatelessWidget {
                 ),
                 IconButton(
                   icon: Icon(Icons.person),
-                  color: Color(0xFF9DB2CE),
+                  color: Color(0xFFA2DED0),
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,

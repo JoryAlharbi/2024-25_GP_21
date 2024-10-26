@@ -1,22 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:rawae_gp24/bookmark.dart';
+import 'package:rawae_gp24/genre_library.dart';
 import 'package:rawae_gp24/homepage.dart';
 import 'package:rawae_gp24/makethread.dart';
 import 'package:rawae_gp24/profile_page.dart';
 import 'package:rawae_gp24/search.dart';
 
-class LibraryApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Library App',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-      ),
-      home: LibraryPage(),
-    );
-  }
-}
+import 'package:flutter/material.dart';
 
 class LibraryPage extends StatelessWidget {
   final List<Map<String, dynamic>> genres = [
@@ -112,19 +102,15 @@ class LibraryPage extends StatelessWidget {
                   icon: Icon(Icons.search, color: const Color(0xFF9DB2CE)),
                   iconSize: 30,
                   onPressed: () {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(builder: (context) => SearchPage()),
-                    // );
+                    // Add search functionality or navigation here if needed
                   },
                 ),
               ],
             ),
           ),
-
-          // Main content
+          // Main content: Genres grid
           Padding(
-            padding: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+            padding: const EdgeInsets.only(top: 120.0, left: 16.0, right: 16.0),
             child: GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
@@ -134,20 +120,39 @@ class LibraryPage extends StatelessWidget {
               itemCount: genres.length,
               itemBuilder: (context, index) {
                 final genre = genres[index];
-                return Column(
-                  children: [
-                    SizedBox(height: 25),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
-                      child: Image.asset(
-                        genre['image'],
-                        width: 120,
-                        height: 120,
-                        fit: BoxFit.cover,
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GenreLibraryPage(
+                          genre: genre['name'],
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 8.0),
-                  ],
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image.asset(
+                          genre['image'],
+                          width: 120,
+                          height: 120,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      SizedBox(height: 8.0),
+                      Text(
+                        genre['name'],
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -251,8 +256,7 @@ class LibraryPage extends StatelessWidget {
   }
 }
 
-// Placeholder pages for navigation
-
+// Custom Clipper for the curved background shape
 class CustomBottomBarClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {

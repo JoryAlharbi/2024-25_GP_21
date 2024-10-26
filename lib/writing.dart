@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'character_page.dart'; // Adjust the path to your character_page.dart file
 
 class WritingPage extends StatefulWidget {
   const WritingPage({Key? key}) : super(key: key);
@@ -25,27 +26,43 @@ class _WritingPageState extends State<WritingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1B2835), // Background color from the screenshot
+      backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: TextButton(
-          child: const Text(
-            'Cancel',
-            style: TextStyle(color: Colors.grey),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.close, // X icon
+            color: Colors.grey, // Grey color for the icon
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context), // Close the page
         ),
         actions: [
-          TextButton(
-            child: const Text(
-              'Done',
-              style: TextStyle(color: Colors.deepOrange),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD35400),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Text(
+                'Done',
+                style: TextStyle(color: Colors.white),
+              ),
+              onPressed: () {
+                // Navigate to character_page.dart when "Done" is pressed
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CharacterPreviewPage(
+                      userName: 'hailey',
+                    ),
+                  ), // Adjust if needed
+                );
+              },
             ),
-            onPressed: () {
-              // Add any action you want when "Done" is pressed
-              print(_textController.text); // Example action
-            },
           ),
         ],
       ),
@@ -58,9 +75,9 @@ class _WritingPageState extends State<WritingPage> {
             alignment: WrapAlignment.center,
             children: [
               _buildCharacterAvatar('Evelyn', 'assets/h.png'),
-              _buildCharacterAvatar('Lucy', 'assets/cat.png'),
-              _buildCharacterAvatar('Oliver', 'assets/catm.png'),
-              _buildCharacterAvatar('Lucas', 'assets/hunter.png'),
+              _buildCharacterAvatar('Lucy', 'assets/h.png'),
+              _buildCharacterAvatar('Oliver', 'assets/h.png'),
+              _buildCharacterAvatar('Lucas', 'assets/h.png'),
             ],
           ),
           const SizedBox(height: 20),
@@ -68,7 +85,7 @@ class _WritingPageState extends State<WritingPage> {
           const SizedBox(height: 20),
           _buildTextField(),
           const SizedBox(height: 10),
-          _buildActionButtons(), // Added action buttons below the text field
+          _buildActionButtons(),
         ],
       ),
     );
@@ -110,7 +127,7 @@ class _WritingPageState extends State<WritingPage> {
         children: [
           const CircleAvatar(
             radius: 25,
-            backgroundImage: AssetImage('assets/profile.png'),
+            backgroundImage: AssetImage('assets/h.png'),
           ),
           const SizedBox(width: 16),
           Column(
@@ -142,7 +159,7 @@ class _WritingPageState extends State<WritingPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12.0), // Add vertical padding
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
         decoration: BoxDecoration(
           color: Colors.white24,
           borderRadius: BorderRadius.circular(10),
@@ -153,8 +170,9 @@ class _WritingPageState extends State<WritingPage> {
           decoration: InputDecoration(
             hintText: 'What’s happening?',
             hintStyle: const TextStyle(color: Colors.grey),
-            border: InputBorder.none, // Remove the default border
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            border: InputBorder.none,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           ),
           style: const TextStyle(color: Colors.white),
         ),
@@ -168,17 +186,18 @@ class _WritingPageState extends State<WritingPage> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.auto_fix_high , color:  Color(0xFFA2DED0)),
+            icon: const Icon(Icons.auto_fix_high, color: Color(0xFFA2DED0)),
             onPressed: () {
               // Add action for the undo button
             },
           ),
           IconButton(
-            icon: const Icon(Icons.auto_awesome_outlined , color: Color(0xFFA2DED0)),
+            icon: const Icon(Icons.auto_awesome_outlined,
+                color: Color(0xFFA2DED0)),
             onPressed: () {
               // Add action for the auto-format button
             },
-          )
+          ),
         ],
       ),
     );

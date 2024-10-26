@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart'; // Firebase core
+import 'package:rawae_gp24/homepage.dart';
+import 'package:rawae_gp24/profile_page.dart';
+import 'package:rawae_gp24/threads.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth
@@ -24,6 +27,9 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => LoginPage(),
         '/signup': (context) => SignUpPage(),
+        '/home': (context) => HomePage(),
+        '/profile': (context) => ProfilePage(),
+        '/threads': (context) => StoryView(),
       },
     );
   }

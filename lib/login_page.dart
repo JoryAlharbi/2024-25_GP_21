@@ -12,29 +12,22 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool _isObscured = true;
   final _auth = FirebaseAuth.instance;
-  final TextEditingController _usernameController =
-      TextEditingController(); //To manage user input from the email field
-  final TextEditingController _passwordController =
-      TextEditingController(); // To manage user input from and password fields.
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   void _login() async {
-    //To handle the login process and authenticate the user.
     try {
       final userCredential = await _auth.signInWithEmailAndPassword(
         email: _usernameController.text.trim(),
         password: _passwordController.text.trim(),
       );
       if (userCredential.user != null) {
-        // Navigate to HomePage directly
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      ); // Successfully logged in
-        Navigator.pushReplacementNamed(
-            context, '/homepage'); // Navigate to home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
       }
     } catch (e) {
-      // Display error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -54,25 +47,26 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF1B2835), // Dark background color
+      backgroundColor: Color(0xFF1B2835),
       body: Stack(
         children: [
           Positioned(
-            top: 108, // Adjust Y position as needed
-            left: -2, // Adjust X position as needed
+            top: 108,
+            left: -2,
             child: Container(
               width: 447,
               height: 803,
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    Color(0xFFA2DED0).withOpacity(0.2),
+                    Color(0xFFA2DED0).withOpacity(0.1),
+                    Color(0xFF1B2835).withOpacity(0.15),
                     Color(0xFFD35400).withOpacity(0.2),
-                    Color(0xFFA2DED0).withOpacity(0.2),
+                    Color(0xFF1B2835).withOpacity(0.1),
                   ],
                   radius: 1.5,
-                  center: Alignment.topCenter,
-                  stops: [0.0, 0.7, 1.0],
+                  center: Alignment.centerRight,
+                  stops: [0.0, 0.2, 0.85, 1],
                 ),
                 borderRadius: BorderRadius.circular(59),
               ),

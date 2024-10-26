@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'threads.dart'; // Ensure this is the correct import path for threads.dart
 
 class MakeThreadPage extends StatefulWidget {
   @override
@@ -43,9 +44,14 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   _formKey.currentState!.save();
-                  // Handle thread creation logic here
-                  Navigator.pop(
-                      context); // Navigate back to the thread view page after creating.
+                  // Navigate to the threads page after creating the thread
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          StoryView(), // Replace with the actual class for threads.dart
+                    ),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(

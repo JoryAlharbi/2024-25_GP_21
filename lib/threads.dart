@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'writing.dart'; // Make sure to import your writing.dart file
 
-
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -28,7 +26,7 @@ class StoryView extends StatelessWidget {
       username: '@LucySmith',
       content: 'Another example of a timeline item.',
       timeAgo: '10m ago',
-      avatarPath: 'assets/cat.png',
+      avatarPath: 'assets/h.png',
       avatarName: 'Lucy',
     ),
     TimelineItem(
@@ -36,7 +34,7 @@ class StoryView extends StatelessWidget {
       username: '@OliverTwist',
       content: 'This is yet another timeline entry.',
       timeAgo: '30m ago',
-      avatarPath: 'assets/catm.png',
+      avatarPath: 'assets/h.png',
       avatarName: 'Oliver',
     ),
   ];
@@ -48,16 +46,21 @@ class StoryView extends StatelessWidget {
         backgroundColor: Color(0xFF1B2835),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: () {},
+          color: const Color(0xFF9DB2CE),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         title: Text(
           'StoryName',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 20),
-            child: Icon(Icons.notifications_outlined, color: Color(0xFFD35400), size: 40),
+            child: Icon(Icons.notifications_outlined,
+                color: Color(0xFFD35400), size: 40),
           ),
         ],
       ),
@@ -85,7 +88,7 @@ class StoryView extends StatelessWidget {
             child: ListView.builder(
               itemCount: timelineItems.length,
               itemBuilder: (context, index) => _buildTimelineItem(
-                timelineItems[index], index == timelineItems.length - 1),
+                  timelineItems[index], index == timelineItems.length - 1),
             ),
           ),
           Padding(
@@ -94,29 +97,31 @@ class StoryView extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => WritingPage()), // Ensure WritingPage is correctly defined
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          WritingPage()), // Ensure WritingPage is correctly defined
                 );
               },
-             child: Container(
-                  width: double.infinity,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Color.fromARGB(255, 64, 94, 123),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Align(
-                    alignment: Alignment.centerLeft, // Align to the left
-                    child: Padding( // Add padding for spacing
-                      padding: EdgeInsets.only(left: 16.0), // Adjust the left padding as needed
-                      child: Text(
-                        'What happens next?...',
-                        style: TextStyle(color: Colors.white),
-                        
-                      ),
+              child: Container(
+                width: double.infinity,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 64, 94, 123),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft, // Align to the left
+                  child: Padding(
+                    // Add padding for spacing
+                    padding: EdgeInsets.only(
+                        left: 16.0), // Adjust the left padding as needed
+                    child: Text(
+                      'What happens next?...',
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
-                  
                 ),
+              ),
             ),
           ),
         ],
@@ -217,26 +222,38 @@ class StoryView extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.name, style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text(item.username),
+                      Text(
+                        item.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white, // Set name text color to white
+                        ),
+                      ),
+                      Text(
+                        item.username,
+                        style: TextStyle(
+                          color:
+                              Colors.white, // Set username text color to white
+                        ),
+                      ),
                     ],
                   ),
                   Column(
                     children: [
-                      Text(item.timeAgo, style: TextStyle(color: Colors.white, fontSize: 12)),
+                      Text(
+                        item.timeAgo,
+                        style: TextStyle(
+                          color: Colors.white, // Set time text color to white
+                          fontSize: 12,
+                        ),
+                      ),
                       // Reaction button directly below the time
                       IconButton(
                         icon: Stack(
-                          alignment: Alignment.center
-                          ,
+                          alignment: Alignment.center,
                           children: [
-                            Icon(Icons.add_reaction_outlined , color: Color(0xFFA2DED0)),
-                            // Positioned(
-                            //   right: -1,
-                            //   bottom: 1,
-                            //   top: 8,
-                            //   child: Icon(Icons.add, color: Colors.white, size: 16),
-                            // ),
+                            Icon(Icons.add_reaction_outlined,
+                                color: Color(0xFFA2DED0)),
                           ],
                         ),
                         onPressed: () {
@@ -248,7 +265,12 @@ class StoryView extends StatelessWidget {
                   ),
                 ],
               ),
-              Text(item.content),
+              Text(
+                item.content,
+                style: TextStyle(
+                  color: Colors.white, // Set content text color to white
+                ),
+              ),
             ],
           ),
         ),
