@@ -6,8 +6,6 @@ import 'package:rawae_gp24/makethread.dart';
 import 'package:rawae_gp24/profile_page.dart';
 import 'package:rawae_gp24/search.dart';
 
-import 'package:flutter/material.dart';
-
 class LibraryPage extends StatelessWidget {
   final List<Map<String, dynamic>> genres = [
     {'name': 'Fantasy', 'image': 'assets/fantasy.png'},
@@ -218,7 +216,7 @@ class LibraryPage extends StatelessWidget {
                 ),
                 IconButton(
                   icon: Icon(Icons.library_books),
-                  color: Color(0xFFA2DED0),
+                  color: Color(0xFF9DB2CE),
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,

@@ -147,7 +147,7 @@ class GenreLibraryPage extends StatelessWidget {
                 ),
                 IconButton(
                   icon: Icon(Icons.library_books),
-                  color: Color(0xFF9DB2CE),
+                  color: Color(0xFFA2DED0),
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
@@ -168,7 +168,7 @@ class GenreLibraryPage extends StatelessWidget {
                 ),
                 IconButton(
                   icon: Icon(Icons.person),
-                  color: Color(0xFFA2DED0),
+                  color: Color(0xFF9DB2CE),
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,

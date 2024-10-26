@@ -113,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
                           color: Colors.white,
                         ),
                         decoration: InputDecoration(
-                          hintText: 'Username',
+                          hintText: 'email',
                           hintStyle: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
