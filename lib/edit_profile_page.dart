@@ -1,10 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rawae_gp24/bookmark.dart';
 import 'package:rawae_gp24/homepage.dart';
 import 'package:rawae_gp24/library.dart';
+import 'package:rawae_gp24/main.dart';
 import 'package:rawae_gp24/makethread.dart';
 import 'package:rawae_gp24/profile_page.dart';
+import 'package:rawae_gp24/main.dart'; // Import your welcome page here
 
 class EditProfilePage extends StatelessWidget {
   @override
@@ -27,7 +30,7 @@ class EditProfilePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'edite Profile',
+              'Edit Profile',
               style: GoogleFonts.poppins(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -36,7 +39,7 @@ class EditProfilePage extends StatelessWidget {
             ),
             SizedBox(height: 30),
             Text(
-              'username',
+              'Username',
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 color: Colors.grey,
@@ -120,8 +123,16 @@ class EditProfilePage extends StatelessWidget {
             SizedBox(height: 40),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  // Handle logout action
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut();
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            MyApp()), // Replace with your welcome page
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Logged out')),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color.fromRGBO(
@@ -174,7 +185,6 @@ class EditProfilePage extends StatelessWidget {
           ),
         ),
       ),
-
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
