@@ -61,8 +61,19 @@ class _SignUpPageState extends State<SignUpPage> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text("Sign Up Successful"),
-            content: Text("Your account has been created successfully."),
+            title: Text(
+              "Sign Up Successful",
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              "Your account has been created successfully.",
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+              ),
+            ),
             actions: [
               TextButton(
                 onPressed: () {
@@ -72,7 +83,13 @@ class _SignUpPageState extends State<SignUpPage> {
                     MaterialPageRoute(builder: (context) => HomePage()),
                   );
                 },
-                child: Text("OK"),
+                child: Text(
+                  "OK",
+                  style: GoogleFonts.poppins(
+                    color: Color(0xFFD35400),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
@@ -94,12 +111,29 @@ class _SignUpPageState extends State<SignUpPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text("Sign Up Failed"),
-          content: Text(errorMessage),
+          title: Text(
+            "Sign Up Failed",
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            errorMessage,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
+              child: Text(
+                "OK",
+                style: GoogleFonts.poppins(
+                  color: Color(0xFFD35400),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -108,12 +142,29 @@ class _SignUpPageState extends State<SignUpPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text("Sign Up Failed"),
-          content: Text("An error occurred. Please try again."),
+          title: Text(
+            "Sign Up Failed",
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            "An error occurred. Please try again.",
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
+              child: Text(
+                "OK",
+                style: GoogleFonts.poppins(
+                  color: Color(0xFFD35400),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -324,7 +375,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Don't have an account? ",
+                          "Already have an account? ",
                           style: GoogleFonts.poppins(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -336,7 +387,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             Navigator.pushNamed(context, '/login');
                           },
                           child: Text(
-                            'log in ',
+                            'Log in',
                             style: GoogleFonts.poppins(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
