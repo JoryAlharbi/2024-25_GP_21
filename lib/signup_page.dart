@@ -22,6 +22,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   bool _isObscured = true;
+  bool _isLoading = false; // Add loading state
 
   Future<void> _pickImage() async {
     final XFile? selectedImage =
@@ -32,8 +33,11 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   void signUpAction() async {
+    setState(() {
+      _isLoading = true; // Show loading indicator
+    });
+
     try {
-      // Attempt to create a user with email and password
       UserCredential userCredential = await auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -42,7 +46,6 @@ class _SignUpPageState extends State<SignUpPage> {
       User? user = userCredential.user;
 
       if (user != null && _image != null) {
-        // Upload the profile image to Firebase Storage
         File imageFile = File(_image!.path);
         String fileName = '${user.uid}/profile_picture.jpg';
         Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
@@ -50,30 +53,17 @@ class _SignUpPageState extends State<SignUpPage> {
         await storageRef.putFile(imageFile);
         String downloadURL = await storageRef.getDownloadURL();
 
-        // Save user information in Firestore
         FirebaseFirestore.instance.collection('Writer').doc(user.uid).set({
           'username': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
           'profilePicture': downloadURL,
         });
 
-        // Show success message
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text(
-              "Sign Up Successful",
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            content: Text(
-              "Your account has been created successfully.",
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-              ),
-            ),
+            title: Text("Sign Up Successful"),
+            content: Text("Your account has been created successfully."),
             actions: [
               TextButton(
                 onPressed: () {
@@ -83,13 +73,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     MaterialPageRoute(builder: (context) => HomePage()),
                   );
                 },
-                child: Text(
-                  "OK",
-                  style: GoogleFonts.poppins(
-                    color: Color(0xFFD35400),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Text("OK"),
               ),
             ],
           ),
@@ -111,29 +95,12 @@ class _SignUpPageState extends State<SignUpPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text(
-            "Sign Up Failed",
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Text(
-            errorMessage,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-            ),
-          ),
+          title: Text("Sign Up Failed"),
+          content: Text(errorMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(
-                "OK",
-                style: GoogleFonts.poppins(
-                  color: Color(0xFFD35400),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: Text("OK"),
             ),
           ],
         ),
@@ -142,33 +109,20 @@ class _SignUpPageState extends State<SignUpPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text(
-            "Sign Up Failed",
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Text(
-            "An error occurred. Please try again.",
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-            ),
-          ),
+          title: Text("Sign Up Failed"),
+          content: Text("An error occurred. Please try again."),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(
-                "OK",
-                style: GoogleFonts.poppins(
-                  color: Color(0xFFD35400),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: Text("OK"),
             ),
           ],
         ),
       );
+    } finally {
+      setState(() {
+        _isLoading = false; // Hide loading indicator
+      });
     }
   }
 
@@ -342,7 +296,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     const SizedBox(height: 25),
                     GestureDetector(
-                      onTap: signUpAction,
+                      onTap: _isLoading
+                          ? null
+                          : signUpAction, // Disable if loading
                       child: Container(
                         width: double.infinity,
                         height: 50,
@@ -359,14 +315,18 @@ class _SignUpPageState extends State<SignUpPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Center(
-                          child: Text(
-                            'Sign Up',
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                            ),
-                          ),
+                          child: _isLoading
+                              ? CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : Text(
+                                  'Sign Up',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  ),
+                                ),
                         ),
                       ),
                     ),
