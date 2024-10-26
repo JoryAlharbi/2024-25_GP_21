@@ -12,6 +12,7 @@ import 'package:rawae_gp24/main.dart'; // Import your welcome page here
 class EditProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+     User? user = FirebaseAuth.instance.currentUser;
     return Scaffold(
       backgroundColor: Color(0xFF1B2835), // Background color
       appBar: AppBar(
@@ -50,7 +51,7 @@ class EditProfilePage extends StatelessWidget {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Color(0xFF2C3E50), // Input field background color
-                hintText: '@yourname',
+                hintText: user?.displayName ?? 'razan',
                 hintStyle: GoogleFonts.poppins(color: Colors.grey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -72,7 +73,7 @@ class EditProfilePage extends StatelessWidget {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Color(0xFF2C3E50),
-                hintText: 'yourname@gmail.com',
+                hintText: user?.email ?? 'No email available',
                 hintStyle: GoogleFonts.poppins(color: Colors.grey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
