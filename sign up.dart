@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth
-import 'package:firebase_storage/firebase_storage.dart'; // Firebase Storage
-import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore for saving user data
-import 'package:image_picker/image_picker.dart'; // Image picker for profile picture
-import 'dart:io'; // To handle image files
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -15,16 +15,16 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   FirebaseAuth auth = FirebaseAuth.instance;
-  final ImagePicker _picker = ImagePicker(); // Image picker instance
-  XFile? _image; // Selected image
+  final ImagePicker _picker = ImagePicker();
+  XFile? _image;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   bool _isObscured = true;
-  String _passwordStrength = ""; // Password strength message
-  Color _strengthColor = Colors.grey; // Color for strength feedback
+  String _passwordStrength = "";
+  Color _strengthColor = Colors.grey;
+  String _emailError = ""; // Email format error message
 
-  // Function to pick an image
   Future<void> _pickImage() async {
     final XFile? selectedImage =
         await _picker.pickImage(source: ImageSource.gallery);
@@ -33,10 +33,16 @@ class _SignUpPageState extends State<SignUpPage> {
     });
   }
 
-  // Function to handle user sign-up and upload image
   void signUpAction() async {
     try {
-      // Sign up with Firebase Auth
+      // Check email format before sign up
+      if (!_isValidEmail(_emailController.text.trim())) {
+        setState(() {
+          _emailError = "Invalid email format";
+        });
+        return;
+      }
+
       UserCredential userCredential = await auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -45,7 +51,6 @@ class _SignUpPageState extends State<SignUpPage> {
       User? user = userCredential.user;
 
       if (user != null && _image != null) {
-        // Upload image to Firebase Storage
         File imageFile = File(_image!.path);
         String fileName = '${user.uid}/profile_picture.jpg';
         Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
@@ -53,14 +58,12 @@ class _SignUpPageState extends State<SignUpPage> {
         await storageRef.putFile(imageFile);
         String downloadURL = await storageRef.getDownloadURL();
 
-        // Save user info to Firestore
         FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'username': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
           'profilePicture': downloadURL,
         });
 
-        // Navigate to another screen or show success message
         print('User signed up and image uploaded!');
       }
     } catch (e) {
@@ -68,9 +71,7 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
-  // Function to check password strength
   void _checkPasswordStrength(String password) {
-    // Define the password strength criteria
     if (password.isEmpty) {
       setState(() {
         _passwordStrength = "";
@@ -82,13 +83,11 @@ class _SignUpPageState extends State<SignUpPage> {
         _strengthColor = Colors.red;
       });
     } else {
-      // Check if password includes uppercase, lowercase, number, and special character
       bool hasUppercase = password.contains(RegExp(r'[A-Z]'));
       bool hasLowercase = password.contains(RegExp(r'[a-z]'));
       bool hasNumber = password.contains(RegExp(r'\d'));
       bool hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
 
-      // Determine strength level
       if (hasUppercase && hasLowercase && hasNumber && hasSpecialChar) {
         setState(() {
           _passwordStrength = "Strong";
@@ -109,13 +108,18 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
+  // Function to validate email format
+  bool _isValidEmail(String email) {
+    return RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+        .hasMatch(email);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1B2835), // Dark background color
+      backgroundColor: const Color(0xFF1B2835),
       body: Stack(
         children: [
-          // Radial gradient background layer
           Positioned(
             top: 108,
             left: -2,
@@ -125,9 +129,9 @@ class _SignUpPageState extends State<SignUpPage> {
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFA2DED0).withOpacity(0.2), // Light mint
-                    const Color(0xFFD35400).withOpacity(0.2), // Orange
-                    const Color(0xFFA2DED0).withOpacity(0.2), // Light mint
+                    const Color(0xFFA2DED0).withOpacity(0.2),
+                    const Color(0xFFD35400).withOpacity(0.2),
+                    const Color(0xFFA2DED0).withOpacity(0.2),
                   ],
                   radius: 1.5,
                   center: Alignment.topCenter,
@@ -137,7 +141,6 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
             ),
           ),
-          // Main content positioned in the center
           Align(
             alignment: Alignment.center,
             child: FractionallySizedBox(
@@ -149,58 +152,55 @@ class _SignUpPageState extends State<SignUpPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Other fields above...
-                    // Password Input
+                    // Email Input with validation
                     Container(
                       decoration: BoxDecoration(
                         color: const Color.fromRGBO(0, 0, 0, 0.25),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: TextField(
-                        controller: _passwordController,
-                        obscureText: _isObscured,
+                        controller: _emailController,
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                           color: Colors.white,
                         ),
-                        onChanged: _checkPasswordStrength, // Call validation function on change
+                        onChanged: (value) {
+                          setState(() {
+                            _emailError = _isValidEmail(value)
+                                ? ""
+                                : "Invalid email format";
+                          });
+                        },
                         decoration: InputDecoration(
-                          hintText: 'Password',
+                          hintText: 'Email',
                           hintStyle: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
                             color: const Color(0xFFA4A4A4),
                           ),
-                          prefixIcon: const Icon(Icons.key, color: Color(0xFFA4A4A4)),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _isObscured ? Icons.visibility_off : Icons.visibility,
-                              color: const Color(0xFFA4A4A4),
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _isObscured = !_isObscured;
-                              });
-                            },
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 16.0),
+                          prefixIcon:
+                              const Icon(Icons.email, color: Color(0xFFA4A4A4)),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 16.0),
                           border: InputBorder.none,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    // Display password strength
-                    Text(
-                      _passwordStrength,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: _strengthColor,
+                    if (_emailError.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          _emailError,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.red,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 25),
-                    // Sign up Button
-                    // Other widgets...
+                    const SizedBox(height: 20),
+                    // Password Input and validation below...
                   ],
                 ),
               ),
