@@ -5,6 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'homepage.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -21,28 +22,38 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   bool _isObscured = true;
-  String _passwordStrength = "";
-  Color _strengthColor = Colors.grey;
-  String _emailError = ""; // Email format error message
+  bool _isPasswordValid = true;
+  bool _isEmailValid = true;
+
+  // Password validation
+  bool isPasswordValid(String password) {
+    final passwordRegExp =
+        RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$');
+    return passwordRegExp.hasMatch(password);
+  }
+
+  // Email validation
+  bool isEmailValid(String email) {
+    final emailRegExp = RegExp(r'^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$');
+    return emailRegExp.hasMatch(email);
+  }
 
   Future<void> _pickImage() async {
-    final XFile? selectedImage =
-        await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? selectedImage = await _picker.pickImage(source: ImageSource.gallery);
     setState(() {
       _image = selectedImage;
     });
   }
 
   void signUpAction() async {
-    try {
-      // Check email format before sign up
-      if (!_isValidEmail(_emailController.text.trim())) {
-        setState(() {
-          _emailError = "Invalid email format";
-        });
-        return;
-      }
+    setState(() {
+      _isEmailValid = isEmailValid(_emailController.text.trim());
+      _isPasswordValid = isPasswordValid(_passwordController.text.trim());
+    });
 
+    if (!_isEmailValid || !_isPasswordValid) return;
+
+    try {
       UserCredential userCredential = await auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -58,60 +69,20 @@ class _SignUpPageState extends State<SignUpPage> {
         await storageRef.putFile(imageFile);
         String downloadURL = await storageRef.getDownloadURL();
 
-        FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        FirebaseFirestore.instance.collection('Writer').doc(user.uid).set({
           'username': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
           'profilePicture': downloadURL,
         });
 
-        print('User signed up and image uploaded!');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
       }
     } catch (e) {
       print('Error during sign-up: $e');
     }
-  }
-
-  void _checkPasswordStrength(String password) {
-    if (password.isEmpty) {
-      setState(() {
-        _passwordStrength = "";
-        _strengthColor = Colors.grey;
-      });
-    } else if (password.length < 6) {
-      setState(() {
-        _passwordStrength = "Too short";
-        _strengthColor = Colors.red;
-      });
-    } else {
-      bool hasUppercase = password.contains(RegExp(r'[A-Z]'));
-      bool hasLowercase = password.contains(RegExp(r'[a-z]'));
-      bool hasNumber = password.contains(RegExp(r'\d'));
-      bool hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-
-      if (hasUppercase && hasLowercase && hasNumber && hasSpecialChar) {
-        setState(() {
-          _passwordStrength = "Strong";
-          _strengthColor = Colors.green;
-        });
-      } else if ((hasUppercase && hasLowercase && hasNumber) ||
-          (hasLowercase && hasNumber && hasSpecialChar)) {
-        setState(() {
-          _passwordStrength = "Medium";
-          _strengthColor = Colors.orange;
-        });
-      } else {
-        setState(() {
-          _passwordStrength = "Weak";
-          _strengthColor = Colors.red;
-        });
-      }
-    }
-  }
-
-  // Function to validate email format
-  bool _isValidEmail(String email) {
-    return RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-        .hasMatch(email);
   }
 
   @override
@@ -151,56 +122,103 @@ class _SignUpPageState extends State<SignUpPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Other fields above...
-                    // Email Input with validation
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color.fromRGBO(0, 0, 0, 0.25),
-                        borderRadius: BorderRadius.circular(12),
+                    Text(
+                      'Create Account',
+                      style: GoogleFonts.poppins(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
-                      child: TextField(
-                        controller: _emailController,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Create. Collaborate. Inspire',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFFA4A4A4),
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: CircleAvatar(
+                        radius: 40,
+                        backgroundColor: Colors.grey[300],
+                        backgroundImage: _image != null ? FileImage(File(_image!.path)) : null,
+                        child: _image == null
+                            ? const Icon(Icons.camera_alt, color: Colors.white, size: 40)
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Username Input
+                    buildTextField(
+                      controller: _usernameController,
+                      hintText: 'Username',
+                      icon: Icons.person,
+                    ),
+                    const SizedBox(height: 20),
+                    // Email Input
+                    buildTextField(
+                      controller: _emailController,
+                      hintText: 'Email',
+                      icon: Icons.email,
+                      isValid: _isEmailValid,
+                      errorMessage: 'Please enter a valid email address.',
+                    ),
+                    const SizedBox(height: 20),
+                    // Password Input
+                    buildTextField(
+                      controller: _passwordController,
+                      hintText: 'Password',
+                      icon: Icons.key,
+                      obscureText: _isObscured,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isObscured ? Icons.visibility_off : Icons.visibility,
+                          color: const Color(0xFFA4A4A4),
                         ),
-                        onChanged: (value) {
+                        onPressed: () {
                           setState(() {
-                            _emailError = _isValidEmail(value)
-                                ? ""
-                                : "Invalid email format";
+                            _isObscured = !_isObscured;
                           });
                         },
-                        decoration: InputDecoration(
-                          hintText: 'Email',
-                          hintStyle: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFFA4A4A4),
+                      ),
+                      isValid: _isPasswordValid,
+                      errorMessage: 'Password must be 8+ chars with uppercase, lowercase, number, and symbol.',
+                    ),
+                    const SizedBox(height: 25),
+                    GestureDetector(
+                      onTap: signUpAction,
+                      child: Container(
+                        width: double.infinity,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF344C64),
+                              Color(0xFFD35400),
+                              Color(0xFFA2DED0),
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
                           ),
-                          prefixIcon:
-                              const Icon(Icons.email, color: Color(0xFFA4A4A4)),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 16.0),
-                          border: InputBorder.none,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Sign Up',
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                    if (_emailError.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          _emailError,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.red,
-                          ),
-                        ),
-                      ),
                     const SizedBox(height: 20),
-                    // Password Input and validation below...
                   ],
                 ),
               ),
@@ -208,6 +226,61 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData icon,
+    bool obscureText = false,
+    bool isValid = true,
+    String? errorMessage,
+    Widget? suffixIcon,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(0, 0, 0, 0.25),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: TextField(
+            controller: controller,
+            obscureText: obscureText,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+            decoration: InputDecoration(
+              hintText: hintText,
+              hintStyle: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFFA4A4A4),
+              ),
+              prefixIcon: Icon(icon, color: const Color(0xFFA4A4A4)),
+              suffixIcon: suffixIcon,
+              contentPadding: const EdgeInsets.symmetric(vertical: 16.0),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+        if (!isValid && errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4.0, left: 8.0),
+            child: Text(
+              errorMessage,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: Colors.red,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
