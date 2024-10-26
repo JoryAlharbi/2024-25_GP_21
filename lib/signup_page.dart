@@ -25,7 +25,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _usernameController = TextEditingController();
   bool _isObscured = true;
 
-  // Function to pick an image
+  // Function to pick an image so the user can add a profile picture
   Future<void> _pickImage() async {
     final XFile? selectedImage =
         await _picker.pickImage(source: ImageSource.gallery);
@@ -54,8 +54,8 @@ class _SignUpPageState extends State<SignUpPage> {
         await storageRef.putFile(imageFile);
         String downloadURL = await storageRef.getDownloadURL();
 
-        // Save user info to Firestore
-        FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        // Save user info to Firestore at the writer document
+        FirebaseFirestore.instance.collection('Writer').doc(user.uid).set({
           'username': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
           'profilePicture': downloadURL,
