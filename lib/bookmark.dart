@@ -1,0 +1,198 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+class BookmarkPage extends StatelessWidget {
+  final List<Map<String, String>> books = [
+    {
+      'title': 'memories of the sea',
+      'image': 'assets/book.png',
+    },
+    {
+      'title': 'Meet Mr. Mulliner',
+      'image': 'assets/book2.png',
+    },
+    {
+      'title': 'P.G Wodehouse',
+      'image': 'assets/book.png',
+    },
+    {
+      'title': 'P.G Wodehouse',
+      'image': 'assets/book2.png',
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFF1B2835),
+      appBar: AppBar(
+        backgroundColor: const Color.fromARGB(0, 112, 28, 28),
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'To read',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 20),
+            Expanded(
+              child: GridView.builder(
+                itemCount: books.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 19.0,
+                  crossAxisSpacing: 22.0,
+                  childAspectRatio: 0.7,
+                ),
+                itemBuilder: (context, index) {
+                  final book = books[index];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Book cover image
+                      Container(
+                        height: 190,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4.0),
+                          image: DecorationImage(
+                            image: AssetImage(book['image']!),
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 8.0),
+                      // Book title
+                      Text(
+                        book['title']!,
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      // Floating action button and bottom navigation bar
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 10.0),
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Color(0xFFD35400),
+              width: 0,
+            ),
+          ),
+          child: FloatingActionButton(
+            onPressed: () {
+              // Navigate to Make Thread page
+            },
+            backgroundColor: Color(0xFFD35400),
+            child: Icon(
+              Icons.add,
+              size: 36,
+              color: Colors.white,
+            ),
+            elevation: 6,
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        shape: CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        child: ClipPath(
+          clipper: CustomBottomBarClipper(),
+          child: Container(
+            height: 90,
+            decoration: BoxDecoration(
+              color: Color(0xFF1E2834),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(30),
+                topRight: Radius.circular(30),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.home_rounded),
+                  color: Color(0xFF9DB2CE),
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/home');
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.library_books_rounded),
+                  color: Color(0xFF9DB2CE),
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/library');
+                  },
+                ),
+                SizedBox(width: 40), // Space for the FAB
+                IconButton(
+                  icon: Icon(Icons.bookmark),
+                  color: Color(0xFFA2DED0),
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/bookmark');
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.person),
+                  color: Color(0xFF9DB2CE),
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/profile');
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Custom Clipper for the curved background shape
+class CustomBottomBarClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    double height = size.height;
+    double width = size.width;
+    Path path = Path();
+
+    path.lineTo(width * 0.25, 0);
+    path.quadraticBezierTo(
+      width * 0.5,
+      height * 0.6,
+      width * 0.75,
+      0,
+    );
+    path.lineTo(width, 0);
+    path.lineTo(width, height);
+    path.lineTo(0, height);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
