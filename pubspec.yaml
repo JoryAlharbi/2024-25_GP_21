@@ -33,3 +33,9 @@ flutter:
   assets:
     - assets/book.png
     - assets/book2.png
+    - assets/fantasy.png
+    - assets/drama.png
+    - assets/romance.png
+    - assets/comedy.png
+    - assets/crime_fiction.png
+    - assets/adventure.png
