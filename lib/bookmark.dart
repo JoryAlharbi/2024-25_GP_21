@@ -142,7 +142,7 @@ class BookmarkPage extends StatelessWidget {
               children: [
                 IconButton(
                   icon: Icon(Icons.home_rounded),
-                  color: Color(0xFFA2DED0),
+                  color: Color(0xFF9DB2CE),
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
@@ -163,7 +163,7 @@ class BookmarkPage extends StatelessWidget {
                 SizedBox(width: 40), // Space for the FAB
                 IconButton(
                   icon: Icon(Icons.bookmark),
-                  color: Color(0xFF9DB2CE),
+                  color: Color(0xFFA2DED0),
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,

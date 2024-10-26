@@ -216,7 +216,7 @@ class LibraryPage extends StatelessWidget {
                 ),
                 IconButton(
                   icon: Icon(Icons.library_books),
-                  color: Color(0xFF9DB2CE),
+                  color: Color(0xFFA2DED0),
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,

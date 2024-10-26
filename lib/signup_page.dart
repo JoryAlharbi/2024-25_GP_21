@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'homepage.dart';
@@ -33,6 +33,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   void signUpAction() async {
     try {
+      // Attempt to create a user with email and password
       UserCredential userCredential = await auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -41,6 +42,7 @@ class _SignUpPageState extends State<SignUpPage> {
       User? user = userCredential.user;
 
       if (user != null && _image != null) {
+        // Upload the profile image to Firebase Storage
         File imageFile = File(_image!.path);
         String fileName = '${user.uid}/profile_picture.jpg';
         Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
@@ -48,19 +50,74 @@ class _SignUpPageState extends State<SignUpPage> {
         await storageRef.putFile(imageFile);
         String downloadURL = await storageRef.getDownloadURL();
 
+        // Save user information in Firestore
         FirebaseFirestore.instance.collection('Writer').doc(user.uid).set({
           'username': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
           'profilePicture': downloadURL,
         });
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+        // Show success message
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Sign Up Successful"),
+            content: Text("Your account has been created successfully."),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close the dialog
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                  );
+                },
+                child: Text("OK"),
+              ),
+            ],
+          ),
         );
       }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      if (e.code == 'weak-password') {
+        errorMessage =
+            "The password provided is too weak. Please use a stronger password.";
+      } else if (e.code == 'email-already-in-use') {
+        errorMessage = "An account already exists with this email.";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "The email address is not valid.";
+      } else {
+        errorMessage = "Failed to sign up. Please try again.";
+      }
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Sign Up Failed"),
+          content: Text(errorMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("OK"),
+            ),
+          ],
+        ),
+      );
     } catch (e) {
-      print('Error during sign-up: $e');
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Sign Up Failed"),
+          content: Text("An error occurred. Please try again."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("OK"),
+            ),
+          ],
+        ),
+      );
     }
   }
 
