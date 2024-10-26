@@ -23,7 +23,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _usernameController = TextEditingController();
   bool _isObscured = true;
   bool _isLoading = false;
-  bool _isSuccessful = false; // To track sign-up success
+  bool _isSuccessful = false;
 
   Future<void> _pickImage() async {
     final XFile? selectedImage =
@@ -55,25 +55,33 @@ class _SignUpPageState extends State<SignUpPage> {
         await storageRef.putFile(imageFile);
         String downloadURL = await storageRef.getDownloadURL();
 
-        FirebaseFirestore.instance.collection('Writer').doc(user.uid).set({
+        await FirebaseFirestore.instance
+            .collection('Writer')
+            .doc(user.uid)
+            .set({
           'username': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
           'profilePicture': downloadURL,
         });
 
-        // Show success state
+        // Set state to show the success state
         setState(() {
           _isLoading = false;
           _isSuccessful = true;
         });
 
-        // Delay before navigating to the home page to show the checkmark
-        Future.delayed(Duration(seconds: 1), () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
+        // Delay for 1 second to show the checkmark, then navigate
+        await Future.delayed(Duration(seconds: 1));
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } else {
+        setState(() {
+          _isLoading = false;
         });
+        _showErrorDialog("Please select a profile image.");
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
@@ -93,39 +101,31 @@ class _SignUpPageState extends State<SignUpPage> {
         errorMessage = "Failed to sign up. Please try again.";
       }
 
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Sign Up Failed"),
-          content: Text(errorMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
-            ),
-          ],
-        ),
-      );
+      _showErrorDialog(errorMessage);
     } catch (e) {
       setState(() {
         _isLoading = false;
         _isSuccessful = false;
       });
 
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Sign Up Failed"),
-          content: Text("An error occurred. Please try again."),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
-            ),
-          ],
-        ),
-      );
+      _showErrorDialog("An error occurred. Please try again.");
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Sign Up Failed"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -252,12 +252,14 @@ class _SignUpPageState extends State<SignUpPage> {
                             child: _isLoading
                                 ? CircularProgressIndicator(
                                     color: Colors.white,
+                                    key: ValueKey("loading"),
                                   )
                                 : _isSuccessful
                                     ? Icon(
                                         Icons.check,
                                         color: Colors.white,
                                         size: 28,
+                                        key: ValueKey("check"),
                                       )
                                     : Text(
                                         'Sign Up',
@@ -266,6 +268,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                           fontWeight: FontWeight.w500,
                                           color: Colors.white,
                                         ),
+                                        key: ValueKey("signUpText"),
                                       ),
                           ),
                         ),
