@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:rawae_gp24/signup_page.dart'; // Adjust the path if necessary
+import 'package:rawae_gp24/signup_page.dart';
+
+// this is just a test page!!
+// just change the content
 
 class HomePage extends StatelessWidget {
   @override
