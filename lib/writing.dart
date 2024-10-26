@@ -127,7 +127,81 @@ class _WritingPageState extends State<WritingPage> {
         children: [
           const CircleAvatar(
             radius: 25,
-            backgroundImage: AssetImage('assets/profile2.png'),
+            backgroundImage: AssetImage('assetimport 'dart:developer' as developer;
+
+// ...
+
+class _WritingPageState extends State<WritingPage> {
+  // ...
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController();
+    developer.log('Text controller initialized');
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    developer.log('Text controller disposed');
+    super.dispose();
+  }
+
+  // ...
+
+  Widget _buildActionButtons() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.auto_fix_high, color: Color(0xFFA2DED0)),
+            onPressed: () {
+              developer.log('Undo button pressed');
+              // Add action for the undo button
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.auto_awesome_outlined,
+                color: Color(0xFFA2DED0)),
+            onPressed: () {
+              developer.log('Auto-format button pressed');
+              // Add action for the auto-format button
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ...
+
+  ElevatedButton(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFFD35400),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+    ),
+    child: const Text(
+      'Done',
+      style: TextStyle(color: Colors.white),
+    ),
+    onPressed: () {
+      developer.log('Done button pressed');
+      // Navigate to character_page.dart when "Done" is pressed
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CharacterPreviewPage(
+            userName: 'hailey',
+          ),
+        ), // Adjust if needed
+      );
+    },
+  ),
+}s/profile2.png'),
           ),
           const SizedBox(width: 16),
           Column(
