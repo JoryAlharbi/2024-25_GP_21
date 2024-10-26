@@ -31,36 +31,29 @@ class _SignUpPageState extends State<SignUpPage> {
     });
   }
 
-  void signUpAction() async {
+  void signInAction() async {
     try {
-      UserCredential userCredential = await auth.createUserWithEmailAndPassword(
+      // Attempt to sign in the user with email and password
+      UserCredential userCredential = await auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      User? user = userCredential.user;
-
-      if (user != null && _image != null) {
-        File imageFile = File(_image!.path);
-        String fileName = '${user.uid}/profile_picture.jpg';
-        Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
-
-        await storageRef.putFile(imageFile);
-        String downloadURL = await storageRef.getDownloadURL();
-
-        FirebaseFirestore.instance.collection('Writer').doc(user.uid).set({
-          'username': _usernameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'profilePicture': downloadURL,
-        });
-
+      // Check if the sign-in was successful
+      if (userCredential.user != null) {
+        // Navigate to HomePage upon successful sign-in
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomePage()),
         );
       }
     } catch (e) {
-      print('Error during sign-up: $e');
+      print('Error during sign-in: $e');
+      // Display a snackbar or dialog with an error message for the user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Sign-in failed. Please check your credentials.')),
+      );
     }
   }
 
@@ -234,7 +227,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     const SizedBox(height: 25),
                     GestureDetector(
-                      onTap: signUpAction,
+                      onTap: () => signInAction(),
                       child: Container(
                         width: double.infinity,
                         height: 50,

@@ -36,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
       } else if (e.code == 'invalid-email') {
         errorMessage = "The email address is badly formatted.";
       } else {
-        errorMessage = "An unknown error occurred. Please try again later.";
+        errorMessage = "wrong email or password, please try again";
       }
       showDialog(
         context: context,
