@@ -22,7 +22,8 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   bool _isObscured = true;
-  bool _isLoading = false; // Add loading state
+  bool _isLoading = false;
+  bool _isSuccessful = false; // To track sign-up success
 
   Future<void> _pickImage() async {
     final XFile? selectedImage =
@@ -34,7 +35,8 @@ class _SignUpPageState extends State<SignUpPage> {
 
   void signUpAction() async {
     setState(() {
-      _isLoading = true; // Show loading indicator
+      _isLoading = true;
+      _isSuccessful = false;
     });
 
     try {
@@ -59,27 +61,26 @@ class _SignUpPageState extends State<SignUpPage> {
           'profilePicture': downloadURL,
         });
 
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text("Sign Up Successful"),
-            content: Text("Your account has been created successfully."),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close the dialog
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
-                  );
-                },
-                child: Text("OK"),
-              ),
-            ],
-          ),
-        );
+        // Show success state
+        setState(() {
+          _isLoading = false;
+          _isSuccessful = true;
+        });
+
+        // Delay before navigating to the home page to show the checkmark
+        Future.delayed(Duration(seconds: 1), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        });
       }
     } on FirebaseAuthException catch (e) {
+      setState(() {
+        _isLoading = false;
+        _isSuccessful = false;
+      });
+
       String errorMessage;
       if (e.code == 'weak-password') {
         errorMessage =
@@ -106,6 +107,11 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
       );
     } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _isSuccessful = false;
+      });
+
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -119,10 +125,6 @@ class _SignUpPageState extends State<SignUpPage> {
           ],
         ),
       );
-    } finally {
-      setState(() {
-        _isLoading = false; // Hide loading indicator
-      });
     }
   }
 
@@ -197,108 +199,38 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color.fromRGBO(0, 0, 0, 0.25),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: TextField(
-                        controller: _usernameController,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'Username',
-                          hintStyle: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFFA4A4A4),
-                          ),
-                          prefixIcon: const Icon(Icons.person,
-                              color: Color(0xFFA4A4A4)),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 16.0),
-                          border: InputBorder.none,
-                        ),
-                      ),
+                    _buildTextField(
+                      controller: _usernameController,
+                      hint: 'Username',
+                      icon: Icons.person,
                     ),
                     const SizedBox(height: 20),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color.fromRGBO(0, 0, 0, 0.25),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: TextField(
-                        controller: _emailController,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'Email',
-                          hintStyle: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFFA4A4A4),
-                          ),
-                          prefixIcon:
-                              const Icon(Icons.email, color: Color(0xFFA4A4A4)),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 16.0),
-                          border: InputBorder.none,
-                        ),
-                      ),
+                    _buildTextField(
+                      controller: _emailController,
+                      hint: 'Email',
+                      icon: Icons.email,
                     ),
                     const SizedBox(height: 20),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color.fromRGBO(0, 0, 0, 0.25),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: TextField(
-                        controller: _passwordController,
-                        obscureText: _isObscured,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
+                    _buildTextField(
+                      controller: _passwordController,
+                      hint: 'Password',
+                      icon: Icons.key,
+                      obscureText: _isObscured,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isObscured ? Icons.visibility_off : Icons.visibility,
+                          color: const Color(0xFFA4A4A4),
                         ),
-                        decoration: InputDecoration(
-                          hintText: 'Password',
-                          hintStyle: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFFA4A4A4),
-                          ),
-                          prefixIcon:
-                              const Icon(Icons.key, color: Color(0xFFA4A4A4)),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _isObscured
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              color: const Color(0xFFA4A4A4),
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _isObscured = !_isObscured;
-                              });
-                            },
-                          ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 16.0),
-                          border: InputBorder.none,
-                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isObscured = !_isObscured;
+                          });
+                        },
                       ),
                     ),
                     const SizedBox(height: 25),
                     GestureDetector(
-                      onTap: _isLoading
-                          ? null
-                          : signUpAction, // Disable if loading
+                      onTap: _isLoading ? null : signUpAction,
                       child: Container(
                         width: double.infinity,
                         height: 50,
@@ -315,18 +247,27 @@ class _SignUpPageState extends State<SignUpPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Center(
-                          child: _isLoading
-                              ? CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : Text(
-                                  'Sign Up',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
+                          child: AnimatedSwitcher(
+                            duration: Duration(milliseconds: 500),
+                            child: _isLoading
+                                ? CircularProgressIndicator(
                                     color: Colors.white,
-                                  ),
-                                ),
+                                  )
+                                : _isSuccessful
+                                    ? Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 28,
+                                      )
+                                    : Text(
+                                        'Sign Up',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                          ),
                         ),
                       ),
                     ),
@@ -363,6 +304,42 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool obscureText = false,
+    Widget? suffixIcon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(0, 0, 0, 0.25),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        style: GoogleFonts.poppins(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: const Color(0xFFA4A4A4),
+          ),
+          prefixIcon: Icon(icon, color: Color(0xFFA4A4A4)),
+          suffixIcon: suffixIcon,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16.0),
+          border: InputBorder.none,
+        ),
       ),
     );
   }
