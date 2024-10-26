@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:rwe/bookmark.dart';
-import 'package:rwe/edit_profile_page.dart';
-import 'package:rwe/homepage.dart';
-import 'package:rwe/library.dart';
-import 'package:rwe/makethread.dart';
+import 'bookmark.dart';
+import 'edit_profile_page.dart';
+import 'homepage.dart';
+import 'library.dart';
+import 'makethread.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
