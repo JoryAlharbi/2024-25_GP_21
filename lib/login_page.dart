@@ -27,12 +27,36 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(builder: (context) => HomePage()),
         );
       }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      if (e.code == 'user-not-found') {
+        errorMessage = "No user found with this email.";
+      } else if (e.code == 'wrong-password') {
+        errorMessage = "Incorrect password. Please try again.";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "The email address is badly formatted.";
+      } else {
+        errorMessage = "wrong email or password, please try again";
+      }
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Login Failed"),
+          content: Text(errorMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("OK"),
+            ),
+          ],
+        ),
+      );
     } catch (e) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text("Login Failed"),
-          content: Text(e.toString()),
+          content: Text("An error occurred. Please try again."),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
