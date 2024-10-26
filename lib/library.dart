@@ -16,7 +16,7 @@ class LibraryApp extends StatelessWidget {
 class LibraryPage extends StatelessWidget {
   final List<Map<String, dynamic>> genres = [
     {'name': 'Fantasy', 'image': 'assets/images/fantasy.png'},
-    {'name': 'Drama', 'color': Colors.grey, 'image': 'assets/images/drama.png'},
+    {'name': 'Drama', 'image': 'assets/images/drama.png'},
     {'name': 'Romance', 'image': 'assets/images/romance.png'},
     {'name': 'Comedy', 'image': 'assets/images/comedy.png'},
     {'name': 'Crime Fiction', 'image': 'assets/images/crime_fiction.png'},
