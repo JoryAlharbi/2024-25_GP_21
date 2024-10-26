@@ -108,6 +108,29 @@ class _SignUpPageState extends State<SignUpPage> {
       backgroundColor: const Color(0xFF1B2835),
       body: Stack(
         children: [
+          // Background Radial Gradients
+          Positioned(
+            top: 108,
+            left: -2,
+            child: Container(
+              width: 447,
+              height: 803,
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFFA2DED0).withOpacity(0.1),
+                    const Color(0xFF1B2835).withOpacity(0.15),
+                    const Color(0xFFD35400).withOpacity(0.2),
+                    const Color(0xFF1B2835).withOpacity(0.1),
+                  ],
+                  radius: 1.5,
+                  center: Alignment.centerRight,
+                  stops: const [0.0, 0.2, 0.85, 1],
+                ),
+                borderRadius: BorderRadius.circular(59),
+              ),
+            ),
+          ),
           Align(
             alignment: Alignment.center,
             child: FractionallySizedBox(
