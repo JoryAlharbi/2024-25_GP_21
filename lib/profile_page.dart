@@ -5,6 +5,8 @@ import 'package:rawae_gp24/edit_profile_page.dart';
 import 'package:rawae_gp24/homepage.dart';
 import 'package:rawae_gp24/library.dart';
 import 'package:rawae_gp24/makethread.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -39,6 +41,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    User? user = FirebaseAuth.instance.currentUser; 
     return Scaffold(
       backgroundColor: Color(0xFF1B2835),
       body: Stack(
@@ -102,7 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 SizedBox(height: 20),
                 Text(
-                  'Ross Ankunding',
+                  user?.displayName ?? 'razan',
                   style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -111,7 +114,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 SizedBox(height: 5),
                 Text(
-                  'Bridie40@yahoo.com',
+                  user?.email ?? 'No email available',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: Color(0xFFA4A4A4),
