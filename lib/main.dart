@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_core/firebase_core.dart'; // Firebase core
 import 'package:rawae_gp24/homepage.dart';
 import 'package:rawae_gp24/profile_page.dart';
 import 'package:rawae_gp24/threads.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
+
+//firebase packages
 import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_core/firebase_core.dart'; // Firebase core
 import 'package:firebase_app_check/firebase_app_check.dart';
 
 void main() async {
