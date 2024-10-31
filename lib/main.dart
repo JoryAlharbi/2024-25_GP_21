@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+//app packages to navigate
 import 'package:rawae_gp24/homepage.dart';
 import 'package:rawae_gp24/profile_page.dart';
 import 'package:rawae_gp24/threads.dart';
@@ -14,10 +16,12 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Ensure Firebase is initialized
-  await FirebaseAppCheck.instance.activate(); // initialize app check
+  await Firebase
+      .initializeApp(); // makes all Firebase services available globally, including the Realtime Database.
+  await FirebaseAppCheck.instance.activate(); // Initialize Firebase App Check
 
-  FirebaseAuth.instance.setLanguageCode('en'); // Or any other language code
+  FirebaseAuth.instance
+      .setLanguageCode('en'); // Set the language for Firebase Auth
   runApp(MyApp());
 }
 
