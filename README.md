@@ -55,7 +55,7 @@ Rawe was built with Flutter. Make sure your Flutter environment is up-to-date.
   <a href="https://www.atlassian.com/software/jira" target="_blank" rel="noreferrer"> 
     <img src="https://www.vectorlogo.zone/logos/atlassian_jira/atlassian_jira-icon.svg" alt="jira" width="40" height="40"/> 
   <a href="https://openai.com/index/dall-e-3/" rel="noreferrer"> 
-    <img src="https://upload.wikimedia.org/wikipedia/commons/4/4d/OpenAI_Logo.svg" alt="openai" width="40" height="40"/> 
+    <img src="https://logodix.com/logos/73721" alt="openai" width="40" height="40"/> 
       
   </a>
 </p>
