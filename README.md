@@ -11,10 +11,29 @@ the shortage of interactive and visual writing tools, our platform lets users’
 stories in real-time, bring their characters to life visually, and get feedback from their peers.
 
 <h2> 📓 Launching Instructions </h2>
+<h3> 
+1- Clone the Repository <br> 
+  
+ ```bash
+   git clone https://github.com/JoryAlharbi/2024-25_GP_21.git
+   cd 2024-25_GP_21
+   ```
+2- Install Dependencies <br> 
 
-TBA
+ ```bash
+flutter pub ger
+   ```
+3- run the app <br> 
+ ```bash
+Flutter run
+   ```
+Additional Notes
+
+This app was built with Flutter. Make sure your Flutter environment is up-to-date.
 
 
+  
+</h3>
 <h2 align="left"> 💻 Languages and Tools:</h2>
 <p align="left"> 
   <a href="https://www.figma.com/" target="_blank" rel="noreferrer"> 
