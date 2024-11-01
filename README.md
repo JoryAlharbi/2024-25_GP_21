@@ -13,11 +13,6 @@ stories in real-time, bring their characters to life visually, and get feedback 
 <h2> 📓 Launching Instructions </h2>
 <p> 
 1- Clone the Repository <br> 
-  
- ```bash
-   git clone https://github.com/JoryAlharbi/2024-25_GP_21.git
-   cd 2024-25_GP_21
-   ```
 2- Install Dependencies <br> 
 
  ```bash
@@ -27,9 +22,7 @@ flutter pub ger
  ```bash
 Flutter run
    ```
-Additional Notes
-
-This app was built with Flutter. Make sure your Flutter environment is up-to-date.
+Rawe was built with Flutter. Make sure your Flutter environment is up-to-date.
 
 
   
