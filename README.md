@@ -11,7 +11,7 @@ the shortage of interactive and visual writing tools, our platform lets users’
 stories in real-time, bring their characters to life visually, and get feedback from their peers.
 
 <h2> 📓 Launching Instructions </h2>
-<h3> 
+<p> 
 1- Clone the Repository <br> 
   
  ```bash
@@ -33,7 +33,7 @@ This app was built with Flutter. Make sure your Flutter environment is up-to-dat
 
 
   
-</h3>
+</p>
 <h2 align="left"> 💻 Languages and Tools:</h2>
 <p align="left"> 
   <a href="https://www.figma.com/" target="_blank" rel="noreferrer"> 
