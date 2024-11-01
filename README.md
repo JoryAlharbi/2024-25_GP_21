@@ -25,7 +25,7 @@ Java Development Kit (JDK) 17: Download JDK 17 and install it.
 2- Install Dependencies <br> 
 
  ```bash
-flutter pub ger
+flutter pub get
    ```
 3- run the app <br> 
  ```bash
