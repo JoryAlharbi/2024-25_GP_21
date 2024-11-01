@@ -15,11 +15,11 @@ stories in real-time, bring their characters to life visually, and get feedback 
 <em>Step 1: Prerequisites </em> 
 Make sure you have the following installed:
 
-Flutter: Follow the Flutter installation guide for your operating system.
-Android Studio or VS Code: For running the Flutter app and using the Android SDK.
-Java Development Kit (JDK) 17: Download JDK 17 and install it.
+Flutter: Follow the Flutter installation guide for your operating system. <br>
+Android Studio or VS Code: For running the Flutter app and using the Android SDK. <br> 
+Java Development Kit (JDK) 17: Download JDK 17 and install it. <br> 
 
-<em> step 2: Instructions </em>
+<em> Step 2: Instructions </em>
 
 1- Clone the Repository <br> 
 2- Install Dependencies <br> 
@@ -31,7 +31,7 @@ flutter pub get
  ```bash
 Flutter run
    ```
-notes: 
+note: 
 Rawe was built with Flutter. Make sure your Flutter environment is up-to-date.
 
 
