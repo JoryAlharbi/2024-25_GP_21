@@ -12,14 +12,14 @@ stories in real-time, bring their characters to life visually, and get feedback 
 
 <h2> 📓 Launching Instructions </h2>
 <p> 
- Step 1: Prerequisites
+<em>Step 1: Prerequisites </em> 
 Make sure you have the following installed:
 
 Flutter: Follow the Flutter installation guide for your operating system.
 Android Studio or VS Code: For running the Flutter app and using the Android SDK.
 Java Development Kit (JDK) 17: Download JDK 17 and install it.
 
-step 2: Instructions 
+<em> step 2: Instructions </em>
 
 1- Clone the Repository <br> 
 2- Install Dependencies <br> 
