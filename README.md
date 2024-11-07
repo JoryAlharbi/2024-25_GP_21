@@ -1,4 +1,5 @@
-<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg](https://drive.google.com/drive/u/0/folders/1M05jvynu7GiS-L66ymQIYs6Pcqepu8Oa" /> 
+
+![rawae (1)](https://github.com/user-attachments/assets/38c9fe79-97ea-413c-9754-a36a5bb2bc5b)
 # Rawae | راوي 
 
 <h2> ⚡Introduction </h2> 
