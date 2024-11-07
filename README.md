@@ -1,5 +1,7 @@
 
-<img src="https://github.com/user-attachments/assets/38c9fe79-97ea-413c-9754-a36a5bb2bc5b" width="200" alt="Rawae Screenshot">
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/38c9fe79-97ea-413c-9754-a36a5bb2bc5b" width="200" alt="Rawae Screenshot">
+</div>
 
 # Rawae | راوي 
 
