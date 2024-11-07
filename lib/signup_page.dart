@@ -332,7 +332,11 @@ class _SignUpPageState extends State<SignUpPage> {
                           height: 55,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFFD35400), Color(0xFFFD983D)],
+                              colors: [
+                                Color(0xFF344C64),
+                                Color(0xFFD35400),
+                                Color(0xFFA2DED0),
+                              ],
                               begin: Alignment.centerRight,
                               end: Alignment.centerLeft,
                             ),
