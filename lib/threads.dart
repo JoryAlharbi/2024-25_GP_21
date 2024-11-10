@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'writing.dart'; // Make sure to import your writing.dart file
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -39,24 +41,26 @@ class StoryView extends StatelessWidget {
     ),
   ];
 
+  StoryView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF1B2835),
+        backgroundColor: const Color(0xFF1B2835),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           color: const Color(0xFF9DB2CE),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
-        title: Text(
+        title: const Text(
           'StoryName',
           style: TextStyle(
               fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        actions: [
+        actions: const [
           Padding(
             padding: EdgeInsets.only(right: 20),
             child: Icon(Icons.notifications_outlined,
@@ -64,7 +68,7 @@ class StoryView extends StatelessWidget {
           ),
         ],
       ),
-      backgroundColor: Color(0xFF1B2835),
+      backgroundColor: const Color(0xFF1B2835),
       body: Column(
         children: [
           // Story avatars row
@@ -78,12 +82,12 @@ class StoryView extends StatelessWidget {
               },
             ),
           ),
-          Divider(
+          const Divider(
             thickness: 1,
             color: Color(0xFF344C64),
             height: 20,
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Expanded(
             child: ListView.builder(
               itemCount: timelineItems.length,
@@ -99,17 +103,17 @@ class StoryView extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) =>
-                          WritingPage()), // Ensure WritingPage is correctly defined
+                          const WritingPage()), // Ensure WritingPage is correctly defined
                 );
               },
               child: Container(
                 width: double.infinity,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 64, 94, 123),
+                  color: const Color.fromARGB(255, 64, 94, 123),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Align(
+                child: const Align(
                   alignment: Alignment.centerLeft, // Align to the left
                   child: Padding(
                     // Add padding for spacing
@@ -132,14 +136,14 @@ class StoryView extends StatelessWidget {
   Widget _buildStoryAvatar(TimelineItem item) {
     return Container(
       width: 90,
-      margin: EdgeInsets.symmetric(horizontal: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 5),
       child: Stack(
         alignment: Alignment.topCenter,
         children: [
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Color(0xFFD35400), width: 2),
+              border: Border.all(color: const Color(0xFFD35400), width: 2),
             ),
             child: CircleAvatar(
               radius: 37,
@@ -147,15 +151,15 @@ class StoryView extends StatelessWidget {
             ),
           ),
           Container(
-            margin: EdgeInsets.only(top: 60),
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+            margin: const EdgeInsets.only(top: 60),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
             decoration: BoxDecoration(
-              color: Color(0xFFD35400),
+              color: const Color(0xFFD35400),
               borderRadius: BorderRadius.circular(15),
             ),
             child: Text(
               item.avatarName,
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -179,7 +183,7 @@ class StoryView extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(
                       width: 4,
-                      color: Color(0xFFD35400),
+                      color: const Color(0xFFD35400),
                     ),
                   ),
                   child: CircleAvatar(
@@ -190,14 +194,15 @@ class StoryView extends StatelessWidget {
                 Positioned(
                   bottom: 0,
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Color(0xFFD35400),
+                      color: const Color(0xFFD35400),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       item.avatarName,
-                      style: TextStyle(color: Colors.white, fontSize: 9),
+                      style: const TextStyle(color: Colors.white, fontSize: 9),
                     ),
                   ),
                 ),
@@ -207,11 +212,11 @@ class StoryView extends StatelessWidget {
               Container(
                 width: 5,
                 height: 40,
-                color: Color(0xFFD35400),
+                color: const Color(0xFFD35400),
               ),
           ],
         ),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,14 +229,14 @@ class StoryView extends StatelessWidget {
                     children: [
                       Text(
                         item.name,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white, // Set name text color to white
                         ),
                       ),
                       Text(
                         item.username,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color:
                               Colors.white, // Set username text color to white
                         ),
@@ -242,14 +247,14 @@ class StoryView extends StatelessWidget {
                     children: [
                       Text(
                         item.timeAgo,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white, // Set time text color to white
                           fontSize: 12,
                         ),
                       ),
                       // Reaction button directly below the time
                       IconButton(
-                        icon: Stack(
+                        icon: const Stack(
                           alignment: Alignment.center,
                           children: [
                             Icon(Icons.add_reaction_outlined,
@@ -267,7 +272,7 @@ class StoryView extends StatelessWidget {
               ),
               Text(
                 item.content,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white, // Set content text color to white
                 ),
               ),

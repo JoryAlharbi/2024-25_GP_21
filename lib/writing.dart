@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'character_page.dart'; // Adjust the path to your character_page.dart file
 
 class WritingPage extends StatefulWidget {
-  const WritingPage({Key? key}) : super(key: key);
+  const WritingPage({super.key});
 
   @override
   _WritingPageState createState() => _WritingPageState();
@@ -123,16 +123,16 @@ class _WritingPageState extends State<WritingPage> {
   Widget _buildProfileSection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: const Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 25,
             backgroundImage: AssetImage('assets/profile2.png'),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               Text(
                 'Rudy Fernandez',
                 style: TextStyle(
@@ -167,12 +167,12 @@ class _WritingPageState extends State<WritingPage> {
         child: TextField(
           controller: _textController,
           maxLines: null, // Allows the text field to expand vertically
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: 'What’s happening?',
-            hintStyle: const TextStyle(color: Colors.grey),
+            hintStyle: TextStyle(color: Colors.grey),
             border: InputBorder.none,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           ),
           style: const TextStyle(color: Colors.white),
         ),

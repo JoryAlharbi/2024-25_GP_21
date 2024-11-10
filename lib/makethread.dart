@@ -1,10 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'threads.dart'; // Ensure this is the correct import path for threads.dart
 
 class MakeThreadPage extends StatefulWidget {
+  const MakeThreadPage({super.key});
+
   @override
   _MakeThreadPageState createState() => _MakeThreadPageState();
 }
@@ -20,42 +24,79 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
     'Fantasy',
     'Fiction',
     'Romance',
-    'Mystery'
+    'Mystery',
+    'Science Fiction',
+    'Horror',
+    'Historical',
+    'Adventure',
+    'Drama',
+    'Non-Fiction'
   ];
+
+  Future<void> _createThread() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      try {
+        // Upload the book cover image if one is provided (optional, add logic for uploading)
+        String? bookCoverUrl;
+        if (_bookCover != null) {
+          // Add code here to upload the image to Firebase Storage and get the URL
+        }
+
+        // Save the thread data to Firestore with the structure you have
+        await FirebaseFirestore.instance.collection('Thread').add({
+          'threadID': DateTime.now()
+              .millisecondsSinceEpoch, // or your logic for threadID
+          'genreID': _selectedGenre != null
+              ? '/Genre/${_selectedGenre!.toLowerCase()}'
+              : null, // genre path
+          'writerID': FirebaseAuth.instance.currentUser?.uid,
+
+          'characterNum': 10, // Replace with actual data if available
+          'totalView': 0, // Initial view count
+          'createdAt':
+              Timestamp.now(), // Timestamp for when the thread was created
+          'title': _threadTitle,
+          'bookCoverUrl': bookCoverUrl, // Replace with actual upload logic
+        });
+
+        // Navigate to the threads page after creating the thread
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                StoryView(), // Replace with your threads page class
+          ),
+        );
+      } catch (e) {
+        print('Error creating thread: $e');
+        // Show a dialog or Snackbar to notify the user of the error
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF1B2835),
+      backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(0, 112, 28, 28),
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
         actions: [
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  _formKey.currentState!.save();
-                  // Navigate to the threads page after creating the thread
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          StoryView(), // Replace with the actual class for threads.dart
-                    ),
-                  );
-                }
-              },
+              onPressed: _createThread,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFD35400),
+                backgroundColor: const Color(0xFFD35400),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -83,14 +124,14 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    Color(0xFFA2DED0).withOpacity(0.1),
-                    Color(0xFF1B2835).withOpacity(0.15),
-                    Color(0xFFD35400).withOpacity(0.2),
-                    Color(0xFF1B2835).withOpacity(0.1),
+                    const Color(0xFFA2DED0).withOpacity(0.1),
+                    const Color(0xFF1B2835).withOpacity(0.15),
+                    const Color(0xFFD35400).withOpacity(0.2),
+                    const Color(0xFF1B2835).withOpacity(0.1),
                   ],
                   radius: 1.5,
                   center: Alignment.centerRight,
-                  stops: [0.0, 0.2, 0.85, 1],
+                  stops: const [0.0, 0.2, 0.85, 1],
                 ),
                 borderRadius: BorderRadius.circular(59),
               ),
@@ -104,7 +145,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: 90),
+                  const SizedBox(height: 90),
                   Text(
                     'Book Title',
                     style: GoogleFonts.poppins(
@@ -114,8 +155,8 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                     ),
                   ),
                   TextFormField(
-                    style: TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
                       hintText: 'Title',
                       hintStyle: TextStyle(color: Color(0xFF9DB2CE)),
                       filled: true,
@@ -129,7 +170,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                         ? 'Title is required'
                         : null,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Text(
                     'Genre',
                     style: GoogleFonts.poppins(
@@ -147,12 +188,12 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                           style: GoogleFonts.poppins(
                             color: _selectedGenre == genre
                                 ? Colors.white
-                                : Color(0xFF9DB2CE),
+                                : const Color(0xFF9DB2CE),
                           ),
                         ),
                         selected: _selectedGenre == genre,
-                        selectedColor: Color(0xFFD35400),
-                        backgroundColor: Color.fromRGBO(61, 71, 83, 1),
+                        selectedColor: const Color(0xFFD35400),
+                        backgroundColor: const Color.fromRGBO(61, 71, 83, 1),
                         onSelected: (selected) {
                           setState(() {
                             _selectedGenre = selected ? genre : null;
@@ -161,7 +202,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                       );
                     }).toList(),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Text(
                     'Book cover',
                     style: GoogleFonts.poppins(
@@ -170,12 +211,12 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   GestureDetector(
                     onTap: () async {
-                      final ImagePicker _picker = ImagePicker();
+                      final ImagePicker picker = ImagePicker();
                       final XFile? image =
-                          await _picker.pickImage(source: ImageSource.gallery);
+                          await picker.pickImage(source: ImageSource.gallery);
                       setState(() {
                         _bookCover = image;
                       });
@@ -184,7 +225,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                       width: double.infinity,
                       height: 150,
                       decoration: BoxDecoration(
-                        color: Color(0xFF2A3B4D),
+                        color: const Color(0xFF2A3B4D),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: _bookCover != null
@@ -195,13 +236,13 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                           : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.image,
+                                const Icon(Icons.image,
                                     color: Color(0xFF9DB2CE), size: 40),
-                                SizedBox(height: 10),
+                                const SizedBox(height: 10),
                                 Text(
                                   'Upload',
                                   style: GoogleFonts.poppins(
-                                      color: Color(0xFF9DB2CE)),
+                                      color: const Color(0xFF9DB2CE)),
                                 ),
                               ],
                             ),

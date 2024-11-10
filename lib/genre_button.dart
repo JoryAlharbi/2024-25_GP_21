@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class GenreButton extends StatelessWidget {
   final String genre;
-  GenreButton(this.genre);
+  const GenreButton(this.genre, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +11,8 @@ class GenreButton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF8F8F8F), // Genre box color
+          backgroundColor:
+              const Color.fromARGB(255, 49, 62, 79), // Genre box color
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0), // Corner radius set to 8
           ),
