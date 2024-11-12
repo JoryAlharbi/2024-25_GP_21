@@ -23,6 +23,24 @@ class _WritingPageState extends State<WritingPage> {
     super.dispose();
   }
 
+  // Method to insert tags into the text field
+  void _insertCharacterTag() {
+    final cursorPos = _textController.selection.base.offset;
+    final text = _textController.text;
+
+    // Insert the tag where the cursor is
+    final newText = text.substring(0, cursorPos) +
+        '##Character##' +
+        text.substring(cursorPos);
+
+    // Update the text in the field and position the cursor after the tag
+    _textController.text = newText;
+    _textController.selection = TextSelection.fromPosition(
+      TextPosition(
+          offset: cursorPos + 12), // Move cursor after the inserted tag
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,10 +50,10 @@ class _WritingPageState extends State<WritingPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(
-            Icons.close, // X icon
-            color: Colors.grey, // Grey color for the icon
+            Icons.close,
+            color: Colors.grey,
           ),
-          onPressed: () => Navigator.pop(context), // Close the page
+          onPressed: () => Navigator.pop(context),
         ),
         actions: [
           Padding(
@@ -47,46 +65,38 @@ class _WritingPageState extends State<WritingPage> {
                   borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
-              child: const Text(
-                'Done',
-                style: TextStyle(color: Colors.white),
-              ),
+              child: const Text('Done', style: TextStyle(color: Colors.white)),
               onPressed: () {
-                // Navigate to character_page.dart when "Done" is pressed
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CharacterPreviewPage(
-                      userName: 'hailey',
-                    ),
-                  ), // Adjust if needed
-                );
+                // When "Done" is pressed, extract character descriptions
+                _processStoryPart();
               },
             ),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            alignment: WrapAlignment.center,
-            children: [
-              _buildCharacterAvatar('Evelyn', 'assets/h.png'),
-              _buildCharacterAvatar('Lucy', 'assets/cat.png'),
-              _buildCharacterAvatar('Oliver', 'assets/catm.png'),
-              _buildCharacterAvatar('Lucas', 'assets/hunter.png'),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildProfileSection(),
-          const SizedBox(height: 20),
-          _buildTextField(),
-          const SizedBox(height: 10),
-          _buildActionButtons(),
-        ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              alignment: WrapAlignment.center,
+              children: [
+                _buildCharacterAvatar('Evelyn', 'assets/h.png'),
+                _buildCharacterAvatar('Lucy', 'assets/cat.png'),
+                _buildCharacterAvatar('Oliver', 'assets/catm.png'),
+                _buildCharacterAvatar('Lucas', 'assets/hunter.png'),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _buildProfileSection(),
+            const SizedBox(height: 20),
+            _buildTextField(),
+            const SizedBox(height: 10),
+            _buildActionButtons(),
+          ],
+        ),
       ),
     );
   }
@@ -164,17 +174,27 @@ class _WritingPageState extends State<WritingPage> {
           color: Colors.white24,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: TextField(
-          controller: _textController,
-          maxLines: null, // Allows the text field to expand vertically
-          decoration: InputDecoration(
-            hintText: 'What’s happening?',
-            hintStyle: const TextStyle(color: Colors.grey),
-            border: InputBorder.none,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          ),
-          style: const TextStyle(color: Colors.white),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _textController,
+                maxLines: null,
+                decoration: InputDecoration(
+                  hintText: 'What’s happening?',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 8.0),
+                ),
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.person_add, color: Colors.orange),
+              onPressed: _insertCharacterTag, // Insert the character tag
+            ),
+          ],
         ),
       ),
     );
@@ -201,5 +221,35 @@ class _WritingPageState extends State<WritingPage> {
         ],
       ),
     );
+  }
+
+  // This method will be called when the "Done" button is pressed
+  void _processStoryPart() {
+    final storyText = _textController.text;
+
+    // Extract character descriptions by searching for ##Character## tags
+    final characterDescriptions = _extractCharacterDescriptions(storyText);
+
+    // You can send these descriptions to the DALL·E API here
+    print("Extracted Character Descriptions: $characterDescriptions");
+
+    // Continue with whatever needs to be done after processing (e.g., navigating to the next page)
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CharacterPreviewPage(
+          userName: 'hailey',
+        ),
+      ),
+    );
+  }
+
+  // Extract character descriptions from the story text by looking for ##Character## tags
+  List<String> _extractCharacterDescriptions(String text) {
+    final regExp = RegExp(r'##Character##(.*?)##');
+    final matches = regExp.allMatches(text);
+
+    // Extract the description from each match and return them as a list
+    return matches.map((match) => match.group(1)?.trim() ?? '').toList();
   }
 }
