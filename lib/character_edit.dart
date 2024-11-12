@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 class EditCharacterPage extends StatefulWidget {
   final String userName;
 
-  EditCharacterPage({required this.userName});
+  const EditCharacterPage({super.key, required this.userName});
 
   @override
   _EditCharacterPageState createState() => _EditCharacterPageState();
@@ -17,12 +17,12 @@ class _EditCharacterPageState extends State<EditCharacterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF1B2835),
+      backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(0, 112, 28, 28),
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -40,12 +40,12 @@ class _EditCharacterPageState extends State<EditCharacterPage> {
                 Container(
                   width: 150,
                   height: 150,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     color: Color(
                         0xFF2A3B4D), // Background color for the placeholder
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Icon(
                       Icons.account_circle_rounded,
                       size: 140,
@@ -54,7 +54,7 @@ class _EditCharacterPageState extends State<EditCharacterPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 // "Add more details" label
                 Text(
                   'Add more details:',
@@ -64,16 +64,16 @@ class _EditCharacterPageState extends State<EditCharacterPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 // Text field for adding more details
                 TextFormField(
                   maxLines: 6,
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Enter additional details...',
-                    hintStyle: TextStyle(color: Color(0xFF9DB2CE)),
+                    hintStyle: const TextStyle(color: Color(0xFF9DB2CE)),
                     filled: true,
-                    fillColor: Color(0xFF2A3B4D),
+                    fillColor: const Color(0xFF2A3B4D),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -81,7 +81,7 @@ class _EditCharacterPageState extends State<EditCharacterPage> {
                   ),
                   onSaved: (value) => _additionalDetails = value,
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 // Done button
                 ElevatedButton(
                   onPressed: () {
@@ -93,9 +93,9 @@ class _EditCharacterPageState extends State<EditCharacterPage> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFD35400),
-                    padding:
-                        EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+                    backgroundColor: const Color(0xFFD35400),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12.0, horizontal: 24.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),

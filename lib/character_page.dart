@@ -6,17 +6,17 @@ import 'threads.dart'; // Adjust the path to your threads.dart file
 class CharacterPreviewPage extends StatelessWidget {
   final String userName;
 
-  CharacterPreviewPage({required this.userName});
+  const CharacterPreviewPage({super.key, required this.userName});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF1B2835),
+      backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(0, 112, 28, 28),
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -44,16 +44,16 @@ class CharacterPreviewPage extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 // Circular profile image placeholder
                 Container(
                   width: 150,
                   height: 150,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     color: Color(0xFF2A3B4D),
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Icon(
                       Icons.account_circle_rounded,
                       size: 140,
@@ -83,9 +83,9 @@ class CharacterPreviewPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF2A3B4D),
-                    padding:
-                        EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+                    backgroundColor: const Color(0xFF2A3B4D),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12.0, horizontal: 24.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -98,7 +98,7 @@ class CharacterPreviewPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: () {
                     // Replace the current page with the thread page
@@ -111,9 +111,9 @@ class CharacterPreviewPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFD35400),
-                    padding:
-                        EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+                    backgroundColor: const Color(0xFFD35400),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12.0, horizontal: 24.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),

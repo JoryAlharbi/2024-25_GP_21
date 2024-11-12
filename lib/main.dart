@@ -26,6 +26,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -33,7 +35,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       routes: {
         '/login': (context) => LoginPage(),
-        '/signup': (context) => SignUpPage(),
+        '/signup': (context) => const SignUpPage(),
         '/home': (context) => HomePage(),
         '/profile': (context) => ProfilePage(),
         '/threads': (context) => StoryView(),
@@ -43,27 +45,30 @@ class MyApp extends StatelessWidget {
 }
 
 class WelcomePage extends StatelessWidget {
+  const WelcomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF1B2835),
+      backgroundColor: const Color(0xFF1B2835),
       body: Stack(
         children: [
           // Ellipse 1 (Top-left)
           Positioned(
-            top: -130,
-            left: -174,
+            top: -230,
+            left: -320,
             child: Container(
-              width: 397, // Width matching the Figma design
-              height: 397, // Height matching the Figma design
+              width: 800, // Width matching the Figma design
+              height: 800, // Height matching the Figma design
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    Color(0xFFD35400)
+                    const Color(0xFFD35400)
                         .withOpacity(0.26), // Orange with adjusted opacity
-                    Color(0xFFA2DED0).withOpacity(0.0), // Transparent mint
+                    const Color(0xFFA2DED0)
+                        .withOpacity(0.0), // Transparent mint
                   ],
-                  stops: [0.0, 1.0], // Smooth transition
+                  stops: const [0.0, 1.0], // Smooth transition
                   radius: 0.3, // Control the spread
                 ),
               ),
@@ -73,18 +78,19 @@ class WelcomePage extends StatelessWidget {
           // Ellipse 2 (Center-right)
           Positioned(
             top: 61,
-            right: -160,
+            right: -340,
             child: Container(
-              width: 397, // Width matching the Figma design
-              height: 397, // Height matching the Figma design
+              width: 800, // Width matching the Figma design
+              height: 800, // Height matching the Figma design
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    Color(0xFF344C64)
+                    const Color(0xFF344C64)
                         .withOpacity(0.58), // Dark blue with adjusted opacity
-                    Color(0xFFD35400).withOpacity(0.0), // Transparent orange
+                    const Color(0xFFD35400)
+                        .withOpacity(0.0), // Transparent orange
                   ],
-                  stops: [0.0, 1.0],
+                  stops: const [0.0, 1.0],
                   radius: 0.3,
                 ),
               ),
@@ -93,19 +99,20 @@ class WelcomePage extends StatelessWidget {
 
           // Ellipse 3 (Bottom-center)
           Positioned(
-            bottom: -160,
+            bottom: -240,
             left: 100,
             child: Container(
-              width: 397, // Width matching the Figma design
-              height: 397, // Height matching the Figma design
+              width: 700, // Width matching the Figma design
+              height: 807, // Height matching the Figma design
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    Color(0xFFA2DED0)
+                    const Color(0xFFA2DED0)
                         .withOpacity(0.2), // Light mint with adjusted opacity
-                    Color(0xFFD35400).withOpacity(0.0), // Transparent orange
+                    const Color(0xFFD35400)
+                        .withOpacity(0.0), // Transparent orange
                   ],
-                  stops: [0.0, 1],
+                  stops: const [0.0, 1],
                   radius: 0.3,
                 ),
               ),
@@ -131,7 +138,7 @@ class WelcomePage extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       'Rawae',
                       style: GoogleFonts.poppins(
@@ -140,7 +147,7 @@ class WelcomePage extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 27),
+                    const SizedBox(height: 27),
                     GestureDetector(
                       onTap: () {
                         Navigator.pushNamed(context, '/login');
@@ -149,7 +156,7 @@ class WelcomePage extends StatelessWidget {
                         width: 318,
                         height: 50,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [
                               Color(0xFF344C64),
                               Color(0xFFD35400),

@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 class ReadBookPage extends StatelessWidget {
   final String bookTitle;
 
-  ReadBookPage({this.bookTitle = 'MEMORIES OF THE SEA'});
+  const ReadBookPage({super.key, this.bookTitle = 'MEMORIES OF THE SEA'});
 
   final String bookContent = '''
     In a world where dreams bleed into reality, Evelyn embarked on a journey across the seas. The whispers of the ocean were her only companions, guiding her toward a future that held more mysteries than she could fathom.
@@ -21,12 +21,12 @@ class ReadBookPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF1B2835),
+      backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
-        backgroundColor: Color(0xFF1B2835),
+        backgroundColor: const Color(0xFF1B2835),
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context);
           },
