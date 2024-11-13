@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
-import 'threads.dart'; // Ensure this is the correct import path for threads.dart
+import 'threads.dart';
 
 class MakeThreadPage extends StatefulWidget {
   const MakeThreadPage({super.key});
@@ -16,64 +17,127 @@ class MakeThreadPage extends StatefulWidget {
 class _MakeThreadPageState extends State<MakeThreadPage> {
   final _formKey = GlobalKey<FormState>();
   String? _threadTitle;
-  String? _selectedGenre;
+  List<DocumentReference> _selectedGenres =
+      []; // For storing selected genres as DocumentReferences
   XFile? _bookCover;
+  bool _isUploading = false;
+  List<QueryDocumentSnapshot> availableGenres =
+      []; // For storing genres from Firestore
 
-  final List<String> genres = [
-    'Thriller',
-    'Fantasy',
-    'Fiction',
-    'Romance',
-    'Mystery',
-    'Science Fiction',
-    'Horror',
-    'Historical',
-    'Adventure',
-    'Drama',
-    'Non-Fiction'
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchGenres(); // Fetch available genres from Firestore
+  }
+
+  // Fetch genres from Firestore
+  Future<void> _fetchGenres() async {
+    final snapshot = await FirebaseFirestore.instance.collection('Genre').get();
+    setState(() {
+      availableGenres = snapshot.docs; // Populate available genres
+    });
+  }
+
+  // Function to upload the image to Firebase Storage
+  // Function to upload the image to Firebase Storage
+  Future<String?> uploadImage(XFile image) async {
+    setState(() => _isUploading = true);
+    try {
+      final storageRef =
+          FirebaseStorage.instance.ref().child('covers/${image.name}');
+      await storageRef.putFile(File(image.path));
+
+      // Retrieve the download URL
+      final downloadURL = await storageRef.getDownloadURL();
+      print(
+          'Download URL: $downloadURL'); // Debug statement to confirm URL retrieval
+      return downloadURL;
+    } catch (e) {
+      print("Error uploading image: $e");
+      return null;
+    } finally {
+      setState(() => _isUploading = false);
+    }
+  }
 
   Future<void> _createThread() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      try {
-        // Upload the book cover image if one is provided (optional, add logic for uploading)
-        String? bookCoverUrl;
-        if (_bookCover != null) {
-          // Add code here to upload the image to Firebase Storage and get the URL
+      String? bookCoverUrl;
+      if (_bookCover != null) {
+        bookCoverUrl = await uploadImage(_bookCover!);
+
+        // Confirm the URL is not null before proceeding
+        if (bookCoverUrl == null) {
+          print("Image upload failed, bookCoverUrl is null");
+          return; // Stop if image upload failed
         }
+      }
 
-        // Save the thread data to Firestore with the structure you have
-        await FirebaseFirestore.instance.collection('Thread').add({
-          'threadID': DateTime.now()
-              .millisecondsSinceEpoch, // or your logic for threadID
-          'genreID': _selectedGenre != null
-              ? '/Genre/${_selectedGenre!.toLowerCase()}'
-              : null, // genre path
-          'writerID': FirebaseAuth.instance.currentUser?.uid,
-
-          'characterNum': 10, // Replace with actual data if available
-          'totalView': 0, // Initial view count
-          'createdAt':
-              Timestamp.now(), // Timestamp for when the thread was created
+      try {
+        // Create a new thread document in Firestore
+        final threadRef =
+            await FirebaseFirestore.instance.collection('Thread').add({
           'title': _threadTitle,
-          'bookCoverUrl': bookCoverUrl, // Replace with actual upload logic
+          'bookCoverUrl': bookCoverUrl,
+          'writerID': FirebaseAuth.instance.currentUser != null
+              ? FirebaseFirestore.instance
+                  .collection('Writer')
+                  .doc(FirebaseAuth.instance.currentUser!.uid)
+              : null,
+          'characterNum': 10,
+          'totalView': 0,
+          'createdAt': Timestamp.now(),
+          'genreID':
+              _selectedGenres, // Store selected genres as DocumentReferences
+          'status': 'in_progress',
+          'threadID': DateTime.now().millisecondsSinceEpoch,
         });
 
-        // Navigate to the threads page after creating the thread
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                StoryView(), // Replace with your threads page class
+            builder: (context) => StoryView(threadId: threadRef.id),
           ),
         );
       } catch (e) {
         print('Error creating thread: $e');
-        // Show a dialog or Snackbar to notify the user of the error
       }
     }
+  }
+
+  Widget buildGenreChips() {
+    return Wrap(
+      spacing: 8.0,
+      children: availableGenres.map((genreDoc) {
+        final genreRef = genreDoc.reference;
+        final genreName = genreDoc['genreName'] ?? 'Unknown Genre';
+
+        return ChoiceChip(
+          label: Text(
+            genreName,
+            style: GoogleFonts.poppins(
+              color: _selectedGenres.contains(genreRef)
+                  ? Colors.white
+                  : const Color(0xFF9DB2CE),
+            ),
+          ),
+          selected: _selectedGenres.contains(genreRef),
+          selectedColor: const Color(0xFFD35400),
+          backgroundColor: const Color.fromRGBO(61, 71, 83, 1),
+          onSelected: (selected) {
+            setState(() {
+              if (selected) {
+                _selectedGenres.add(genreRef);
+              } else {
+                _selectedGenres.remove(genreRef);
+              }
+            });
+          },
+        );
+      }).toList(),
+    );
   }
 
   @override
@@ -90,11 +154,10 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
           },
         ),
         actions: [
-          const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: ElevatedButton(
-              onPressed: _createThread,
+              onPressed: _isUploading ? null : _createThread,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD35400),
                 shape: RoundedRectangleBorder(
@@ -137,7 +200,6 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
               ),
             ),
           ),
-          // Main content
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Form(
@@ -179,29 +241,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Wrap(
-                    spacing: 8.0,
-                    children: genres.map((genre) {
-                      return ChoiceChip(
-                        label: Text(
-                          genre,
-                          style: GoogleFonts.poppins(
-                            color: _selectedGenre == genre
-                                ? Colors.white
-                                : const Color(0xFF9DB2CE),
-                          ),
-                        ),
-                        selected: _selectedGenre == genre,
-                        selectedColor: const Color(0xFFD35400),
-                        backgroundColor: const Color.fromRGBO(61, 71, 83, 1),
-                        onSelected: (selected) {
-                          setState(() {
-                            _selectedGenre = selected ? genre : null;
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
+                  buildGenreChips(), // Display genre chips
                   const SizedBox(height: 20),
                   Text(
                     'Book cover',

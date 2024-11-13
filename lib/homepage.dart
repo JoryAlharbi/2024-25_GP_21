@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:rawae_gp24/custom_navigation_bar.dart'; // Import your CustomNavigationBar
-import 'package:rawae_gp24/genre_button.dart';
-import 'package:rawae_gp24/makethread.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:rawae_gp24/signup_page.dart'; // Adjust the path if necessary
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:rawae_gp24/bookmark.dart';
-import 'package:rawae_gp24/library.dart';
-import 'package:rawae_gp24/profile_page.dart';
+import 'threads.dart';
+import 'makethread.dart';
+import 'custom_navigation_bar.dart';
+import 'genre_button.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,12 +16,25 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int selectedIndex = 0;
 
+  Future<String> _getGenreNames(List<dynamic> genreRefs) async {
+    List<String> genreNames = [];
+    for (var genreRef in genreRefs) {
+      if (genreRef is DocumentReference) {
+        final genreSnapshot = await genreRef.get();
+        if (genreSnapshot.exists) {
+          genreNames.add(genreSnapshot['genreName'] ?? 'Unknown Genre');
+        }
+      }
+    }
+    return genreNames.join(', ');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
-        backgroundColor: Color(0x00701C1C),
+        backgroundColor: const Color(0x00701C1C),
         elevation: 0,
         actions: [
           IconButton(
@@ -50,7 +60,13 @@ class _HomePageState extends State<HomePage> {
                 GenreButton('Fiction'),
                 GenreButton('Romance'),
                 GenreButton('Mystery'),
-                // Add more genres as needed
+                GenreButton('Science Fiction'),
+                GenreButton('Comedy'),
+                GenreButton('Drama'),
+                GenreButton('Adventure'),
+                GenreButton('Romance'),
+                GenreButton('Horror'),
+                GenreButton('Historical'),
               ],
             ),
           ),
@@ -58,15 +74,51 @@ class _HomePageState extends State<HomePage> {
           const Divider(color: Color.fromARGB(222, 62, 72, 72)),
           const SizedBox(height: 20),
           Expanded(
-            child: ListView.builder(
-              itemCount: 3,
-              itemBuilder: (context, index) {
-                return BookListItem(
-                  title: 'Book Title $index',
-                  genre: 'Genre $index',
-                  isPopular: index == 0,
-                  userIcons: 3,
-                );
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('Thread')
+                  .where('status', isEqualTo: 'in_progress')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text('No threads available.'));
+                } else {
+                  final threads = snapshot.data!.docs;
+                  return ListView.builder(
+                    itemCount: threads.length,
+                    itemBuilder: (context, index) {
+                      final threadData =
+                          threads[index].data() as Map<String, dynamic>;
+                      final List<dynamic> genreRefs =
+                          threadData['genreID'] ?? [];
+                      final String? bookCoverUrl = threadData['bookCoverUrl'];
+                      final String threadId = threads[index].id;
+
+                      return FutureBuilder<String>(
+                        future: _getGenreNames(genreRefs),
+                        builder: (context, genreSnapshot) {
+                          if (!genreSnapshot.hasData) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+                          final genreNames = genreSnapshot.data!;
+                          return BookListItem(
+                            title: threadData['title'] ?? 'Untitled',
+                            genre: genreNames,
+                            isPopular: index == 0,
+                            userIcons: 3,
+                            bookCoverUrl: bookCoverUrl,
+                            threadId: threadId,
+                          );
+                        },
+                      );
+                    },
+                  );
+                }
               },
             ),
           ),
@@ -105,6 +157,8 @@ class BookListItem extends StatelessWidget {
   final String genre;
   final bool isPopular;
   final int userIcons;
+  final String? bookCoverUrl;
+  final String threadId;
 
   const BookListItem({
     super.key,
@@ -112,13 +166,20 @@ class BookListItem extends StatelessWidget {
     required this.genre,
     required this.isPopular,
     required this.userIcons,
+    this.bookCoverUrl,
+    required this.threadId,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, '/threads'); // Replace with actual route
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StoryView(threadId: threadId),
+          ),
+        );
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -130,8 +191,10 @@ class BookListItem extends StatelessWidget {
               height: 120.0,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4.0),
-                image: const DecorationImage(
-                  image: AssetImage('assets/book.png'),
+                image: DecorationImage(
+                  image: bookCoverUrl != null
+                      ? NetworkImage(bookCoverUrl!)
+                      : const AssetImage('assets/book.png') as ImageProvider,
                   fit: BoxFit.cover,
                 ),
               ),

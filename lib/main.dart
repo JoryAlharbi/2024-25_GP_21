@@ -18,7 +18,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase
       .initializeApp(); // makes all Firebase services available globally, including the Realtime Database.
-  await FirebaseAppCheck.instance.activate(); // Initialize Firebase App Check
+  // await FirebaseAppCheck.instance.activate(); // Initialize Firebase App Check
 
   FirebaseAuth.instance
       .setLanguageCode('en'); // Set the language for Firebase Auth
@@ -38,7 +38,17 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => const SignUpPage(),
         '/home': (context) => HomePage(),
         '/profile': (context) => ProfilePage(),
-        '/threads': (context) => StoryView(),
+      },
+      // Use onGenerateRoute to handle dynamic routes with parameters
+      onGenerateRoute: (settings) {
+        if (settings.name == '/threads') {
+          final args = settings.arguments as Map<String, String>;
+          final threadId = args['threadId']!;
+          return MaterialPageRoute(
+            builder: (context) => StoryView(threadId: threadId),
+          );
+        }
+        return null; // Return null for unhandled routes
       },
     );
   }

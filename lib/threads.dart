@@ -1,47 +1,11 @@
 import 'package:flutter/material.dart';
-import 'writing.dart'; // Make sure to import your writing.dart file
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData.dark(),
-      home: StoryView(),
-    );
-  }
-}
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'writing.dart'; // Ensure that writing.dart is correctly set up
 
 class StoryView extends StatelessWidget {
-  final List<TimelineItem> timelineItems = [
-    TimelineItem(
-      name: 'Rudy Fernandez',
-      username: '@RubyFerna',
-      content: 'Lorem ipsum dolor sit ame...',
-      timeAgo: '4m ago',
-      avatarPath: 'assets/h.png',
-      avatarName: 'Evelyn',
-    ),
-    TimelineItem(
-      name: 'Lucy Smith',
-      username: '@LucySmith',
-      content: 'Another example of a timeline item.',
-      timeAgo: '10m ago',
-      avatarPath: 'assets/cat.png',
-      avatarName: 'Lucy',
-    ),
-    TimelineItem(
-      name: 'Oliver Twist',
-      username: '@OliverTwist',
-      content: 'This is yet another timeline entry.',
-      timeAgo: '30m ago',
-      avatarPath: 'assets/catm.png',
-      avatarName: 'Oliver',
-    ),
-  ];
+  final String threadId; // Thread ID to fetch specific thread data
 
-  StoryView({super.key});
+  StoryView({super.key, required this.threadId});
 
   @override
   Widget build(BuildContext context) {
@@ -55,10 +19,26 @@ class StoryView extends StatelessWidget {
             Navigator.pop(context);
           },
         ),
-        title: const Text(
-          'StoryName',
-          style: TextStyle(
-              fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+        // Displaying the thread title from Firestore
+        title: StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('Thread')
+              .doc(threadId)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final threadData = snapshot.data!.data() as Map<String, dynamic>;
+              return Text(
+                threadData['title'] ?? 'Story', // Display the thread title
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              );
+            }
+            return const Text('Loading...');
+          },
         ),
         actions: const [
           Padding(
@@ -71,30 +51,48 @@ class StoryView extends StatelessWidget {
       backgroundColor: const Color(0xFF1B2835),
       body: Column(
         children: [
-          // Story avatars row
-          SizedBox(
-            height: 100,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: timelineItems.length,
-              itemBuilder: (context, index) {
-                return _buildStoryAvatar(timelineItems[index]);
-              },
-            ),
-          ),
           const Divider(
             thickness: 1,
             color: Color(0xFF344C64),
             height: 20,
           ),
           const SizedBox(height: 16),
+          // Display timeline items (contributions) from Firestore
           Expanded(
-            child: ListView.builder(
-              itemCount: timelineItems.length,
-              itemBuilder: (context, index) => _buildTimelineItem(
-                  timelineItems[index], index == timelineItems.length - 1),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('Thread')
+                  .doc(threadId)
+                  .collection(
+                      'Parts') // Assuming parts are saved in a subcollection
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final timelineItems = snapshot.data!.docs.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return TimelineItem(
+                      name: data['name'] ?? 'Unknown',
+                      username: data['username'] ?? '@unknown',
+                      content: data['content'] ?? '',
+                      timeAgo: data['timeAgo'] ?? 'just now',
+                      avatarPath: data['avatarPath'] ?? 'assets/default.png',
+                      avatarName: data['avatarName'] ?? 'User',
+                    );
+                  }).toList();
+
+                  return ListView.builder(
+                    itemCount: timelineItems.length,
+                    itemBuilder: (context, index) => _buildTimelineItem(
+                      timelineItems[index],
+                      index == timelineItems.length - 1,
+                    ),
+                  );
+                }
+                return const Center(child: CircularProgressIndicator());
+              },
             ),
           ),
+          // Button or prompt to contribute
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: GestureDetector(
@@ -102,30 +100,39 @@ class StoryView extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) =>
-                          const WritingPage()), // Ensure WritingPage is correctly defined
+                    builder: (context) => WritingPage(
+                        threadId: threadId), // Pass threadId to WritingPage
+                  ),
                 );
               },
               child: Container(
-                width: double.infinity,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 64, 94, 123),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Align(
-                  alignment: Alignment.centerLeft, // Align to the left
-                  child: Padding(
-                    // Add padding for spacing
-                    padding: EdgeInsets.only(
-                        left: 16.0), // Adjust the left padding as needed
-                    child: Text(
-                      'What happens next?...',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                  width: double.infinity,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 42, 60, 76),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-              ),
+                  child: const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16.0),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons
+                                .edit_rounded, // Use Icons.push_pin for a pin icon
+                            color: Color(0xFF9DB2CE),
+                          ),
+                          const SizedBox(
+                              width: 8), // Spacing between the icon and text
+                          const Text(
+                            'What happens next?...',
+                            style: TextStyle(color: Color(0xFF9DB2CE)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )),
             ),
           ),
         ],
@@ -231,14 +238,13 @@ class StoryView extends StatelessWidget {
                         item.name,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.white, // Set name text color to white
+                          color: Colors.white,
                         ),
                       ),
                       Text(
                         item.username,
                         style: const TextStyle(
-                          color:
-                              Colors.white, // Set username text color to white
+                          color: Colors.white,
                         ),
                       ),
                     ],
@@ -248,21 +254,14 @@ class StoryView extends StatelessWidget {
                       Text(
                         item.timeAgo,
                         style: const TextStyle(
-                          color: Colors.white, // Set time text color to white
+                          color: Colors.white,
                           fontSize: 12,
                         ),
                       ),
-                      // Reaction button directly below the time
                       IconButton(
-                        icon: const Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Icon(Icons.add_reaction_outlined,
-                                color: Color(0xFFA2DED0)),
-                          ],
-                        ),
+                        icon: const Icon(Icons.add_reaction_outlined,
+                            color: Color(0xFFA2DED0)),
                         onPressed: () {
-                          // Handle reaction logic here
                           print('Reacted to: ${item.name}');
                         },
                       ),
@@ -273,7 +272,7 @@ class StoryView extends StatelessWidget {
               Text(
                 item.content,
                 style: const TextStyle(
-                  color: Colors.white, // Set content text color to white
+                  color: Color.fromRGBO(255, 255, 255, 1),
                 ),
               ),
             ],

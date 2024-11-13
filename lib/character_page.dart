@@ -105,8 +105,9 @@ class CharacterPreviewPage extends StatelessWidget {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            StoryView(), // Replace with your threads page class
+                        builder: (context) => StoryView(
+                          threadId: '',
+                        ), // Replace with your threads page class
                       ),
                     );
                   },

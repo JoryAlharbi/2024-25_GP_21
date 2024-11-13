@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'character_page.dart'; // Adjust the path to your character_page.dart file
 
 class WritingPage extends StatefulWidget {
-  const WritingPage({Key? key}) : super(key: key);
+  const WritingPage({Key? key, required String threadId}) : super(key: key);
 
   @override
   _WritingPageState createState() => _WritingPageState();

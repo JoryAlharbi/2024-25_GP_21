@@ -11,10 +11,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  image_picker: ^0.8.7+3  
+   
   google_fonts: ^6.2.1
   delightful_toast: ^1.1.0
   get_it: ^8.0.0
+ 
   
 
   #fire base dependencies
@@ -24,6 +25,8 @@ dependencies:
   cloud_firestore: ^5.4.4 
   firebase_app_check: ^0.3.1+4
   firebase_database: ^11.1.4
+  image_picker: ^1.1.2
+
   
 dev_dependencies:
   flutter_test:
@@ -55,5 +58,10 @@ flutter:
     - assets/cat.png
     - assets/catm.png
     - assets/profile2.png
+
+
+ 
+
+
 
 

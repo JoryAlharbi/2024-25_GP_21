@@ -10,6 +10,7 @@ android {
     namespace = "com.example.rawae_gp24"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+ 
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
