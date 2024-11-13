@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'homepage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -27,6 +26,18 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _isLoading = false;
   bool _isSuccessful = false;
   String _passwordStrength = "";
+  File? _profileImage;
+
+  // Function to pick an image
+  Future<void> pickImage() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
 
   // Password strength checker function
   String checkPasswordStrength(String password) {
@@ -72,10 +83,23 @@ class _SignUpPageState extends State<SignUpPage> {
 
       User? user = userCredential.user;
 
+      // Upload profile image if selected
+      String? profileImageUrl;
+      if (_profileImage != null) {
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('profile_images')
+            .child('${user!.uid}.jpg');
+        await ref.putFile(_profileImage!);
+        profileImageUrl = await ref.getDownloadURL();
+      }
+
+      /// to add in the writer collection ther writer info
       if (user != null) {
         FirebaseFirestore.instance.collection('Writer').doc(user.uid).set({
           'username': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
+          'profileImageUrl': profileImageUrl ?? '',
         });
 
         setState(() {
@@ -117,6 +141,7 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
+////////////////////////
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -174,6 +199,20 @@ class _SignUpPageState extends State<SignUpPage> {
                           color: const Color(0xFFA4A4A4),
                         ),
                       ),
+                      GestureDetector(
+                        onTap: pickImage,
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundImage: _profileImage != null
+                              ? FileImage(_profileImage!)
+                              : null,
+                          child: _profileImage == null
+                              ? Icon(Icons.add_a_photo,
+                                  color: Colors.white, size: 50)
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                       const SizedBox(height: 25),
                       TextFormField(
                         controller: _usernameController,
