@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Add Firestore import
+import 'package:firebase_core/firebase_core.dart'; // Add Firebase core import
+
 import 'package:rawae_gp24/bookmark.dart';
 import 'package:rawae_gp24/edit_profile_page.dart';
 import 'package:rawae_gp24/homepage.dart';
@@ -18,6 +21,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   bool isPublishedSelected = true;
+  String? profileImageUrl;
+  String? username;
 
   final List<Map<String, String>> publishedBooks = [
     {'imageUrl': 'assets/book.png', 'title': 'Memories of the Sea'},
@@ -28,6 +33,29 @@ class _ProfilePageState extends State<ProfilePage> {
     {'imageUrl': 'assets/book2.png', 'title': 'The Three Month Rule'},
     {'imageUrl': 'assets/book2.png', 'title': 'New Adventures'},
   ];
+  // Fetch writer's data
+  Future<void> fetchWriterData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
+          .instance
+          .collection('Writer')
+          .doc(user.uid)
+          .get();
+      if (snapshot.exists) {
+        setState(() {
+          profileImageUrl = snapshot.data()?['profileImageUrl'];
+          username = snapshot.data()?['username'];
+        });
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchWriterData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +94,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     CircleAvatar(
                       radius: 60,
                       backgroundColor: Colors.grey[700],
-                      child: const Icon(Icons.person,
-                          size: 60, color: Colors.white),
+                      backgroundImage: profileImageUrl != null
+                          ? NetworkImage(profileImageUrl!)
+                          : null,
+                      child: profileImageUrl == null
+                          ? const Icon(Icons.person,
+                              size: 60, color: Colors.white)
+                          : null,
                     ),
                     Positioned(
                       bottom: 0,
@@ -91,7 +124,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  user?.displayName ?? 'razan',
+                  username ?? 'Loading...',
                   style: GoogleFonts.poppins(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
