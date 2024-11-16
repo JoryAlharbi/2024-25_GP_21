@@ -5,8 +5,17 @@ import 'threads.dart'; // Adjust the path to your threads.dart file
 
 class CharacterPreviewPage extends StatelessWidget {
   final String userName;
+  final String threadId;
+  final String storyText;
+  final String userId; // Add userId as a required field
 
-  const CharacterPreviewPage({super.key, required this.userName});
+  const CharacterPreviewPage({
+    super.key,
+    required this.userName,
+    required this.threadId,
+    required this.storyText,
+    required this.userId, // Include userId
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +86,7 @@ class CharacterPreviewPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => EditCharacterPage(
-                          userName: 'Hailey',
+                          userName: userName, // Pass the userName
                         ),
                       ),
                     );
@@ -106,8 +115,9 @@ class CharacterPreviewPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => StoryView(
-                          threadId: '',
-                        ), // Replace with your threads page class
+                          threadId: threadId,
+                          userId: userId, // Pass the required userId
+                        ),
                       ),
                     );
                   },

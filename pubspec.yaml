@@ -11,11 +11,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-   
+
+
+
+  
   google_fonts: ^6.2.1
   delightful_toast: ^1.1.0
   get_it: ^8.0.0
- 
+  
+  
   
 
   #fire base dependencies
@@ -54,10 +58,12 @@ flutter:
     - assets/crime_fiction.png
     - assets/adventure.png
     - assets/h.png
+    - assets/default.png
     - assets/hunter.png
     - assets/cat.png
     - assets/catm.png
     - assets/profile2.png
+
 
 
  

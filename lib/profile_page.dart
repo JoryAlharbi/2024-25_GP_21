@@ -33,6 +33,7 @@ class _ProfilePageState extends State<ProfilePage> {
     {'imageUrl': 'assets/book2.png', 'title': 'The Three Month Rule'},
     {'imageUrl': 'assets/book2.png', 'title': 'New Adventures'},
   ];
+
   // Fetch writer's data
   Future<void> fetchWriterData() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -44,7 +45,9 @@ class _ProfilePageState extends State<ProfilePage> {
           .get();
       if (snapshot.exists) {
         setState(() {
-          profileImageUrl = snapshot.data()?['profileImageUrl'];
+          // Check if the profileImageUrl exists, otherwise use the default image
+          profileImageUrl =
+              snapshot.data()?['profileImageUrl'] ?? 'assets/default.png';
           username = snapshot.data()?['username'];
         });
       }

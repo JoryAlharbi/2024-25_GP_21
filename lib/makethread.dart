@@ -8,7 +8,7 @@ import 'dart:io';
 import 'threads.dart';
 
 class MakeThreadPage extends StatefulWidget {
-  const MakeThreadPage({super.key});
+  const MakeThreadPage({Key? key}) : super(key: key);
 
   @override
   _MakeThreadPageState createState() => _MakeThreadPageState();
@@ -17,40 +17,31 @@ class MakeThreadPage extends StatefulWidget {
 class _MakeThreadPageState extends State<MakeThreadPage> {
   final _formKey = GlobalKey<FormState>();
   String? _threadTitle;
-  List<DocumentReference> _selectedGenres =
-      []; // For storing selected genres as DocumentReferences
+  List<DocumentReference> _selectedGenres = [];
   XFile? _bookCover;
   bool _isUploading = false;
-  List<QueryDocumentSnapshot> availableGenres =
-      []; // For storing genres from Firestore
+  List<QueryDocumentSnapshot> availableGenres = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchGenres(); // Fetch available genres from Firestore
+    _fetchGenres();
   }
 
-  // Fetch genres from Firestore
   Future<void> _fetchGenres() async {
     final snapshot = await FirebaseFirestore.instance.collection('Genre').get();
     setState(() {
-      availableGenres = snapshot.docs; // Populate available genres
+      availableGenres = snapshot.docs;
     });
   }
 
-  // Function to upload the image to Firebase Storage
-  // Function to upload the image to Firebase Storage
   Future<String?> uploadImage(XFile image) async {
     setState(() => _isUploading = true);
     try {
       final storageRef =
           FirebaseStorage.instance.ref().child('covers/${image.name}');
       await storageRef.putFile(File(image.path));
-
-      // Retrieve the download URL
       final downloadURL = await storageRef.getDownloadURL();
-      print(
-          'Download URL: $downloadURL'); // Debug statement to confirm URL retrieval
       return downloadURL;
     } catch (e) {
       print("Error uploading image: $e");
@@ -62,35 +53,40 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
 
   Future<void> _createThread() async {
     if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
+      if (_selectedGenres.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select at least one genre.')),
+        );
+        return;
+      }
 
+      _formKey.currentState!.save();
       String? bookCoverUrl;
+
       if (_bookCover != null) {
         bookCoverUrl = await uploadImage(_bookCover!);
-
-        // Confirm the URL is not null before proceeding
-        if (bookCoverUrl == null) {
-          print("Image upload failed, bookCoverUrl is null");
-          return; // Stop if image upload failed
-        }
+        if (bookCoverUrl == null) return;
       }
 
       try {
-        // Create a new thread document in Firestore
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User not logged in.')),
+          );
+          return;
+        }
+
         final threadRef =
             await FirebaseFirestore.instance.collection('Thread').add({
           'title': _threadTitle,
           'bookCoverUrl': bookCoverUrl,
-          'writerID': FirebaseAuth.instance.currentUser != null
-              ? FirebaseFirestore.instance
-                  .collection('Writer')
-                  .doc(FirebaseAuth.instance.currentUser!.uid)
-              : null,
+          'writerID':
+              FirebaseFirestore.instance.collection('Writer').doc(user.uid),
           'characterNum': 10,
           'totalView': 0,
           'createdAt': Timestamp.now(),
-          'genreID':
-              _selectedGenres, // Store selected genres as DocumentReferences
+          'genreID': _selectedGenres,
           'status': 'in_progress',
           'threadID': DateTime.now().millisecondsSinceEpoch,
         });
@@ -98,7 +94,10 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => StoryView(threadId: threadRef.id),
+            builder: (context) => StoryView(
+              threadId: threadRef.id,
+              userId: user.uid,
+            ),
           ),
         );
       } catch (e) {
@@ -175,124 +174,96 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          // Radial gradient background layer
-          Positioned(
-            top: 40,
-            left: -2,
-            child: Container(
-              width: 447,
-              height: 803,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFFA2DED0).withOpacity(0.1),
-                    const Color(0xFF1B2835).withOpacity(0.15),
-                    const Color(0xFFD35400).withOpacity(0.2),
-                    const Color(0xFF1B2835).withOpacity(0.1),
-                  ],
-                  radius: 1.5,
-                  center: Alignment.centerRight,
-                  stops: const [0.0, 0.2, 0.85, 1],
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 90),
+              Text(
+                'Book Title',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-                borderRadius: BorderRadius.circular(59),
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 90),
-                  Text(
-                    'Book Title',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+              TextFormField(
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: 'Title',
+                  hintStyle: TextStyle(color: Color(0xFF9DB2CE)),
+                  filled: true,
+                  fillColor: Colors.transparent,
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF9DB2CE)),
                   ),
-                  TextFormField(
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: 'Title',
-                      hintStyle: TextStyle(color: Color(0xFF9DB2CE)),
-                      filled: true,
-                      fillColor: Colors.transparent,
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFF9DB2CE)),
-                      ),
-                    ),
-                    onSaved: (value) => _threadTitle = value,
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Title is required'
-                        : null,
+                ),
+                onSaved: (value) => _threadTitle = value,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Title is required' : null,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Genre',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              buildGenreChips(),
+              const SizedBox(height: 20),
+              Text(
+                'Book cover',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () async {
+                  final ImagePicker picker = ImagePicker();
+                  final XFile? image =
+                      await picker.pickImage(source: ImageSource.gallery);
+                  setState(() {
+                    _bookCover = image;
+                  });
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A3B4D),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Genre',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  buildGenreChips(), // Display genre chips
-                  const SizedBox(height: 20),
-                  Text(
-                    'Book cover',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: () async {
-                      final ImagePicker picker = ImagePicker();
-                      final XFile? image =
-                          await picker.pickImage(source: ImageSource.gallery);
-                      setState(() {
-                        _bookCover = image;
-                      });
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2A3B4D),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: _bookCover != null
-                          ? Image.file(
-                              File(_bookCover!.path),
-                              fit: BoxFit.cover,
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.image,
-                                    color: Color(0xFF9DB2CE), size: 40),
-                                const SizedBox(height: 10),
-                                Text(
-                                  'Upload',
-                                  style: GoogleFonts.poppins(
-                                      color: const Color(0xFF9DB2CE)),
-                                ),
-                              ],
+                  child: _bookCover != null
+                      ? Image.file(
+                          File(_bookCover!.path),
+                          fit: BoxFit.cover,
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.image,
+                                color: Color(0xFF9DB2CE), size: 40),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Upload',
+                              style: GoogleFonts.poppins(
+                                  color: const Color(0xFF9DB2CE)),
                             ),
-                    ),
-                  ),
-                ],
+                          ],
+                        ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

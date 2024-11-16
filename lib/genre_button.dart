@@ -11,8 +11,7 @@ class GenreButton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              const Color.fromARGB(255, 49, 62, 79), // Genre box color
+          backgroundColor: const Color(0xFF313E4F), // Genre box color
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0), // Corner radius set to 8
           ),

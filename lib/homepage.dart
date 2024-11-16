@@ -5,6 +5,7 @@ import 'threads.dart';
 import 'makethread.dart';
 import 'custom_navigation_bar.dart';
 import 'genre_button.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Add Firebase Auth to get the current user
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,6 +32,18 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Fetch the current user's ID
+    final String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId == null) {
+      return const Center(
+        child: Text(
+          "Please log in to view the homepage.",
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
@@ -113,6 +126,7 @@ class _HomePageState extends State<HomePage> {
                             userIcons: 3,
                             bookCoverUrl: bookCoverUrl,
                             threadId: threadId,
+                            userId: userId, // Pass userId to BookListItem
                           );
                         },
                       );
@@ -159,6 +173,7 @@ class BookListItem extends StatelessWidget {
   final int userIcons;
   final String? bookCoverUrl;
   final String threadId;
+  final String userId; // Add userId to pass to StoryView
 
   const BookListItem({
     super.key,
@@ -168,6 +183,7 @@ class BookListItem extends StatelessWidget {
     required this.userIcons,
     this.bookCoverUrl,
     required this.threadId,
+    required this.userId, // Add userId as a required parameter
   });
 
   @override
@@ -177,7 +193,8 @@ class BookListItem extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => StoryView(threadId: threadId),
+            builder: (context) =>
+                StoryView(threadId: threadId, userId: userId), // Pass userId
           ),
         );
       },

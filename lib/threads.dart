@@ -1,11 +1,40 @@
 import 'package:flutter/material.dart';
+import 'writing.dart'; // Make sure to import your writing.dart file
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'writing.dart'; // Ensure that writing.dart is correctly set up
+import 'package:firebase_auth/firebase_auth.dart';
 
-class StoryView extends StatelessWidget {
-  final String threadId; // Thread ID to fetch specific thread data
+class StoryView extends StatefulWidget {
+  final String threadId;
 
-  StoryView({super.key, required this.threadId});
+  StoryView({super.key, required this.threadId, required String userId});
+
+  @override
+  _StoryViewState createState() => _StoryViewState();
+}
+
+class _StoryViewState extends State<StoryView> {
+  late final String userId;
+  bool isBellClicked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    userId = FirebaseAuth.instance.currentUser!.uid;
+
+    // Increment the total view count when someone opens the thread
+    _incrementViewCount();
+  }
+
+  void _incrementViewCount() {
+    FirebaseFirestore.instance
+        .collection('Thread')
+        .doc(widget.threadId)
+        .update({
+      'totalView': FieldValue.increment(1), // Increment the view count by 1
+    }).catchError((e) {
+      print("Error incrementing view count: $e");
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,21 +44,18 @@ class StoryView extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           color: const Color(0xFF9DB2CE),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
-        // Displaying the thread title from Firestore
         title: StreamBuilder<DocumentSnapshot>(
           stream: FirebaseFirestore.instance
               .collection('Thread')
-              .doc(threadId)
+              .doc(widget.threadId)
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               final threadData = snapshot.data!.data() as Map<String, dynamic>;
               return Text(
-                threadData['title'] ?? 'Story', // Display the thread title
+                threadData['title'] ?? 'Story',
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -40,117 +66,247 @@ class StoryView extends StatelessWidget {
             return const Text('Loading...');
           },
         ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 20),
-            child: Icon(Icons.notifications_outlined,
-                color: Color(0xFFD35400), size: 40),
+        actions: [
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('Thread')
+                .doc(widget.threadId)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                final threadData =
+                    snapshot.data!.data() as Map<String, dynamic>;
+                isBellClicked =
+                    (threadData['bellClickers'] as List).contains(userId);
+              }
+
+              return IconButton(
+                icon: Icon(
+                  isBellClicked
+                      ? Icons.notifications // Filled bell when clicked
+                      : Icons
+                          .notifications_outlined, // Outline when not clicked
+                  color: isBellClicked
+                      ? const Color(0xFFD35400)
+                      : const Color(0xFFD35400), // Color change
+                  size: 40,
+                ),
+                onPressed: () => onBellClick(),
+              );
+            },
           ),
         ],
       ),
       backgroundColor: const Color(0xFF1B2835),
-      body: Column(
-        children: [
-          const Divider(
-            thickness: 1,
-            color: Color(0xFF344C64),
-            height: 20,
-          ),
-          const SizedBox(height: 16),
-          // Display timeline items (contributions) from Firestore
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('Thread')
-                  .doc(threadId)
-                  .collection(
-                      'Parts') // Assuming parts are saved in a subcollection
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final timelineItems = snapshot.data!.docs.map((doc) {
-                    final data = doc.data() as Map<String, dynamic>;
-                    return TimelineItem(
-                      name: data['name'] ?? 'Unknown',
-                      username: data['username'] ?? '@unknown',
-                      content: data['content'] ?? '',
-                      timeAgo: data['timeAgo'] ?? 'just now',
-                      avatarPath: data['avatarPath'] ?? 'assets/default.png',
-                      avatarName: data['avatarName'] ?? 'User',
-                    );
-                  }).toList();
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Column(
+          children: [
+            // Horizontal Scroll for Avatars
+            SizedBox(
+              height: 100,
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('Thread')
+                    .doc(widget.threadId)
+                    .collection('Parts')
+                    .orderBy('createdAt', descending: false)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final timelineItems = snapshot.data!.docs.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      return TimelineItem(
+                        name: data['name'] ?? 'Unknown',
+                        username: data['username'] ?? '@unknown',
+                        content: data['content'] ?? '',
+                        timeAgo: _calculateTimeAgo(data['createdAt']),
+                        avatarPath: data['avatarPath'] ?? 'assets/default.png',
+                        avatarName: data['avatarName'] ?? 'User',
+                      );
+                    }).toList();
 
-                  return ListView.builder(
-                    itemCount: timelineItems.length,
-                    itemBuilder: (context, index) => _buildTimelineItem(
-                      timelineItems[index],
-                      index == timelineItems.length - 1,
-                    ),
-                  );
-                }
-                return const Center(child: CircularProgressIndicator());
-              },
+                    return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: timelineItems.length,
+                      itemBuilder: (context, index) {
+                        return _buildStoryAvatar(timelineItems[index]);
+                      },
+                    );
+                  }
+                  return const Center(child: CircularProgressIndicator());
+                },
+              ),
             ),
-          ),
-          // Button or prompt to contribute
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => WritingPage(
-                        threadId: threadId), // Pass threadId to WritingPage
-                  ),
-                );
-              },
-              child: Container(
+            const Divider(
+              thickness: 1,
+              color: Color(0xFF344C64),
+              height: 20,
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('Thread')
+                    .doc(widget.threadId)
+                    .collection('Parts')
+                    .orderBy('createdAt', descending: false)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final timelineItems = snapshot.data!.docs.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      return TimelineItem(
+                        name: data['name'] ?? 'Unknown',
+                        username: data['username'] ?? '@unknown',
+                        content: data['content'] ?? '',
+                        timeAgo: _calculateTimeAgo(data['createdAt']),
+                        avatarPath: data['avatarPath'] ?? 'assets/default.png',
+                        avatarName: data['avatarName'] ?? 'User',
+                      );
+                    }).toList();
+
+                    return ListView.builder(
+                      itemCount: timelineItems.length,
+                      itemBuilder: (context, index) => _buildTimelineItem(
+                        timelineItems[index],
+                        index == timelineItems.length - 1,
+                      ),
+                    );
+                  }
+                  return const Center(child: CircularProgressIndicator());
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: GestureDetector(
+                onTap: () => onWritingBoxClick(context),
+                child: Container(
                   width: double.infinity,
                   height: 50,
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(255, 42, 60, 76),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Align(
+                  child: Align(
                     alignment: Alignment.centerLeft,
                     child: Padding(
                       padding: const EdgeInsets.only(left: 16.0),
                       child: Row(
                         children: [
                           Icon(
-                            Icons
-                                .edit_rounded, // Use Icons.push_pin for a pin icon
+                            Icons.edit_rounded,
                             color: Color(0xFF9DB2CE),
                           ),
-                          const SizedBox(
-                              width: 8), // Spacing between the icon and text
-                          const Text(
-                            'What happens next?...',
-                            style: TextStyle(color: Color(0xFF9DB2CE)),
+                          SizedBox(width: 8),
+                          StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('Thread')
+                                .doc(widget.threadId)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                bool isWriting =
+                                    snapshot.data!['isWriting'] ?? false;
+                                return Text(
+                                  isWriting
+                                      ? 'Someone is writing... !!'
+                                      : 'What happens next?',
+                                  style: TextStyle(color: Color(0xFF9DB2CE)),
+                                );
+                              }
+                              return const Text(
+                                'What happens next...',
+                                style: TextStyle(color: Color(0xFF9DB2CE)),
+                              );
+                            },
                           ),
                         ],
                       ),
                     ),
-                  )),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  void onBellClick() {
+    if (!isBellClicked) {
+      FirebaseFirestore.instance
+          .collection('Thread')
+          .doc(widget.threadId)
+          .update({
+        'bellClickers': FieldValue.arrayUnion([userId]),
+      });
+    } else {
+      FirebaseFirestore.instance
+          .collection('Thread')
+          .doc(widget.threadId)
+          .update({
+        'bellClickers': FieldValue.arrayRemove([userId]),
+      });
+    }
+    setState(() {
+      isBellClicked = !isBellClicked;
+    });
+  }
+
+  void onWritingBoxClick(BuildContext context) async {
+    DocumentSnapshot threadSnapshot = await FirebaseFirestore.instance
+        .collection('Thread')
+        .doc(widget.threadId)
+        .get();
+
+    if (!(threadSnapshot['isWriting'] ?? false)) {
+      FirebaseFirestore.instance
+          .collection('Thread')
+          .doc(widget.threadId)
+          .update({
+        'isWriting': true,
+      });
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => WritingPage(threadId: widget.threadId),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Someone is currently writing. Please wait.")),
+      );
+    }
+  }
+
+  String _calculateTimeAgo(Timestamp? timestamp) {
+    if (timestamp == null) return 'Just now';
+    final now = DateTime.now();
+    final difference = now.difference(timestamp.toDate());
+    if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    } else {
+      return '${difference.inDays}d ago';
+    }
   }
 
   Widget _buildStoryAvatar(TimelineItem item) {
     return Container(
       width: 90,
-      margin: const EdgeInsets.symmetric(horizontal: 5),
+      margin: EdgeInsets.symmetric(horizontal: 5),
       child: Stack(
         alignment: Alignment.topCenter,
         children: [
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFD35400), width: 2),
+              border: Border.all(color: Color(0xFFD35400), width: 2),
             ),
             child: CircleAvatar(
               radius: 37,
@@ -158,127 +314,19 @@ class StoryView extends StatelessWidget {
             ),
           ),
           Container(
-            margin: const EdgeInsets.only(top: 60),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+            margin: EdgeInsets.only(top: 60),
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 1),
             decoration: BoxDecoration(
-              color: const Color(0xFFD35400),
+              color: Color(0xFFD35400),
               borderRadius: BorderRadius.circular(15),
             ),
             child: Text(
               item.avatarName,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.white),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      width: 4,
-                      color: const Color(0xFFD35400),
-                    ),
-                  ),
-                  child: CircleAvatar(
-                    radius: 30,
-                    backgroundImage: AssetImage(item.avatarPath),
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD35400),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      item.avatarName,
-                      style: const TextStyle(color: Colors.white, fontSize: 9),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (!isLastItem)
-              Container(
-                width: 5,
-                height: 40,
-                color: const Color(0xFFD35400),
-              ),
-          ],
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        item.username,
-                        style: const TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      Text(
-                        item.timeAgo,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add_reaction_outlined,
-                            color: Color(0xFFA2DED0)),
-                        onPressed: () {
-                          print('Reacted to: ${item.name}');
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Text(
-                item.content,
-                style: const TextStyle(
-                  color: Color.fromRGBO(255, 255, 255, 1),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }
@@ -299,4 +347,117 @@ class TimelineItem {
     required this.avatarPath,
     required this.avatarName,
   });
+}
+
+Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Column(
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    width: 4,
+                    color: const Color(0xFFD35400),
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 30,
+                  backgroundImage: AssetImage(item.avatarPath),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD35400),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    item.avatarName,
+                    style: const TextStyle(color: Colors.white, fontSize: 9),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (!isLastItem)
+            Container(
+              width: 4,
+              height: 90,
+              color: const Color(0xFFD35400),
+            ),
+        ],
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      item.username,
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  item.timeAgo,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                item.content,
+                style: const TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Align(
+                alignment: Alignment.centerRight, // Align to the right
+                child: IconButton(
+                  icon: const Icon(Icons.add_reaction_outlined,
+                      color: Color(0xFFA2DED0)),
+                  onPressed: () {
+                    print('Reacted to: ${item.name}');
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
 }

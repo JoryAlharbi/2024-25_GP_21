@@ -1,27 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-//app packages to navigate
+// App packages to navigate
 import 'package:rawae_gp24/homepage.dart';
 import 'package:rawae_gp24/profile_page.dart';
 import 'package:rawae_gp24/threads.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
 
-//firebase packages
-import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_core/firebase_core.dart'; // Firebase core
-import 'package:firebase_app_check/firebase_app_check.dart';
+// Firebase packages
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase
-      .initializeApp(); // makes all Firebase services available globally, including the Realtime Database.
-  // await FirebaseAppCheck.instance.activate(); // Initialize Firebase App Check
-
-  FirebaseAuth.instance
-      .setLanguageCode('en'); // Set the language for Firebase Auth
+  await Firebase.initializeApp();
+  FirebaseAuth.instance.setLanguageCode('en');
   runApp(MyApp());
 }
 
@@ -31,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: WelcomePage(),
+      home: const WelcomePage(),
       debugShowCheckedModeBanner: false,
       routes: {
         '/login': (context) => LoginPage(),
@@ -39,16 +33,16 @@ class MyApp extends StatelessWidget {
         '/home': (context) => HomePage(),
         '/profile': (context) => ProfilePage(),
       },
-      // Use onGenerateRoute to handle dynamic routes with parameters
       onGenerateRoute: (settings) {
         if (settings.name == '/threads') {
           final args = settings.arguments as Map<String, String>;
           final threadId = args['threadId']!;
+          final userId = args['userId']!;
           return MaterialPageRoute(
-            builder: (context) => StoryView(threadId: threadId),
+            builder: (context) => StoryView(threadId: threadId, userId: userId),
           );
         }
-        return null; // Return null for unhandled routes
+        return null;
       },
     );
   }
@@ -63,42 +57,18 @@ class WelcomePage extends StatelessWidget {
       backgroundColor: const Color(0xFF1B2835),
       body: Stack(
         children: [
-          // Ellipse 1 (Top-left)
+          // Gradient decorations
           Positioned(
             top: -230,
             left: -320,
             child: Container(
-              width: 800, // Width matching the Figma design
-              height: 800, // Height matching the Figma design
+              width: 800,
+              height: 800,
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFD35400)
-                        .withOpacity(0.26), // Orange with adjusted opacity
-                    const Color(0xFFA2DED0)
-                        .withOpacity(0.0), // Transparent mint
-                  ],
-                  stops: const [0.0, 1.0], // Smooth transition
-                  radius: 0.3, // Control the spread
-                ),
-              ),
-            ),
-          ),
-
-          // Ellipse 2 (Center-right)
-          Positioned(
-            top: 61,
-            right: -340,
-            child: Container(
-              width: 800, // Width matching the Figma design
-              height: 800, // Height matching the Figma design
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF344C64)
-                        .withOpacity(0.58), // Dark blue with adjusted opacity
-                    const Color(0xFFD35400)
-                        .withOpacity(0.0), // Transparent orange
+                    const Color(0xFFD35400).withOpacity(0.26),
+                    const Color(0xFFA2DED0).withOpacity(0.0),
                   ],
                   stops: const [0.0, 1.0],
                   radius: 0.3,
@@ -106,21 +76,35 @@ class WelcomePage extends StatelessWidget {
               ),
             ),
           ),
-
-          // Ellipse 3 (Bottom-center)
+          Positioned(
+            top: 61,
+            right: -340,
+            child: Container(
+              width: 800,
+              height: 800,
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF344C64).withOpacity(0.58),
+                    const Color(0xFFD35400).withOpacity(0.0),
+                  ],
+                  stops: const [0.0, 1.0],
+                  radius: 0.3,
+                ),
+              ),
+            ),
+          ),
           Positioned(
             bottom: -240,
             left: 100,
             child: Container(
-              width: 700, // Width matching the Figma design
-              height: 807, // Height matching the Figma design
+              width: 700,
+              height: 807,
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFA2DED0)
-                        .withOpacity(0.2), // Light mint with adjusted opacity
-                    const Color(0xFFD35400)
-                        .withOpacity(0.0), // Transparent orange
+                    const Color(0xFFA2DED0).withOpacity(0.2),
+                    const Color(0xFFD35400).withOpacity(0.0),
                   ],
                   stops: const [0.0, 1],
                   radius: 0.3,
@@ -128,12 +112,11 @@ class WelcomePage extends StatelessWidget {
               ),
             ),
           ),
-
-          // Main content positioned in the lower half
+          // Welcome content
           Align(
             alignment: Alignment.bottomCenter,
             child: FractionallySizedBox(
-              widthFactor: 0.8, // Adjust width as needed
+              widthFactor: 0.8,
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 80.0),
                 child: Column(

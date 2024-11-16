@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'character_page.dart'; // Adjust the path to your character_page.dart file
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class WritingPage extends StatefulWidget {
-  const WritingPage({Key? key, required String threadId}) : super(key: key);
+  final String threadId;
+
+  const WritingPage({Key? key, required this.threadId}) : super(key: key);
 
   @override
   _WritingPageState createState() => _WritingPageState();
@@ -10,6 +13,8 @@ class WritingPage extends StatefulWidget {
 
 class _WritingPageState extends State<WritingPage> {
   late final TextEditingController _textController;
+  final String userId =
+      FirebaseAuth.instance.currentUser!.uid; // Current User ID
 
   @override
   void initState() {
@@ -23,22 +28,58 @@ class _WritingPageState extends State<WritingPage> {
     super.dispose();
   }
 
-  // Method to insert tags into the text field
-  void _insertCharacterTag() {
-    final cursorPos = _textController.selection.base.offset;
-    final text = _textController.text;
+  void _cancelWriting() {
+    // Set `isWriting` back to false in Firestore
+    FirebaseFirestore.instance
+        .collection('Thread')
+        .doc(widget.threadId)
+        .update({
+      'isWriting': false,
+    }).then((_) {
+      Navigator.pop(context); // Navigate back to the thread page
+    });
+  }
 
-    // Insert the tag where the cursor is
-    final newText = text.substring(0, cursorPos) +
-        '##Character##' +
-        text.substring(cursorPos);
+  void _processStoryPart() {
+    final storyText = _textController.text;
 
-    // Update the text in the field and position the cursor after the tag
-    _textController.text = newText;
-    _textController.selection = TextSelection.fromPosition(
-      TextPosition(
-          offset: cursorPos + 12), // Move cursor after the inserted tag
-    );
+    if (storyText.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Cannot submit an empty part!")),
+      );
+      return;
+    }
+
+    // Submit the part and update the `contributors` array with the reference to the user document
+    FirebaseFirestore.instance
+        .collection('Thread')
+        .doc(widget.threadId)
+        .collection('Parts')
+        .add({
+      'content': storyText,
+      'createdAt': Timestamp.now(),
+      'writerID': FirebaseAuth.instance.currentUser!.uid, // Use actual user ID
+    }).then((_) {
+      // Add the reference to the `contributors` array in the thread document
+      FirebaseFirestore.instance
+          .collection('Thread')
+          .doc(widget.threadId)
+          .update({
+        'contributors': FieldValue.arrayUnion([
+          FirebaseFirestore.instance
+              .collection('Writer')
+              .doc(FirebaseAuth.instance.currentUser!.uid)
+        ]), // Add reference to contributors
+      });
+
+      FirebaseFirestore.instance
+          .collection('Thread')
+          .doc(widget.threadId)
+          .update({
+        'isWriting': false,
+      });
+      Navigator.pop(context);
+    });
   }
 
   @override
@@ -49,11 +90,8 @@ class _WritingPageState extends State<WritingPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.close,
-            color: Colors.grey,
-          ),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.close, color: Colors.grey),
+          onPressed: _cancelWriting, // Cancel writing and reset the flag
         ),
         actions: [
           Padding(
@@ -66,10 +104,7 @@ class _WritingPageState extends State<WritingPage> {
                 ),
               ),
               child: const Text('Done', style: TextStyle(color: Colors.white)),
-              onPressed: () {
-                // When "Done" is pressed, extract character descriptions
-                _processStoryPart();
-              },
+              onPressed: _processStoryPart, // Submit the writing part
             ),
           ),
         ],
@@ -94,7 +129,7 @@ class _WritingPageState extends State<WritingPage> {
             const SizedBox(height: 20),
             _buildTextField(),
             const SizedBox(height: 10),
-            _buildActionButtons(),
+            _buildActionButtons(), // Include action buttons
           ],
         ),
       ),
@@ -131,37 +166,68 @@ class _WritingPageState extends State<WritingPage> {
   }
 
   Widget _buildProfileSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            radius: 25,
-            backgroundImage: AssetImage('assets/profile2.png'),
-          ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                'Rudy Fernandez',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance
+          .collection('Writer') // Collection name based on screenshot
+          .doc(userId) // Use current user ID
+          .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return const Center(
+            child: Text(
+              "User not found",
+              style: TextStyle(color: Colors.white),
+            ),
+          );
+        }
+
+        final userData = snapshot.data!.data() as Map<String, dynamic>;
+        final name = userData['name'] ?? 'Unknown User';
+        final username = userData['username'] ?? '@unknown';
+        final profileImageUrl = userData['profileImageUrl'] ??
+            'assets/default.png'; // Fallback to default image if not available
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 25,
+                backgroundImage: profileImageUrl.startsWith('http')
+                    ? NetworkImage(profileImageUrl) // Load image from URL
+                    : AssetImage(profileImageUrl) as ImageProvider,
               ),
-              Text(
-                '@andresfrans',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    username,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -171,7 +237,7 @@ class _WritingPageState extends State<WritingPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12.0),
         decoration: BoxDecoration(
-          color: Colors.white24,
+          color: const Color(0xFF313E4F),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -180,18 +246,18 @@ class _WritingPageState extends State<WritingPage> {
               child: TextField(
                 controller: _textController,
                 maxLines: null,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'What’s happening?',
-                  hintStyle: const TextStyle(color: Colors.grey),
+                  hintStyle: TextStyle(color: Color(0xFF9DB2CE)),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 8.0),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 ),
                 style: const TextStyle(color: Colors.white),
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.person_add, color: Colors.orange),
+              icon: const Icon(Icons.person_add, color: Color(0xFF9DB2CE)),
               onPressed: _insertCharacterTag, // Insert the character tag
             ),
           ],
@@ -208,14 +274,14 @@ class _WritingPageState extends State<WritingPage> {
           IconButton(
             icon: const Icon(Icons.auto_fix_high, color: Color(0xFFA2DED0)),
             onPressed: () {
-              // Add action for the undo button
+              // Functionality for undoing changes
             },
           ),
           IconButton(
             icon: const Icon(Icons.auto_awesome_outlined,
                 color: Color(0xFFA2DED0)),
             onPressed: () {
-              // Add action for the auto-format button
+              // Functionality for enhancing or formatting text
             },
           ),
         ],
@@ -223,33 +289,20 @@ class _WritingPageState extends State<WritingPage> {
     );
   }
 
-  // This method will be called when the "Done" button is pressed
-  void _processStoryPart() {
-    final storyText = _textController.text;
+  void _insertCharacterTag() {
+    final cursorPos = _textController.selection.base.offset;
+    final text = _textController.text;
 
-    // Extract character descriptions by searching for ##Character## tags
-    final characterDescriptions = _extractCharacterDescriptions(storyText);
+    // Insert the tag where the cursor is
+    final newText = text.substring(0, cursorPos) +
+        '##Character##' +
+        text.substring(cursorPos);
 
-    // You can send these descriptions to the DALL·E API here
-    print("Extracted Character Descriptions: $characterDescriptions");
-
-    // Continue with whatever needs to be done after processing (e.g., navigating to the next page)
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CharacterPreviewPage(
-          userName: 'hailey',
-        ),
-      ),
+    // Update the text in the field and position the cursor after the tag
+    _textController.text = newText;
+    _textController.selection = TextSelection.fromPosition(
+      TextPosition(
+          offset: cursorPos + 12), // Move cursor after the inserted tag
     );
-  }
-
-  // Extract character descriptions from the story text by looking for ##Character## tags
-  List<String> _extractCharacterDescriptions(String text) {
-    final regExp = RegExp(r'##Character##(.*?)##');
-    final matches = regExp.allMatches(text);
-
-    // Extract the description from each match and return them as a list
-    return matches.map((match) => match.group(1)?.trim() ?? '').toList();
   }
 }
