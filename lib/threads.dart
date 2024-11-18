@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'writing.dart'; // Make sure to import your writing.dart file
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart'; //for the norifications!!
 import 'package:firebase_auth/firebase_auth.dart';
 
 class StoryView extends StatefulWidget {
