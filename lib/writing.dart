@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class WritingPage extends StatefulWidget {
   final String threadId;
@@ -29,58 +31,107 @@ class _WritingPageState extends State<WritingPage> {
   }
 
   void _cancelWriting() {
-    // Set `isWriting` back to false in Firestore
     FirebaseFirestore.instance
         .collection('Thread')
         .doc(widget.threadId)
-        .update({
-      'isWriting': false,
-    }).then((_) {
+        .update({'isWriting': false}).then((_) {
       Navigator.pop(context); // Navigate back to the thread page
     });
   }
 
-  void _processStoryPart() {
-    final storyText = _textController.text;
+ void _processStoryPart() async {
+  final storyText = _textController.text;
 
-    if (storyText.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cannot submit an empty part!")),
-      );
-      return;
-    }
+  if (storyText.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Cannot submit an empty part!")),
+    );
+    return;
+  }
 
-    // Submit the part and update the `contributors` array with the reference to the user document
-    FirebaseFirestore.instance
+  final RegExp tagRegExp = RegExp(r'##(.*?)##');
+  final characterTags = tagRegExp
+      .allMatches(storyText)
+      .map((match) => match.group(1))
+      .where((tag) => tag != null)
+      .cast<String>()
+      .toList();
+
+  if (characterTags.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("No characters found in tags!")),
+    );
+    return;
+  }
+
+  final partData = {
+    'content': storyText,
+    'createdAt': Timestamp.now(),
+    'writerID': userId,
+    'characters': characterTags,
+  };
+
+  try {
+    // Add the part to Firestore and capture the document ID
+    final partRef = await FirebaseFirestore.instance
         .collection('Thread')
         .doc(widget.threadId)
         .collection('Parts')
-        .add({
-      'content': storyText,
-      'createdAt': Timestamp.now(),
-      'writerID': FirebaseAuth.instance.currentUser!.uid, // Use actual user ID
-    }).then((_) {
-      // Add the reference to the `contributors` array in the thread document
-      FirebaseFirestore.instance
-          .collection('Thread')
-          .doc(widget.threadId)
-          .update({
-        'contributors': FieldValue.arrayUnion([
-          FirebaseFirestore.instance
-              .collection('Writer')
-              .doc(FirebaseAuth.instance.currentUser!.uid)
-        ]), // Add reference to contributors
-      });
+        .add(partData);
 
-      FirebaseFirestore.instance
-          .collection('Thread')
-          .doc(widget.threadId)
-          .update({
-        'isWriting': false,
-      });
-      Navigator.pop(context);
+    // Capture the generated part ID (document ID)
+    final partId = partRef.id;
+
+    // Update thread contributors and writing status
+    await FirebaseFirestore.instance
+        .collection('Thread')
+        .doc(widget.threadId)
+        .update({
+      'contributors': FieldValue.arrayUnion([
+        FirebaseFirestore.instance.collection('Writer').doc(userId)
+      ]),
+      'isWriting': false,
     });
+
+    // Send the characters to the API with dynamic partId and threadId
+    await _sendCharactersToAPI(characterTags, widget.threadId, partId);
+
+    // Navigate back after submission
+    Navigator.pop(context);
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Failed to submit part: $e")),
+    );
   }
+}
+
+
+  Future<void> _sendCharactersToAPI(List<String> characterTags, String threadId, String partId) async {
+  const apiUrl = 'http://10.0.2.2:5000/generate-image';  // This works for Android emulators
+
+  try {
+    print("Sending characters: $characterTags, Thread ID: $threadId, Part ID: $partId");
+
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'tags': characterTags,
+        'thread_id': threadId,
+        'part_id': partId,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print('Characters sent to API successfully!');
+    } else {
+      print('Failed to send characters to API: ${response.statusCode} - ${response.body}');
+    }
+  } catch (e) {
+    print('Error sending characters to API: $e');
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +142,7 @@ class _WritingPageState extends State<WritingPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.grey),
-          onPressed: _cancelWriting, // Cancel writing and reset the flag
+          onPressed: _cancelWriting,
         ),
         actions: [
           Padding(
@@ -104,7 +155,7 @@ class _WritingPageState extends State<WritingPage> {
                 ),
               ),
               child: const Text('Done', style: TextStyle(color: Colors.white)),
-              onPressed: _processStoryPart, // Submit the writing part
+              onPressed: _processStoryPart,
             ),
           ),
         ],
@@ -129,7 +180,7 @@ class _WritingPageState extends State<WritingPage> {
             const SizedBox(height: 20),
             _buildTextField(),
             const SizedBox(height: 10),
-            _buildActionButtons(), // Include action buttons
+            _buildActionButtons(),
           ],
         ),
       ),
@@ -167,31 +218,22 @@ class _WritingPageState extends State<WritingPage> {
 
   Widget _buildProfileSection() {
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance
-          .collection('Writer') // Collection name based on screenshot
-          .doc(userId) // Use current user ID
-          .get(),
+      future: FirebaseFirestore.instance.collection('Writer').doc(userId).get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (!snapshot.hasData || !snapshot.data!.exists) {
           return const Center(
-            child: Text(
-              "User not found",
-              style: TextStyle(color: Colors.white),
-            ),
+            child: Text("User not found", style: TextStyle(color: Colors.white)),
           );
         }
 
         final userData = snapshot.data!.data() as Map<String, dynamic>;
         final name = userData['name'] ?? 'Unknown User';
         final username = userData['username'] ?? '@unknown';
-        final profileImageUrl = userData['profileImageUrl'] ??
-            'assets/default.png'; // Fallback to default image if not available
+        final profileImageUrl = userData['profileImageUrl'] ?? 'assets/default.png';
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -200,7 +242,7 @@ class _WritingPageState extends State<WritingPage> {
               CircleAvatar(
                 radius: 25,
                 backgroundImage: profileImageUrl.startsWith('http')
-                    ? NetworkImage(profileImageUrl) // Load image from URL
+                    ? NetworkImage(profileImageUrl)
                     : AssetImage(profileImageUrl) as ImageProvider,
               ),
               const SizedBox(width: 16),
@@ -217,10 +259,7 @@ class _WritingPageState extends State<WritingPage> {
                   ),
                   Text(
                     username,
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(color: Colors.grey, fontSize: 14),
                   ),
                 ],
               ),
@@ -258,7 +297,7 @@ class _WritingPageState extends State<WritingPage> {
             ),
             IconButton(
               icon: const Icon(Icons.person_add, color: Color(0xFF9DB2CE)),
-              onPressed: _insertCharacterTag, // Insert the character tag
+              onPressed: _insertCharacterTag,
             ),
           ],
         ),
@@ -274,14 +313,14 @@ class _WritingPageState extends State<WritingPage> {
           IconButton(
             icon: const Icon(Icons.auto_fix_high, color: Color(0xFFA2DED0)),
             onPressed: () {
-              // Functionality for undoing changes
+              // Undo functionality
             },
           ),
           IconButton(
             icon: const Icon(Icons.auto_awesome_outlined,
                 color: Color(0xFFA2DED0)),
             onPressed: () {
-              // Functionality for enhancing or formatting text
+              // Enhance or format text
             },
           ),
         ],
