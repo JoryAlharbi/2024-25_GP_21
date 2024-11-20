@@ -26,6 +26,103 @@ class _StoryViewState extends State<StoryView> {
     _incrementViewCount();
   }
 
+// these methods to handel the user when someone is writing
+// there was also another method but it was a simplier one with no notification handeling
+//this has everything so its comperhensive
+
+  void onBellClick() async {
+    // First, update the bellClickers array in Firestore
+    if (!isBellClicked) {
+      await FirebaseFirestore.instance
+          .collection('Thread')
+          .doc(widget.threadId)
+          .update({
+        'bellClickers': FieldValue.arrayUnion([userId]),
+      });
+
+      // Check if no one is currently writing
+      DocumentSnapshot threadSnapshot = await FirebaseFirestore.instance
+          .collection('Thread')
+          .doc(widget.threadId)
+          .get();
+      bool isWriting = threadSnapshot['isWriting'] ?? false;
+
+      // If no one is writing, send a push notification
+      if (!isWriting) {
+        sendPushNotification();
+      }
+    } else {
+      // Remove the user from bellClickers array
+      await FirebaseFirestore.instance
+          .collection('Thread')
+          .doc(widget.threadId)
+          .update({
+        'bellClickers': FieldValue.arrayRemove([userId]),
+      });
+    }
+
+    // Update the UI by toggling the bell click state
+    setState(() {
+      isBellClicked = !isBellClicked;
+    });
+  }
+
+// Function to send push notification
+//there are two functions that sends the notifications , they work together.
+  Future<void> sendPushNotification() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    // Here you can send a notification to a topic or specific user.
+    // For simplicity, let's assume you send it to all users following this thread.
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('Thread')
+          .doc(widget.threadId)
+          .get()
+          .then((doc) {
+        List<String> bellClickers = List.from(doc['bellClickers'] ?? []);
+        // Notify each user who has clicked the bell
+        for (String userId in bellClickers) {
+          sendNotificationToUser(userId);
+        }
+      });
+    } catch (e) {
+      print("Error sending notification: $e");
+    }
+  }
+
+// Function to send notification to a specific user using their Firebase token
+// the token should be added when the user signup or signin
+//the token is added in the main page!!!
+//each user has a unique token so this method sends the notification to their token.
+
+  Future<void> sendNotificationToUser(String userId) async {
+    // Fetch the user's device token from Firestore
+    DocumentSnapshot userSnapshot =
+        await FirebaseFirestore.instance.collection('Users').doc(userId).get();
+
+    String? deviceToken = userSnapshot['deviceToken'];
+
+    if (deviceToken != null) {
+      try {
+        // Send a notification using FirebaseMessaging
+        await FirebaseMessaging.instance.sendMessage(
+          to: deviceToken,
+          data: {
+            'title': 'No one is writing!',
+            'body': 'Click here to join the story writing session.',
+          },
+        );
+        print("Notification sent to $userId");
+      } catch (e) {
+        print("Failed to send notification: $e");
+      }
+    }
+  }
+
+  //////////////////////////////
+
   void _incrementViewCount() {
     FirebaseFirestore.instance
         .collection('Thread')
@@ -234,27 +331,6 @@ class _StoryViewState extends State<StoryView> {
         ),
       ),
     );
-  }
-
-  void onBellClick() {
-    if (!isBellClicked) {
-      FirebaseFirestore.instance
-          .collection('Thread')
-          .doc(widget.threadId)
-          .update({
-        'bellClickers': FieldValue.arrayUnion([userId]),
-      });
-    } else {
-      FirebaseFirestore.instance
-          .collection('Thread')
-          .doc(widget.threadId)
-          .update({
-        'bellClickers': FieldValue.arrayRemove([userId]),
-      });
-    }
-    setState(() {
-      isBellClicked = !isBellClicked;
-    });
   }
 
   void onWritingBoxClick(BuildContext context) async {
