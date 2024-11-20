@@ -96,6 +96,9 @@ class _SignUpPageState extends State<SignUpPage> {
 
       /// to add in the writer collection ther writer info
       if (user != null) {
+        await user
+            .sendEmailVerification(); //send a validation email to the email
+
         FirebaseFirestore.instance.collection('Writer').doc(user.uid).set({
           'username': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
