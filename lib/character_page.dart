@@ -2,23 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'character_edit.dart'; // Adjust the path to your character_edit.dart file
 import 'threads.dart'; // Adjust the path to your threads.dart file
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CharacterPreviewPage extends StatelessWidget {
   final String userName;
   final String threadId;
   final String storyText;
   final String userId; // Add userId as a required field
-
+  final String publicUrl;
   const CharacterPreviewPage({
     super.key,
     required this.userName,
     required this.threadId,
     required this.storyText,
-    required this.userId, // Include userId
+    required this.userId,
+    required this.publicUrl,
+    
   });
-
+static CharacterPreviewPage fromArguments(Map<String, dynamic> args) {
+    return CharacterPreviewPage(
+      userName: args['userName'] ?? '',
+      threadId: args['threadId'] ?? '',
+      storyText: args['storyText'] ?? '',
+      userId: args['userId'] ?? '',
+      publicUrl: args['publicUrl'] ?? '',
+    );
+  }
   @override
   Widget build(BuildContext context) {
+        print("CharacterPreviewPage URL: $publicUrl  hi ");
+        print("CharacterPreviewPage URL: $threadId  hi ");
+        print("CharacterPreviewPage URL: $userId  hi ");
+        print("CharacterPreviewPage URL: $userName  hi ");
+
     return Scaffold(
       backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
@@ -56,20 +72,32 @@ class CharacterPreviewPage extends StatelessWidget {
                 const SizedBox(height: 30),
                 // Circular profile image placeholder
                 Container(
-                  width: 150,
-                  height: 150,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFF2A3B4D),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.account_circle_rounded,
-                      size: 140,
-                      color: Color(0xFF9DB2CE),
-                    ),
-                  ),
-                ),
+  width: 150,
+  height: 150,
+  decoration: BoxDecoration(
+    shape: BoxShape.circle,
+    color: Color(0xFF2A3B4D),
+  ),
+  child: ClipOval(
+    child: Image.network(
+      publicUrl, // The URL of the image
+      fit: BoxFit.cover, // Ensure the image fits inside the circle
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child; // Image loaded
+        } else {
+          return Center(child: CircularProgressIndicator()); // Show loading indicator
+        }
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return Icon(Icons.error, color: Colors.red); // Show error icon
+      },
+    ),
+  ),
+)
+
+
+,
               ],
             ),
           ),
