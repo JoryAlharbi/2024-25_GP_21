@@ -10,6 +10,8 @@ class CharacterPreviewPage extends StatelessWidget {
   final String storyText;
   final String userId; // Add userId as a required field
   final String publicUrl;
+final List<String> characterTags;
+
   const CharacterPreviewPage({
     super.key,
     required this.userName,
@@ -17,6 +19,7 @@ class CharacterPreviewPage extends StatelessWidget {
     required this.storyText,
     required this.userId,
     required this.publicUrl,
+    required this.characterTags,
     
   });
 static CharacterPreviewPage fromArguments(Map<String, dynamic> args) {
@@ -26,7 +29,8 @@ static CharacterPreviewPage fromArguments(Map<String, dynamic> args) {
       storyText: args['storyText'] ?? '',
       userId: args['userId'] ?? '',
       publicUrl: args['publicUrl'] ?? '',
-    );
+characterTags: List<String>.from(args['characterTags'] ?? []),     );
+
   }
   @override
   Widget build(BuildContext context) {
@@ -34,7 +38,7 @@ static CharacterPreviewPage fromArguments(Map<String, dynamic> args) {
         print("CharacterPreviewPage URL: $threadId  hi ");
         print("CharacterPreviewPage URL: $userId  hi ");
         print("CharacterPreviewPage URL: $userName  hi ");
-
+print("CharacterPreviewPage URL: $characterTags  hi ");
     return Scaffold(
       backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
@@ -115,6 +119,7 @@ static CharacterPreviewPage fromArguments(Map<String, dynamic> args) {
                       MaterialPageRoute(
                         builder: (context) => EditCharacterPage(
                           userName: userName, // Pass the userName
+                         characterTags:characterTags,
                         ),
                       ),
                     );

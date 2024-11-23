@@ -4,7 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 class EditCharacterPage extends StatefulWidget {
   final String userName;
 
-  const EditCharacterPage({super.key, required this.userName});
+ final List<String> characterTags;
+  const EditCharacterPage({super.key, required this.userName,
+  required this.characterTags,});
 
   @override
   _EditCharacterPageState createState() => _EditCharacterPageState();
@@ -69,8 +71,9 @@ class _EditCharacterPageState extends State<EditCharacterPage> {
                 TextFormField(
                   maxLines: 6,
                   style: const TextStyle(color: Colors.white),
+                  initialValue: widget.characterTags.join(', '),
                   decoration: InputDecoration(
-                    hintText: 'Enter additional details...',
+                    hintText: 'use creative and specific details to give a clear picture',
                     hintStyle: const TextStyle(color: Color(0xFF9DB2CE)),
                     filled: true,
                     fillColor: const Color(0xFF2A3B4D),

@@ -50,25 +50,28 @@ class _WritingPageState extends State<WritingPage> {
       return;
     }
 
-    final RegExp tagRegExp = RegExp(r'##(.*?)##');
-    final characterTags = tagRegExp
-        .allMatches(storyText)
-        .map((match) => match.group(1))
-        .where((tag) => tag != null)
-        .cast<String>()
-        .toList();
+  // Remove character tags from the input
+  final sanitizedText = removeCharacterTags(storyText);
 
-    setState(() {
-      _isLoading = true;
-    });
+  final RegExp tagRegExp = RegExp(r'##(.*?)##');
+  final characterTags = tagRegExp
+      .allMatches(storyText)
+      .map((match) => match.group(1))
+      .where((tag) => tag != null)
+      .cast<String>()
+      .toList();
 
-    try {
-      final partData = {
-        'content': storyText,
-        'createdAt': Timestamp.now(),
-        'writerID': userId,
-        'characters': characterTags,
-      };
+  setState(() {
+    _isLoading = true;
+  });
+
+  try {
+    final partData = {
+      'content': sanitizedText, // Use sanitized text here
+      'createdAt': Timestamp.now(),
+      'writerID': userId,
+      'characters': characterTags,
+    };
 
       // Add the part to Firestore
       final partRef = await FirebaseFirestore.instance
@@ -102,6 +105,7 @@ class _WritingPageState extends State<WritingPage> {
       'storyText': storyText,
       'userId': userId,
       'publicUrl': jsonDecode(response.body)['public_url'], // Adjust based on your API response structure
+      "characterTags":characterTags,
     },
   );
 } else {
@@ -242,7 +246,7 @@ class _WritingPageState extends State<WritingPage> {
         }
 
         final userData = snapshot.data!.data() as Map<String, dynamic>;
-        final name = userData['name'] ?? 'Unknown User';
+        final name = userData['username'] ?? 'Unknown User';
         final username = userData['username'] ?? '@unknown';
         final profileImageUrl = userData['profileImageUrl'] ?? 'assets/default.png';
 
@@ -268,10 +272,7 @@ class _WritingPageState extends State<WritingPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Text(
-                    username,
-                    style: const TextStyle(color: Colors.grey, fontSize: 14),
-                  ),
+                 
                 ],
               ),
             ],
@@ -345,4 +346,9 @@ class _WritingPageState extends State<WritingPage> {
       );
     });
   }
+  String removeCharacterTags(String input) {
+  final RegExp characterTagRegExp = RegExp(r'##.*?##');
+  return input.replaceAll(characterTagRegExp, '').trim();
+}
+
 }
