@@ -4,13 +4,14 @@ import 'character_edit.dart'; // Adjust the path to your character_edit.dart fil
 import 'threads.dart'; // Adjust the path to your threads.dart file
 import 'package:cached_network_image/cached_network_image.dart';
 
-class CharacterPreviewPage extends StatelessWidget {
+class CharacterPreviewPage extends StatefulWidget {
   final String userName;
   final String threadId;
   final String storyText;
-  final String userId; // Add userId as a required field
+  final String userId;
   final String publicUrl;
-final List<String> characterTags;
+  final List<String> characterTags;
+  final String partId;
 
   const CharacterPreviewPage({
     super.key,
@@ -20,25 +21,40 @@ final List<String> characterTags;
     required this.userId,
     required this.publicUrl,
     required this.characterTags,
-    
+    required this.partId,
   });
-static CharacterPreviewPage fromArguments(Map<String, dynamic> args) {
+
+  static CharacterPreviewPage fromArguments(Map<String, dynamic> args) {
     return CharacterPreviewPage(
       userName: args['userName'] ?? '',
       threadId: args['threadId'] ?? '',
       storyText: args['storyText'] ?? '',
       userId: args['userId'] ?? '',
       publicUrl: args['publicUrl'] ?? '',
-characterTags: List<String>.from(args['characterTags'] ?? []),     );
-
+      characterTags: List<String>.from(args['characterTags'] ?? []),   
+      partId: args['partId'] ?? '',
+    );
   }
+
+  @override
+  _CharacterPreviewPageState createState() => _CharacterPreviewPageState();
+}
+
+class _CharacterPreviewPageState extends State<CharacterPreviewPage> {
+  String? updatedPublicUrl;
+  List<String>? updatedCharacterTags;
+
+  @override
+  void initState() {
+    super.initState();
+    updatedPublicUrl = widget.publicUrl;
+    updatedCharacterTags = widget.characterTags;
+    print('Updated Public URL: $updatedPublicUrl');
+    print('Updated Character Tags: $updatedCharacterTags');
+  }
+
   @override
   Widget build(BuildContext context) {
-        print("CharacterPreviewPage URL: $publicUrl  hi ");
-        print("CharacterPreviewPage URL: $threadId  hi ");
-        print("CharacterPreviewPage URL: $userId  hi ");
-        print("CharacterPreviewPage URL: $userName  hi ");
-print("CharacterPreviewPage URL: $characterTags  hi ");
     return Scaffold(
       backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
@@ -66,7 +82,7 @@ print("CharacterPreviewPage URL: $characterTags  hi ");
                   ),
                 ),
                 Text(
-                  '$userName!',
+                  widget.userName,
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 32,
@@ -76,32 +92,30 @@ print("CharacterPreviewPage URL: $characterTags  hi ");
                 const SizedBox(height: 30),
                 // Circular profile image placeholder
                 Container(
-  width: 150,
-  height: 150,
-  decoration: BoxDecoration(
-    shape: BoxShape.circle,
-    color: Color(0xFF2A3B4D),
-  ),
-  child: ClipOval(
-    child: Image.network(
-      publicUrl, // The URL of the image
-      fit: BoxFit.cover, // Ensure the image fits inside the circle
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) {
-          return child; // Image loaded
-        } else {
-          return Center(child: CircularProgressIndicator()); // Show loading indicator
-        }
-      },
-      errorBuilder: (context, error, stackTrace) {
-        return Icon(Icons.error, color: Colors.red); // Show error icon
-      },
-    ),
-  ),
-)
-
-
-,
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFF2A3B4D),
+                  ),
+                  child: ClipOval(
+                    child: Image.network(
+                      updatedPublicUrl ?? widget.publicUrl, // Use the updated URL
+                      key: ValueKey(updatedPublicUrl ?? widget.publicUrl), // Add key to force reload
+                      fit: BoxFit.cover, 
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) {
+                          return child; // Image loaded
+                        } else {
+                          return Center(child: CircularProgressIndicator()); // Show loading indicator
+                        }
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(Icons.error, color: Colors.red); // Show error icon
+                      },
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -112,17 +126,28 @@ print("CharacterPreviewPage URL: $characterTags  hi ");
             child: Row(
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                    // Navigate to the edit character page
-                    Navigator.push(
+                  onPressed: () async {
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => EditCharacterPage(
-                          userName: userName, // Pass the userName
-                         characterTags:characterTags,
+                          userName: widget.userName,
+                          characterTags: widget.characterTags,
+                          threadId: widget.threadId,
+                          partId: widget.partId,
                         ),
                       ),
                     );
+                    if (result != null) {
+                      setState(() {
+                        updatedPublicUrl = result['publicUrl'];
+                        updatedCharacterTags = List<String>.from(result['characterTags']);
+                          print("Updated Public URL: $updatedPublicUrl");
+  print("Updated Character Tags: $updatedCharacterTags");
+                      });
+                      // Log the updated values
+                    
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2A3B4D),
@@ -143,13 +168,12 @@ print("CharacterPreviewPage URL: $characterTags  hi ");
                 const SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: () {
-                    // Replace the current page with the thread page
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (context) => StoryView(
-                          threadId: threadId,
-                          userId: userId, // Pass the required userId
+                          threadId: widget.threadId,
+                          userId: widget.userId,
                         ),
                       ),
                     );

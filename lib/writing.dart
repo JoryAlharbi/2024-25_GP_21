@@ -102,6 +102,7 @@ class _WritingPageState extends State<WritingPage> {
     arguments: {
       'userName': 'Character Name',
       'threadId': widget.threadId,
+      'partId': partRef.id,
       'storyText': storyText,
       'userId': userId,
       'publicUrl': jsonDecode(response.body)['public_url'], // Adjust based on your API response structure
