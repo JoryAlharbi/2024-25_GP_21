@@ -101,7 +101,7 @@ class _CharacterPreviewPageState extends State<CharacterPreviewPage> {
                   child: ClipOval(
                     child: Image.network(
                       updatedPublicUrl ?? widget.publicUrl, // Use the updated URL
-                      key: ValueKey(updatedPublicUrl ?? widget.publicUrl), // Add key to force reload
+                      key: ValueKey(updatedPublicUrl), // Add key to force reload
                       fit: BoxFit.cover, 
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) {
