@@ -214,12 +214,14 @@ class _StoryViewState extends State<StoryView> {
                   if (snapshot.hasData) {
                     final timelineItems = snapshot.data!.docs.map((doc) {
                       final data = doc.data() as Map<String, dynamic>;
+
                       return TimelineItem(
                         name: data['name'] ?? 'Unknown',
                         username: data['username'] ?? '@unknown',
                         content: data['content'] ?? '',
                         timeAgo: _calculateTimeAgo(data['createdAt']),
-                        avatarPath: data['avatarPath'] ?? 'assets/default.png',
+                        avatarPath:
+                            data['profileImageUrl'] ?? 'assets/default.png',
                         avatarName: data['avatarName'] ?? 'User',
                       );
                     }).toList();
@@ -252,30 +254,89 @@ class _StoryViewState extends State<StoryView> {
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    final timelineItems = snapshot.data!.docs.map((doc) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      return TimelineItem(
-                        name: data['name'] ?? 'Unknown',
-                        username: data['username'] ?? '@unknown',
-                        content: data['content'] ?? '',
-                        timeAgo: _calculateTimeAgo(data['createdAt']),
-                        avatarPath: data['avatarPath'] ?? 'assets/default.png',
-                        avatarName: data['avatarName'] ?? 'User',
-                      );
-                    }).toList();
+                    final partsDocs = snapshot.data!.docs;
 
                     return ListView.builder(
-                      itemCount: timelineItems.length,
-                      itemBuilder: (context, index) => _buildTimelineItem(
-                        timelineItems[index],
-                        index == timelineItems.length - 1,
-                      ),
+                      itemCount: partsDocs.length,
+                      itemBuilder: (context, index) {
+                        final data =
+                            partsDocs[index].data() as Map<String, dynamic>;
+                        final writerId = data['writerID'] ?? '';
+
+                        // Useing FutureBuilder to fetch writer details
+                        return FutureBuilder<Map<String, String>>(
+                          future: getWriterDetails(writerId),
+                          builder: (context, writerSnapshot) {
+                            if (writerSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return _buildTimelineItem(
+                                TimelineItem(
+                                  name: 'Loading...',
+                                  username: '@loading',
+                                  content: data['content'] ?? '',
+                                  timeAgo: _calculateTimeAgo(data['createdAt']),
+                                  avatarPath: data['profileImageUrl'] ??
+                                      'assets/default.png',
+                                  avatarName: 'Loading',
+                                ),
+                                index == partsDocs.length - 1,
+                              );
+                            }
+
+                            if (writerSnapshot.hasError) {
+                              print(
+                                  "Error loading writer details for $writerId");
+                              return _buildTimelineItem(
+                                TimelineItem(
+                                  name: 'Error',
+                                  username: '@error',
+                                  content: data['content'] ?? '',
+                                  timeAgo: _calculateTimeAgo(data['createdAt']),
+                                  avatarPath: 'assets/default.png',
+                                  avatarName: 'Error',
+                                ),
+                                index == partsDocs.length - 1,
+                              );
+                            }
+
+                            if (writerSnapshot.hasData) {
+                              final writerDetails = writerSnapshot.data!;
+                              return _buildTimelineItem(
+                                TimelineItem(
+                                  name: writerDetails['name']!,
+                                  username: '@${writerDetails['username']!}',
+                                  content: data['content'] ?? '',
+                                  timeAgo: _calculateTimeAgo(data['createdAt']),
+                                  avatarPath: data['avatarPath'] ??
+                                      'assets/default.png',
+                                  avatarName: writerDetails['name']!,
+                                ),
+                                index == partsDocs.length - 1,
+                              );
+                            }
+
+                            // Fallback for unexpected cases
+                            return _buildTimelineItem(
+                              TimelineItem(
+                                name: 'Unknown',
+                                username: '@unknown',
+                                content: data['content'] ?? '',
+                                timeAgo: _calculateTimeAgo(data['createdAt']),
+                                avatarPath: 'assets/default.png',
+                                avatarName: 'Unknown',
+                              ),
+                              index == partsDocs.length - 1,
+                            );
+                          },
+                        );
+                      },
                     );
                   }
                   return const Center(child: CircularProgressIndicator());
                 },
               ),
             ),
+
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: GestureDetector(
@@ -405,6 +466,33 @@ class _StoryViewState extends State<StoryView> {
         ],
       ),
     );
+  }
+
+  Future<Map<String, String>> getWriterDetails(String writerId) async {
+    try {
+      print("Fetching details for writerId: $writerId");
+      final writerDoc = await FirebaseFirestore.instance
+          .collection('Writer')
+          .doc(writerId)
+          .get();
+
+      if (writerDoc.exists) {
+        final data = writerDoc.data() as Map<String, dynamic>;
+        print("Writer data found: $data"); // Debugging
+        return {
+          'name': data['name'] ?? 'Unknown Writer',
+          'username': data['username'] ?? '@unknown',
+        };
+      } else {
+        print("No writer document found for writerId: $writerId");
+      }
+    } catch (e) {
+      print("Error fetching writer details for $writerId: $e");
+    }
+    return {
+      'name': 'Unknown Writer',
+      'username': '@unknown',
+    };
   }
 }
 

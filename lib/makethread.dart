@@ -83,12 +83,14 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
           'bookCoverUrl': bookCoverUrl,
           'writerID':
               FirebaseFirestore.instance.collection('Writer').doc(user.uid),
-          'characterNum': 10,
           'totalView': 0,
           'createdAt': Timestamp.now(),
           'genreID': _selectedGenres,
+          'bellClickers': [],
+          'contributors': [],
           'status': 'in_progress',
           'threadID': DateTime.now().millisecondsSinceEpoch,
+          'isWriting': false,
         });
 
         Navigator.pushReplacement(
@@ -139,6 +141,8 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
     );
   }
 
+  bool _isLoading = false; // Add a loading state variable
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -155,22 +159,42 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
-            child: ElevatedButton(
-              onPressed: _isUploading ? null : _createThread,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFD35400),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Text(
-                'Create',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.white, // Match your app's theme
+                    ),
+                  )
+                : ElevatedButton(
+                    onPressed: _isUploading
+                        ? null
+                        : () async {
+                            setState(() {
+                              _isLoading = true; // Show loading indicator
+                            });
+
+                            try {
+                              await _createThread(); // Perform thread creation
+                            } finally {
+                              setState(() {
+                                _isLoading = false; // Hide loading indicator
+                              });
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD35400),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      'Create',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -183,7 +207,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
             children: [
               const SizedBox(height: 90),
               Text(
-                'Book Title',
+                'Book Title *',
                 style: GoogleFonts.poppins(
                   color: Colors.white,
                   fontSize: 18,
@@ -207,7 +231,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Genre',
+                'Genre *',
                 style: GoogleFonts.poppins(
                   color: Colors.white,
                   fontSize: 18,

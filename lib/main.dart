@@ -7,7 +7,7 @@ import 'package:rawae_gp24/profile_page.dart';
 import 'package:rawae_gp24/threads.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
-import 'character_page.dart'; 
+import 'character_page.dart';
 // Firebase packages
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -34,26 +34,26 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => const SignUpPage(),
         '/home': (context) => HomePage(),
         '/profile': (context) => ProfilePage(),
-         
       },
-     onGenerateRoute: (settings) {
-    switch (settings.name) {
-      case '/character_page':
-        final args = settings.arguments as Map<String, dynamic>;
-        return MaterialPageRoute(
-          builder: (context) => CharacterPreviewPage.fromArguments(args),
-        );
-      case '/threads':
-        final args = settings.arguments as Map<String, String>;
-        final threadId = args['threadId']!;
-        final userId = args['userId']!;
-        return MaterialPageRoute(
-          builder: (context) => StoryView(threadId: threadId, userId: userId),
-        );
-      default:
-        return MaterialPageRoute(builder: (context) => HomePage());
-    }
-  },
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/character_page':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => CharacterPreviewPage.fromArguments(args),
+            );
+          case '/threads':
+            final args = settings.arguments as Map<String, String>;
+            final threadId = args['threadId']!;
+            final userId = args['userId']!;
+            return MaterialPageRoute(
+              builder: (context) =>
+                  StoryView(threadId: threadId, userId: userId),
+            );
+          default:
+            return MaterialPageRoute(builder: (context) => HomePage());
+        }
+      },
     );
   }
 }
@@ -72,12 +72,12 @@ class _WelcomePageState extends State<WelcomePage> {
     FirebaseMessaging.instance.requestPermission();
     FirebaseMessaging.instance.getToken().then((token) {
       if (token != null) {
-        _storeDeviceToken(token);
+        //       _storeDeviceToken(token);
       }
     });
   }
-
-  Future<void> _storeDeviceToken(String token) async {
+/* 
+ Future<void> _storeDeviceToken(String token) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       await FirebaseFirestore.instance
@@ -85,7 +85,7 @@ class _WelcomePageState extends State<WelcomePage> {
           .doc(user.uid)
           .update({'deviceToken': token});
     }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {

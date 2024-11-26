@@ -91,6 +91,7 @@ class _HomePageState extends State<HomePage> {
               stream: FirebaseFirestore.instance
                   .collection('Thread')
                   .where('status', isEqualTo: 'in_progress')
+                  // .orderBy('totalView', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
