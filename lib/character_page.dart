@@ -5,33 +5,33 @@ import 'threads.dart'; // Adjust the path to your threads.dart file
 import 'package:cached_network_image/cached_network_image.dart';
 
 class CharacterPreviewPage extends StatefulWidget {
-  final String userName;
+  final String charName;
   final String threadId;
   final String storyText;
   final String userId;
   final String publicUrl;
-  final List<String> characterTags;
+  final String description;  // Changed from List<String> to String
   final String partId;
 
   const CharacterPreviewPage({
     super.key,
-    required this.userName,
+    required this.charName,
     required this.threadId,
     required this.storyText,
     required this.userId,
     required this.publicUrl,
-    required this.characterTags,
+    required this.description,  // Accepts String
     required this.partId,
   });
 
   static CharacterPreviewPage fromArguments(Map<String, dynamic> args) {
     return CharacterPreviewPage(
-      userName: args['userName'] ?? '',
+      charName: args['charName'] ?? '',
       threadId: args['threadId'] ?? '',
       storyText: args['storyText'] ?? '',
       userId: args['userId'] ?? '',
       publicUrl: args['publicUrl'] ?? '',
-      characterTags: List<String>.from(args['characterTags'] ?? []),   
+      description: args['description'] ?? '',  // Ensure it's a String
       partId: args['partId'] ?? '',
     );
   }
@@ -42,15 +42,15 @@ class CharacterPreviewPage extends StatefulWidget {
 
 class _CharacterPreviewPageState extends State<CharacterPreviewPage> {
   String? updatedPublicUrl;
-  List<String>? updatedCharacterTags;
+  String? updatedDescription;  // Changed to String
 
   @override
   void initState() {
     super.initState();
     updatedPublicUrl = widget.publicUrl;
-    updatedCharacterTags = widget.characterTags;
+    updatedDescription = widget.description;  // Directly assign String description
     print('Updated Public URL: $updatedPublicUrl');
-    print('Updated Character Tags: $updatedCharacterTags');
+    print('Updated Description: $updatedDescription');
   }
 
   @override
@@ -82,7 +82,7 @@ class _CharacterPreviewPageState extends State<CharacterPreviewPage> {
                   ),
                 ),
                 Text(
-                  widget.userName,
+                  widget.charName,
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 32,
@@ -116,6 +116,16 @@ class _CharacterPreviewPageState extends State<CharacterPreviewPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 20),
+                // Show description as a text
+                Text(
+                  updatedDescription ?? widget.description, // Use the updated description
+                  style: GoogleFonts.poppins(
+                    color: const Color.fromARGB(255, 211, 211, 211),
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           ),
@@ -131,8 +141,8 @@ class _CharacterPreviewPageState extends State<CharacterPreviewPage> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => EditCharacterPage(
-                          userName: widget.userName,
-                          characterTags: widget.characterTags,
+                          userName: widget.charName,
+                          description: widget.description,  // Pass description as a String
                           threadId: widget.threadId,
                           partId: widget.partId,
                         ),
@@ -141,12 +151,10 @@ class _CharacterPreviewPageState extends State<CharacterPreviewPage> {
                     if (result != null) {
                       setState(() {
                         updatedPublicUrl = result['publicUrl'];
-                        updatedCharacterTags = List<String>.from(result['characterTags']);
-                          print("Updated Public URL: $updatedPublicUrl");
-  print("Updated Character Tags: $updatedCharacterTags");
+                        updatedDescription = result['description'];  // Update with the new description
+                        print("Updated Public URL: $updatedPublicUrl");
+                        print("Updated Description: $updatedDescription");
                       });
-                      // Log the updated values
-                    
                     }
                   },
                   style: ElevatedButton.styleFrom(

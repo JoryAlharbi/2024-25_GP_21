@@ -40,26 +40,15 @@ class _WritingPageState extends State<WritingPage> {
     });
   }
 
-  void _processStoryPart() async {
-    final storyText = _textController.text;
+ Future<void> _processStoryPart() async {
+  final storyText = _textController.text;
 
-    if (storyText.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cannot submit an empty part!")),
-      );
-      return;
-    }
-
-  // Remove character tags from the input
-  final sanitizedText = removeCharacterTags(storyText);
-
-  final RegExp tagRegExp = RegExp(r'##(.*?)##');
-  final characterTags = tagRegExp
-      .allMatches(storyText)
-      .map((match) => match.group(1))
-      .where((tag) => tag != null)
-      .cast<String>()
-      .toList();
+  if (storyText.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Cannot submit an empty part!")),
+    );
+    return;
+  }
 
   setState(() {
     _isLoading = true;
@@ -67,78 +56,79 @@ class _WritingPageState extends State<WritingPage> {
 
   try {
     final partData = {
-      'content': sanitizedText, // Use sanitized text here
+      'content': storyText,
       'createdAt': Timestamp.now(),
       'writerID': userId,
-      'characters': characterTags,
     };
 
-      // Add the part to Firestore
-      final partRef = await FirebaseFirestore.instance
-          .collection('Thread')
-          .doc(widget.threadId)
-          .collection('Parts')
-          .add(partData);
+    // Add the part to Firestore
+    final partRef = await FirebaseFirestore.instance
+        .collection('Thread')
+        .doc(widget.threadId)
+        .collection('Parts')
+        .add(partData);
 
-      // Update thread contributors and writing status
-      await FirebaseFirestore.instance
-          .collection('Thread')
-          .doc(widget.threadId)
-          .update({
-        'contributors': FieldValue.arrayUnion([
-          FirebaseFirestore.instance.collection('Writer').doc(userId)
-        ]),
-        'isWriting': false,
-      });
+    // Update thread contributors and writing status
+    await FirebaseFirestore.instance
+        .collection('Thread')
+        .doc(widget.threadId)
+        .update({
+      'contributors': FieldValue.arrayUnion([
+        FirebaseFirestore.instance.collection('Writer').doc(userId)
+      ]),
+      'isWriting': false,
+    });
 
-      if (characterTags.isNotEmpty) {
-        final response = await _sendCharactersToAPI(characterTags, widget.threadId, partRef.id);
-          print('Response Status Code: ${response.statusCode}');
-          print('Response Body: ${response.body}');
-       if (response.statusCode == 200) {
-  Navigator.pushReplacementNamed(
-    context,
-    '/character_page', // Make sure this route is properly set
-    arguments: {
-      'userName': 'Character Name',
-      'threadId': widget.threadId,
-      'partId': partRef.id,
-      'storyText': storyText,
-      'userId': userId,
-      'publicUrl': jsonDecode(response.body)['public_url'], // Adjust based on your API response structure
-      "characterTags":characterTags,
-    },
-  );
-} else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Failed to process characters!")),
-          );
-        }
-      } else {
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-         // Log the error
-        
-        SnackBar(content: Text("Failed to submit part")),
+    // Send the story part to the API, including partId and threadId
+    final response = await _sendCharactersToAPI(storyText, widget.threadId, partRef.id);
+    print(response.statusCode);
+
+    if (response.statusCode == 200) {
+      // Handle the response from the server and navigate to the character page
+      Navigator.pushReplacementNamed(
+        context,
+        '/character_page', // Make sure this route is properly set
+        arguments: {
+          'charName': jsonDecode(response.body)['characters'][0]['name'],
+          'description': jsonDecode(response.body)['characters'][0]['description'],
+          'threadId': widget.threadId,
+          'partId': partRef.id,
+          'storyText': storyText,
+          'userId': userId,
+          'publicUrl': jsonDecode(response.body)['public_url'], 
+        },
       );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+    } else if (response.statusCode == 404) {
+      // Handle 404 response
+        Navigator.pop(context);
+
+    } else {
+      // Handle other errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to process characters!")),
+      );
     }
+  } catch (e) {
+    print('Error occurred: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Failed to submit part")),
+    );
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
+
 
   Future<http.Response> _sendCharactersToAPI(
-      List<String> characterTags, String threadId, String partId) {
+      String storyText, String threadId, String partId) {
     const apiUrl = 'http://10.0.2.2:5000/generate-image'; // Local API URL
     return http.post(
       Uri.parse(apiUrl),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'tags': characterTags,
+        'story_text': storyText, // Send the full story text
         'thread_id': threadId,
         'part_id': partId,
       }),
@@ -273,7 +263,6 @@ class _WritingPageState extends State<WritingPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                 
                 ],
               ),
             ],
@@ -308,10 +297,6 @@ class _WritingPageState extends State<WritingPage> {
                 style: const TextStyle(color: Colors.white),
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.person_add, color: Color(0xFF9DB2CE)),
-              onPressed: _insertCharacterTag,
-            ),
           ],
         ),
       ),
@@ -323,33 +308,9 @@ class _WritingPageState extends State<WritingPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
         children: [
-        
-          
+          // Add any action buttons here if needed
         ],
       ),
     );
   }
-
-  void _insertCharacterTag() {
-    setState(() {
-      final cursorPos = _textController.selection.base.offset;
-      final text = _textController.text;
-      final newText = cursorPos >= 0
-          ? text.replaceRange(
-              cursorPos,
-              cursorPos,
-              ' ##CharacterTag## ',
-            )
-          : '$text ##CharacterTag##';
-      _textController.text = newText;
-      _textController.selection = TextSelection.fromPosition(
-        TextPosition(offset: cursorPos + 15), // Move cursor after inserted tag
-      );
-    });
-  }
-  String removeCharacterTags(String input) {
-  final RegExp characterTagRegExp = RegExp(r'##.*?##');
-  return input.replaceAll(characterTagRegExp, '').trim();
-}
-
 }

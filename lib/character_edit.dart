@@ -6,12 +6,12 @@ import 'dart:convert';
 class EditCharacterPage extends StatefulWidget {
   final String userName;
 
- final List<String> characterTags;
+ final String description;
  final String threadId;
  final String partId;
 
   const EditCharacterPage({super.key, required this.userName,
-  required this.characterTags,
+  required this.description,
    required this.threadId,
   required this.partId,});
 
@@ -29,9 +29,10 @@ class _EditCharacterPageState extends State<EditCharacterPage> {
       Uri.parse(apiUrl),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'tags': additionalDetails,
+        'story_text': additionalDetails,
         'thread_id': threadId,
         'part_id': partId,
+        "additional" :1
       }),
     );
   }
@@ -90,7 +91,7 @@ class _EditCharacterPageState extends State<EditCharacterPage> {
                 TextFormField(
                   maxLines: 6,
                   style: const TextStyle(color: Colors.white),
-                  initialValue: widget.characterTags.join(', '),
+                  initialValue: widget.description,
                   decoration: InputDecoration(
                     hintText: 'use creative and specific details to give a clear picture',
                     hintStyle: const TextStyle(color: Color(0xFF9DB2CE)),
@@ -129,7 +130,7 @@ ElevatedButton(
           'storyText': 'Your story text here',  // Replace with actual story text if applicable
           'userId': 'UserId here',  // Replace with actual userId if applicable
           'publicUrl': jsonDecode(response.body)['public_url'], // Assuming your API returns 'public_url'
-          'characterTags': widget.characterTags, 
+          'characterTags': widget.description, 
            // Use the existing characterTags
         };
 
