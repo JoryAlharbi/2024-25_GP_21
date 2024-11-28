@@ -39,6 +39,7 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final userRef =
           FirebaseFirestore.instance.collection('Writer').doc(user.uid);
+
       // Fetch threads where contributors array contains the user's reference
       final threadsSnapshot = await FirebaseFirestore.instance
           .collection('Thread')
@@ -56,10 +57,21 @@ class _ProfilePageState extends State<ProfilePage> {
 
       for (var doc in threadsSnapshot.docs) {
         var threadData = doc.data() as Map<String, dynamic>;
+
+        // Check for the 'bookCoverUrl' and set a fallback if null
+        String? bookCoverUrl = threadData['bookCoverUrl'] ??
+            'assets/default_cover.png'; // Fallback to a default cover image
+
         if (threadData['status'] == 'in_progress') {
-          inProgressThreads.add(threadData);
+          inProgressThreads.add({
+            ...threadData, // Copy all the existing data
+            'bookCoverUrl': bookCoverUrl, // Add the bookCoverUrl field
+          });
         } else if (threadData['status'] == 'Published') {
-          publishedThreads.add(threadData);
+          publishedThreads.add({
+            ...threadData, // Copy all the existing data
+            'bookCoverUrl': bookCoverUrl, // Add the bookCoverUrl field
+          });
         }
       }
 
@@ -326,38 +338,74 @@ class _ProfilePageState extends State<ProfilePage> {
                           const SizedBox(height: 20),
                           isPublishedSelected
                               ? Expanded(
-                                  child: ListView.builder(
+                                  child: GridView.builder(
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2, // Two books per row
+                                      crossAxisSpacing:
+                                          10, // Space between columns
+                                      mainAxisSpacing: 10, // Space between rows
+                                      childAspectRatio:
+                                          0.7, // Aspect ratio of each item (adjust as needed)
+                                    ),
                                     itemCount: publishedThreads.length,
                                     itemBuilder: (context, index) {
-                                      return ListTile(
-                                        title: Text(
-                                          publishedThreads[index]['title'],
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                        subtitle: Text(
-                                          publishedThreads[index]
-                                              ['description'],
-                                          style:
-                                              TextStyle(color: Colors.white70),
+                                      return Card(
+                                        elevation: 5,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            publishedThreads[index]
+                                                        ['bookCoverUrl'] !=
+                                                    null
+                                                ? Image.network(
+                                                    publishedThreads[index]
+                                                        ['bookCoverUrl'],
+                                                    width: double.infinity,
+                                                    height: 180,
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                : const Icon(Icons.book,
+                                                    color: Colors.white),
+                                          ],
                                         ),
                                       );
                                     },
                                   ),
                                 )
                               : Expanded(
-                                  child: ListView.builder(
+                                  child: GridView.builder(
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2, // Two books per row
+                                      crossAxisSpacing:
+                                          10, // Space between columns
+                                      mainAxisSpacing: 10, // Space between rows
+                                      childAspectRatio:
+                                          0.7, // Aspect ratio of each item (adjust as needed)
+                                    ),
                                     itemCount: inProgressThreads.length,
                                     itemBuilder: (context, index) {
-                                      return ListTile(
-                                        title: Text(
-                                          inProgressThreads[index]['title'],
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                        subtitle: Text(
-                                          inProgressThreads[index]
-                                              ['description'],
-                                          style:
-                                              TextStyle(color: Colors.white70),
+                                      return Card(
+                                        elevation: 5,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            inProgressThreads[index]
+                                                        ['bookCoverUrl'] !=
+                                                    null
+                                                ? Image.network(
+                                                    inProgressThreads[index]
+                                                        ['bookCoverUrl'],
+                                                    width: double.infinity,
+                                                    height: 200,
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                : const Icon(Icons.book,
+                                                    color: Colors.white),
+                                          ],
                                         ),
                                       );
                                     },
