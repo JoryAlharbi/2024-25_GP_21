@@ -81,7 +81,7 @@ class _WelcomePageState extends State<WelcomePage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       await FirebaseFirestore.instance
-          .collection('users')
+          .collection('Writer')
           .doc(user.uid)
           .update({'deviceToken': token});
     }
