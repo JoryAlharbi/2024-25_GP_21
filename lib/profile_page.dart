@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Add Firestore import
 import 'package:firebase_core/firebase_core.dart'; // Add Firebase core import
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 
 import 'package:rawae_gp24/bookmark.dart';
 import 'package:rawae_gp24/edit_profile_page.dart';
@@ -9,7 +12,6 @@ import 'package:rawae_gp24/homepage.dart';
 import 'package:rawae_gp24/library.dart';
 import 'package:rawae_gp24/makethread.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:rawae_gp24/custom_navigation_bar.dart'; // Import your CustomNavigationBar
 
 class ProfilePage extends StatefulWidget {
@@ -23,16 +25,52 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isPublishedSelected = true;
   String? profileImageUrl;
   String? username;
+  File? _profileImage;
 
-  final List<Map<String, String>> publishedBooks = [
-    {'imageUrl': 'assets/book.png', 'title': 'Memories of the Sea'},
-    {'imageUrl': 'assets/book.png', 'title': 'Think Outside the Box'},
-  ];
+  List<Map<String, dynamic>> inProgressThreads = [];
+  List<Map<String, dynamic>> publishedThreads = [];
 
-  final List<Map<String, String>> inProgressBooks = [
-    {'imageUrl': 'assets/book2.png', 'title': 'The Three Month Rule'},
-    {'imageUrl': 'assets/book2.png', 'title': 'New Adventures'},
-  ];
+  // Fetch user's threads
+  Future<void> fetchUserThreads() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return; // Return if no user is logged in.
+
+    try {
+      final userRef =
+          FirebaseFirestore.instance.collection('Writer').doc(user.uid);
+      // Fetch threads where contributors array contains the user's reference
+      final threadsSnapshot = await FirebaseFirestore.instance
+          .collection('Thread')
+          .where('contributors',
+              arrayContains: userRef) // Match with user's document reference
+          .get();
+
+      print('Fetched Threads Count: ${threadsSnapshot.size}');
+      threadsSnapshot.docs.forEach((doc) {
+        print(doc.data());
+      });
+
+      List<Map<String, dynamic>> inProgressThreads = [];
+      List<Map<String, dynamic>> publishedThreads = [];
+
+      for (var doc in threadsSnapshot.docs) {
+        var threadData = doc.data() as Map<String, dynamic>;
+        if (threadData['status'] == 'in_progress') {
+          inProgressThreads.add(threadData);
+        } else if (threadData['status'] == 'Published') {
+          publishedThreads.add(threadData);
+        }
+      }
+
+      setState(() {
+        this.inProgressThreads = inProgressThreads;
+        this.publishedThreads = publishedThreads;
+      });
+    } catch (e) {
+      print("Error fetching threads: $e");
+    }
+  }
 
   // Fetch writer's data
   Future<void> fetchWriterData() async {
@@ -45,10 +83,48 @@ class _ProfilePageState extends State<ProfilePage> {
           .get();
       if (snapshot.exists) {
         setState(() {
-          // Check if the profileImageUrl exists, otherwise use the default image
-          profileImageUrl =
-              snapshot.data()?['profileImageUrl'] ?? 'assets/default.png';
+          profileImageUrl = snapshot.data()?['profileImageUrl'] ??
+              'assets/default.png'; // Fallback to default image
           username = snapshot.data()?['username'];
+        });
+      }
+    }
+  }
+
+  // Function to pick an image
+  Future<void> pickImage() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  // Select and upload a new profile picture
+  Future<void> selectProfilePicture() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final file = File(pickedFile.path);
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('profile_pictures/${user.uid}.jpg');
+        await storageRef.putFile(file);
+
+        final downloadUrl = await storageRef.getDownloadURL();
+        await FirebaseFirestore.instance
+            .collection('Writer')
+            .doc(user.uid)
+            .update({'profileImageUrl': downloadUrl});
+
+        setState(() {
+          profileImageUrl = downloadUrl;
         });
       }
     }
@@ -58,6 +134,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     fetchWriterData();
+    fetchUserThreads(); // Call to fetch the threads
   }
 
   @override
@@ -94,24 +171,32 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 120),
                 Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundColor: Colors.grey[700],
-                      backgroundImage: profileImageUrl != null
-                          ? NetworkImage(profileImageUrl!)
-                          : null,
-                      child: profileImageUrl == null
-                          ? const Icon(Icons.person,
-                              size: 60, color: Colors.white)
-                          : null,
+                    GestureDetector(
+                      onTap: pickImage,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundImage: _profileImage != null
+                            ? FileImage(
+                                _profileImage!) // Display the picked image
+                            : (profileImageUrl != null &&
+                                    profileImageUrl!.isNotEmpty
+                                ? NetworkImage(
+                                    profileImageUrl!) // Display the image from network (if available)
+                                : null) as ImageProvider?, // Handle null properly
+                        child: _profileImage == null &&
+                                (profileImageUrl == null ||
+                                    profileImageUrl!.isEmpty)
+                            ? const Icon(Icons.add_a_photo,
+                                color: Colors.white,
+                                size: 50) // Default icon when no image
+                            : null,
+                      ),
                     ),
                     Positioned(
                       bottom: 0,
                       right: 0,
                       child: GestureDetector(
-                        onTap: () {
-                          // Handle change profile picture action
-                        },
+                        onTap: selectProfilePicture,
                         child: Container(
                           decoration: const BoxDecoration(
                             color: Colors.orange,
@@ -229,7 +314,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     if (!isPublishedSelected)
                                       Container(
                                         height: 3,
-                                        width: 30,
+                                        width: 60,
                                         color: Colors.white,
                                         margin: const EdgeInsets.only(top: 4),
                                       ),
@@ -239,33 +324,45 @@ class _ProfilePageState extends State<ProfilePage> {
                             ],
                           ),
                           const SizedBox(height: 20),
-                          Expanded(
-                            child: Center(
-                              child: GridView.builder(
-                                shrinkWrap: true,
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  crossAxisSpacing: 10,
-                                  mainAxisSpacing: 10,
-                                  childAspectRatio: 0.7,
+                          isPublishedSelected
+                              ? Expanded(
+                                  child: ListView.builder(
+                                    itemCount: publishedThreads.length,
+                                    itemBuilder: (context, index) {
+                                      return ListTile(
+                                        title: Text(
+                                          publishedThreads[index]['title'],
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        subtitle: Text(
+                                          publishedThreads[index]
+                                              ['description'],
+                                          style:
+                                              TextStyle(color: Colors.white70),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                )
+                              : Expanded(
+                                  child: ListView.builder(
+                                    itemCount: inProgressThreads.length,
+                                    itemBuilder: (context, index) {
+                                      return ListTile(
+                                        title: Text(
+                                          inProgressThreads[index]['title'],
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        subtitle: Text(
+                                          inProgressThreads[index]
+                                              ['description'],
+                                          style:
+                                              TextStyle(color: Colors.white70),
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
-                                itemCount: (isPublishedSelected
-                                        ? publishedBooks
-                                        : inProgressBooks)
-                                    .length,
-                                itemBuilder: (context, index) {
-                                  final book = isPublishedSelected
-                                      ? publishedBooks[index]
-                                      : inProgressBooks[index];
-                                  return BookCard(
-                                    imageUrl: book['imageUrl']!,
-                                    title: book['title']!,
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -276,53 +373,9 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => MakeThreadPage()),
-          );
-        },
-        backgroundColor: const Color(0xFFD35400),
-        elevation: 6,
-        child: const Icon(Icons.add, size: 36, color: Colors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: CustomNavigationBar(selectedIndex: 3),
-    );
-  }
-}
-
-// BookCard widget for the grid list
-class BookCard extends StatelessWidget {
-  final String imageUrl;
-  final String title;
-
-  const BookCard({super.key, required this.imageUrl, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: Image.asset(
-              imageUrl,
-              width: 100,
-              height: 150,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 12, color: Colors.white),
-          ),
-        ],
+      bottomNavigationBar: CustomNavigationBar(
+        selectedIndex:
+            0, // Pass the required argument/ Your custom navigation bar
       ),
     );
   }

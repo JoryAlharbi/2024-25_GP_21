@@ -1,0 +1,332 @@
+@startuml
+set namespaceSeparator ::
+
+class "rawae_gp24::book.dart::BookDetailsPage" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "rawae_gp24::book.dart::BookDetailsPage"
+
+class "rawae_gp24::book.dart::GenreChip" {
+  +String label
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "rawae_gp24::book.dart::GenreChip"
+
+class "rawae_gp24::bookmark.dart::BookmarkPage" {
+  +List<Map<String, String>> books
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "rawae_gp24::bookmark.dart::BookmarkPage"
+
+class "rawae_gp24::character_edit.dart::EditCharacterPage" {
+  +String userName
+  +List<String> characterTags
+  +String threadId
+  +String partId
+  +_EditCharacterPageState createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "rawae_gp24::character_edit.dart::EditCharacterPage"
+
+class "rawae_gp24::character_edit.dart::_EditCharacterPageState" {
+  -GlobalKey<FormState> _formKey
+  -String? _additionalDetails
+  -dynamic _sendCharactersToAPI()
+  +Widget build()
+}
+
+"rawae_gp24::character_edit.dart::_EditCharacterPageState" o-- "flutter::src::widgets::framework.dart::GlobalKey<FormState>"
+"flutter::src::widgets::framework.dart::State" <|-- "rawae_gp24::character_edit.dart::_EditCharacterPageState"
+
+class "rawae_gp24::character_page.dart::CharacterPreviewPage" {
+  +String userName
+  +String threadId
+  +String storyText
+  +String userId
+  +String publicUrl
+  +List<String> characterTags
+  +String partId
+  {static} +CharacterPreviewPage fromArguments()
+  +_CharacterPreviewPageState createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "rawae_gp24::character_page.dart::CharacterPreviewPage"
+
+class "rawae_gp24::character_page.dart::_CharacterPreviewPageState" {
+  +String? updatedPublicUrl
+  +List<String>? updatedCharacterTags
+  +void initState()
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::State" <|-- "rawae_gp24::character_page.dart::_CharacterPreviewPageState"
+
+class "rawae_gp24::custom_navigation_bar.dart::CustomNavigationBar" {
+  +int selectedIndex
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "rawae_gp24::custom_navigation_bar.dart::CustomNavigationBar"
+
+class "rawae_gp24::edit_profile_page.dart::EditProfilePage" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "rawae_gp24::edit_profile_page.dart::EditProfilePage"
+
+class "rawae_gp24::genre_button.dart::GenreButton" {
+  +String genre
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "rawae_gp24::genre_button.dart::GenreButton"
+
+class "rawae_gp24::genre_library.dart::GenreLibraryPage" {
+  +String genre
+  +List<Map<String, String>> books
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "rawae_gp24::genre_library.dart::GenreLibraryPage"
+
+class "rawae_gp24::homepage.dart::HomePage" {
+  +_HomePageState createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "rawae_gp24::homepage.dart::HomePage"
+
+class "rawae_gp24::homepage.dart::_HomePageState" {
+  +int selectedIndex
+  -dynamic _getGenreNames()
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::State" <|-- "rawae_gp24::homepage.dart::_HomePageState"
+
+class "rawae_gp24::homepage.dart::BookListItem" {
+  +String title
+  +String genre
+  +bool isPopular
+  +int userIcons
+  +String? bookCoverUrl
+  +String threadId
+  +String userId
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "rawae_gp24::homepage.dart::BookListItem"
+
+class "rawae_gp24::library.dart::LibraryPage" {
+  +List<Map<String, dynamic>> genres
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "rawae_gp24::library.dart::LibraryPage"
+
+class "rawae_gp24::login_page.dart::LoginPage" {
+  +_LoginPageState createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "rawae_gp24::login_page.dart::LoginPage"
+
+class "rawae_gp24::login_page.dart::_LoginPageState" {
+  -bool _isObscured
+  -FirebaseAuth _auth
+  -TextEditingController _usernameController
+  -TextEditingController _passwordController
+  -void _login()
+  +Widget build()
+}
+
+"rawae_gp24::login_page.dart::_LoginPageState" o-- "firebase_auth::firebase_auth.dart::FirebaseAuth"
+"rawae_gp24::login_page.dart::_LoginPageState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter::src::widgets::framework.dart::State" <|-- "rawae_gp24::login_page.dart::_LoginPageState"
+
+class "rawae_gp24::main.dart::MyApp" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "rawae_gp24::main.dart::MyApp"
+
+class "rawae_gp24::main.dart::WelcomePage" {
+  +_WelcomePageState createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "rawae_gp24::main.dart::WelcomePage"
+
+class "rawae_gp24::main.dart::_WelcomePageState" {
+  +void initState()
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::State" <|-- "rawae_gp24::main.dart::_WelcomePageState"
+
+class "rawae_gp24::makethread.dart::MakeThreadPage" {
+  +_MakeThreadPageState createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "rawae_gp24::makethread.dart::MakeThreadPage"
+
+class "rawae_gp24::makethread.dart::_MakeThreadPageState" {
+  -GlobalKey<FormState> _formKey
+  -String? _threadTitle
+  -List<DocumentReference<Object?>> _selectedGenres
+  -XFile? _bookCover
+  -bool _isUploading
+  +List<QueryDocumentSnapshot<Object?>> availableGenres
+  -bool _isLoading
+  +void initState()
+  -dynamic _fetchGenres()
+  +dynamic uploadImage()
+  -dynamic _createThread()
+  +Widget buildGenreChips()
+  +Widget build()
+}
+
+"rawae_gp24::makethread.dart::_MakeThreadPageState" o-- "flutter::src::widgets::framework.dart::GlobalKey<FormState>"
+"rawae_gp24::makethread.dart::_MakeThreadPageState" o-- "cross_file::src::types::interface.dart::XFile"
+"flutter::src::widgets::framework.dart::State" <|-- "rawae_gp24::makethread.dart::_MakeThreadPageState"
+
+class "rawae_gp24::profile_page.dart::ProfilePage" {
+  +_ProfilePageState createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "rawae_gp24::profile_page.dart::ProfilePage"
+
+class "rawae_gp24::profile_page.dart::_ProfilePageState" {
+  +bool isPublishedSelected
+  +String? profileImageUrl
+  +String? username
+  -File? _profileImage
+  +List<Map<String, dynamic>> inProgressThreads
+  +List<Map<String, dynamic>> publishedThreads
+  +dynamic fetchUserThreads()
+  +dynamic fetchWriterData()
+  +dynamic pickImage()
+  +dynamic selectProfilePicture()
+  +void initState()
+  +Widget build()
+}
+
+"rawae_gp24::profile_page.dart::_ProfilePageState" o-- "dart::io::File"
+"flutter::src::widgets::framework.dart::State" <|-- "rawae_gp24::profile_page.dart::_ProfilePageState"
+
+class "rawae_gp24::profile_page.dart::CurvePainter" {
+  +void paint()
+  +bool shouldRepaint()
+}
+
+"flutter::src::rendering::custom_paint.dart::CustomPainter" <|-- "rawae_gp24::profile_page.dart::CurvePainter"
+
+class "rawae_gp24::read_book.dart::ReadBookPage" {
+  +String bookTitle
+  +String bookContent
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "rawae_gp24::read_book.dart::ReadBookPage"
+
+class "rawae_gp24::search.dart::SearchPage" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "rawae_gp24::search.dart::SearchPage"
+
+class "rawae_gp24::signup_page.dart::SignUpPage" {
+  +_SignUpPageState createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "rawae_gp24::signup_page.dart::SignUpPage"
+
+class "rawae_gp24::signup_page.dart::_SignUpPageState" {
+  +FirebaseAuth auth
+  -GlobalKey<FormState> _formKey
+  -TextEditingController _emailController
+  -TextEditingController _passwordController
+  -TextEditingController _confirmPasswordController
+  -TextEditingController _usernameController
+  -TextEditingController _nameController
+  -bool _isObscured
+  -bool _isLoading
+  -bool _isSuccessful
+  -String _passwordStrength
+  -File? _profileImage
+  -String? _emailError
+  -String? _usernameError
+  -String? _nameError
+  +void signUpAction()
+  +Widget build()
+}
+
+"rawae_gp24::signup_page.dart::_SignUpPageState" o-- "firebase_auth::firebase_auth.dart::FirebaseAuth"
+"rawae_gp24::signup_page.dart::_SignUpPageState" o-- "flutter::src::widgets::framework.dart::GlobalKey<FormState>"
+"rawae_gp24::signup_page.dart::_SignUpPageState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"rawae_gp24::signup_page.dart::_SignUpPageState" o-- "dart::io::File"
+"flutter::src::widgets::framework.dart::State" <|-- "rawae_gp24::signup_page.dart::_SignUpPageState"
+
+class "rawae_gp24::threads.dart::StoryView" {
+  +String threadId
+  +_StoryViewState createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "rawae_gp24::threads.dart::StoryView"
+
+class "rawae_gp24::threads.dart::_StoryViewState" {
+  +String userId
+  +bool isBellClicked
+  +void initState()
+  +void onBellClick()
+  +dynamic sendPushNotification()
+  +dynamic sendNotificationToUser()
+  -void _incrementViewCount()
+  +Widget build()
+  +void onWritingBoxClick()
+  -String _calculateTimeAgo()
+  -Widget _buildStoryAvatar()
+  +dynamic getWriterDetails()
+}
+
+"flutter::src::widgets::framework.dart::State" <|-- "rawae_gp24::threads.dart::_StoryViewState"
+
+class "rawae_gp24::threads.dart::TimelineItem" {
+  +String name
+  +String username
+  +String content
+  +String timeAgo
+  +String avatarPath
+  +String avatarName
+}
+
+class "rawae_gp24::writing.dart::WritingPage" {
+  +String threadId
+  +_WritingPageState createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "rawae_gp24::writing.dart::WritingPage"
+
+class "rawae_gp24::writing.dart::_WritingPageState" {
+  -TextEditingController _textController
+  +String userId
+  -bool _isLoading
+  +void initState()
+  +void dispose()
+  -void _cancelWriting()
+  -void _processStoryPart()
+  -dynamic _sendCharactersToAPI()
+  +Widget build()
+  -Widget _buildCharacterAvatar()
+  -Widget _buildProfileSection()
+  -Widget _buildTextField()
+  -Widget _buildActionButtons()
+  -void _insertCharacterTag()
+  +String removeCharacterTags()
+}
+
+"rawae_gp24::writing.dart::_WritingPageState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter::src::widgets::framework.dart::State" <|-- "rawae_gp24::writing.dart::_WritingPageState"
+
+
+@enduml
