@@ -72,12 +72,15 @@ class _WelcomePageState extends State<WelcomePage> {
     FirebaseMessaging.instance.requestPermission();
     FirebaseMessaging.instance.getToken().then((token) {
       if (token != null) {
-        //       _storeDeviceToken(token);
+        _storeDeviceToken(token);
       }
+    }).catchError((error) {
+      // Handle token retrieval failure
+      print("Error retrieving token: $error");
     });
   }
-/* 
- Future<void> _storeDeviceToken(String token) async {
+
+  Future<void> _storeDeviceToken(String token) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       await FirebaseFirestore.instance
@@ -85,7 +88,7 @@ class _WelcomePageState extends State<WelcomePage> {
           .doc(user.uid)
           .update({'deviceToken': token});
     }
-  }*/
+  }
 
   @override
   Widget build(BuildContext context) {
