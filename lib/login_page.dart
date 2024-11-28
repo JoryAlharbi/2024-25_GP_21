@@ -36,36 +36,54 @@ class _LoginPageState extends State<LoginPage> {
       } else if (e.code == 'invalid-email') {
         errorMessage = "The email address is badly formatted.";
       } else {
-        errorMessage = "wrong email or password, please try again";
+        errorMessage = "Wrong email or password, please try again.";
       }
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Login Failed"),
-          content: Text(errorMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
-            ),
-          ],
-        ),
-      );
+      _showErrorDialog("Login Failed", errorMessage);
     } catch (e) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Login Failed"),
-          content: Text("An error occurred. Please try again."),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
-            ),
-          ],
-        ),
-      );
+      _showErrorDialog("Login Failed", "An error occurred. Please try again.");
     }
+  }
+
+  void _forgotPassword() async {
+    final email = _usernameController.text.trim();
+    if (email.isEmpty) {
+      _showErrorDialog("Forgot Password", "Please enter your email address.");
+      return;
+    }
+
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      _showErrorDialog(
+        "Password Reset Email Sent",
+        "A password reset link has been sent to your email address.",
+      );
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      if (e.code == 'user-not-found') {
+        errorMessage = "No user found with this email.";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "The email address is badly formatted.";
+      } else {
+        errorMessage = "An error occurred. Please try again.";
+      }
+      _showErrorDialog("Forgot Password", errorMessage);
+    }
+  }
+
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -190,7 +208,22 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 25),
+                    SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.center,
+                      child: TextButton(
+                        onPressed: _forgotPassword,
+                        child: Text(
+                          "Forgot Password?",
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFFD35400),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 10),
                     GestureDetector(
                       onTap: _login,
                       child: Container(
