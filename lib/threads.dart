@@ -567,7 +567,7 @@ Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
                   shape: BoxShape.circle,
                   border: Border.all(
                     width: 4,
-                    color: const Color(0xFFD35400),
+                    color: const Color(0xFFD35400),//image
                   ),
                 ),
                 child: CircleAvatar(
@@ -583,7 +583,7 @@ Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD35400),
+                    color: const Color(0xFFD35400),//name char
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -594,12 +594,13 @@ Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
               ),
             ],
           ),
-          if (!isLastItem)
-            Container(
-              width: 4,
-              height: 90,
-              color: const Color(0xFFD35400),
-            ),
+         if (!isLastItem)
+  Container(
+    width: 4,
+    height: (item.content.length * 0.87 < 90) ? 90 : item.content.length * 0.87,
+    color: const Color(0xFFD35400),
+  ),
+
         ],
       ),
       const SizedBox(width: 12),
