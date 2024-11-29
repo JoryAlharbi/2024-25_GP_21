@@ -32,7 +32,7 @@ class _EditCharacterPageState extends State<EditCharacterPage> {
         'story_text': additionalDetails,
         'thread_id': threadId,
         'part_id': partId,
-        "additional" :1
+        "additional" :true 
       }),
     );
   }
@@ -130,7 +130,7 @@ ElevatedButton(
           'storyText': 'Your story text here',  // Replace with actual story text if applicable
           'userId': 'UserId here',  // Replace with actual userId if applicable
           'publicUrl': jsonDecode(response.body)['public_url'], // Assuming your API returns 'public_url'
-          'characterTags': widget.description, 
+          'description': _additionalDetails, 
            // Use the existing characterTags
         };
 
