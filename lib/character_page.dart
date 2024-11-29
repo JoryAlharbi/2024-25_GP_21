@@ -33,6 +33,8 @@ class CharacterPreviewPage extends StatefulWidget {
       publicUrl: args['publicUrl'] ?? '',
       description: args['description'] ?? '', // Ensure it's a String
       partId: args['partId'] ?? '',
+      
+
     );
   }
 

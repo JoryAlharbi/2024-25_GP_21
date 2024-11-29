@@ -200,44 +200,114 @@ class _StoryViewState extends State<StoryView> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           children: [
+              Align(
+      alignment: Alignment.centerLeft,
+      child: const Text(
+        'Writers ', 
+        style: TextStyle(
+          fontSize: 18,
+       
+          color: Color.fromARGB(228, 255, 255, 255),
+           // Adjust the text color as needed
+        ),
+      ),
+    ),
+    const SizedBox(height: 10), // Space between the title and the avatar section
+
             // Horizontal Scroll for Avatars
-            SizedBox(
-              height: 100,
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('Thread')
-                    .doc(widget.threadId)
-                    .collection('Parts')
-                    .orderBy('createdAt', descending: false)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    final timelineItems = snapshot.data!.docs.map((doc) {
-                      final data = doc.data() as Map<String, dynamic>;
+           SizedBox(
+  height: 100,
+  child: StreamBuilder<DocumentSnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection('Thread')
+        .doc(widget.threadId)
+        .snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.hasData) {
+        final threadData = snapshot.data!.data() as Map<String, dynamic>;
+        final contributors = List<DocumentReference>.from(threadData['contributors'] ?? []);
 
-                      return TimelineItem(
-                        name: data['name'] ?? 'Unknown',
-                        username: data['username'] ?? '@unknown',
-                        content: data['content'] ?? '',
-                        timeAgo: _calculateTimeAgo(data['createdAt']),
-                        avatarPath:
-                            data['profileImageUrl'] ?? 'assets/default.png',
-                        avatarName: data['avatarName'] ?? 'User',
-                      );
-                    }).toList();
+        // Fetch contributor details based on references
+        return FutureBuilder<List<Map<String, dynamic>>>(
+          future: Future.wait(
+            contributors.map((ref) => ref.get().then((contributorSnapshot) {
+              if (contributorSnapshot.exists) {
+                final contributorData =
+                    contributorSnapshot.data() as Map<String, dynamic>;
+                return {
+                  'name': contributorData['name'] ?? 'Unknown',
+                  'profileImageUrl': contributorData['profileImageUrl'] ??
+                      'assets/default.png',
+                };
+              }
+              else {
+                return {
+                  'name': 'Unknown',
+                  'profileImageUrl': 'assets/default.png',
+                };
+              }
+            })).toList(),
+          ),
+          builder: (context, contributorSnapshot) {
+            if (contributorSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (contributorSnapshot.hasData) {
+              final contributorsDetails = contributorSnapshot.data!;
 
-                    return ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: timelineItems.length,
-                      itemBuilder: (context, index) {
-                        return _buildStoryAvatar(timelineItems[index]);
-                      },
-                    );
-                  }
-                  return const Center(child: CircularProgressIndicator());
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: contributorsDetails.length,
+                itemBuilder: (context, index) {
+                  final contributor = contributorsDetails[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Avatar with blue circular border
+                        
+                        Container(
+                          width: 70, // Slightly bigger container for the border
+                          height: 60,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Color(0xFFA2DED0), width: 4), // Blue border
+                          ),
+                          child:  CircleAvatar(
+  radius: 28,
+  backgroundImage: contributor['profileImageUrl'].startsWith('assets/')
+      ? AssetImage(contributor['profileImageUrl']) // Load from assets
+      : NetworkImage(contributor['profileImageUrl']) as ImageProvider, // Load from network
+  backgroundColor: Colors.grey.shade300,
+),
+
+                        ),
+                        const SizedBox(height: 8),
+                        // Name text in white
+                        Text(
+                          contributor['name'],
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white, // Text color changed to white
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 },
-              ),
-            ),
+              );
+            }
+            return const Center(child: Text('No contributors found.'));
+          },
+        );
+      }
+      return const Center(child: CircularProgressIndicator());
+    },
+  ),
+),
+
             const Divider(
               thickness: 1,
               color: Color(0xFF344C64),
