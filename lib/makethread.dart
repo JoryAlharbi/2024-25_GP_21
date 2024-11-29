@@ -205,9 +205,9 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 90),
+              const SizedBox(height: 20),
               Text(
-                'Book Title *',
+                'Book Title*',
                 style: GoogleFonts.poppins(
                   color: Colors.white,
                   fontSize: 18,
@@ -231,7 +231,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Genre *',
+                'Genre*',
                 style: GoogleFonts.poppins(
                   color: Colors.white,
                   fontSize: 18,

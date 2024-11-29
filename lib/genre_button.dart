@@ -3,7 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 class GenreButton extends StatelessWidget {
   final String genre;
-  const GenreButton(this.genre, {super.key});
+  final VoidCallback onPressed; // Add a callback
+
+  const GenreButton(this.genre, {required this.onPressed, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,9 +18,7 @@ class GenreButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(8.0), // Corner radius set to 8
           ),
         ),
-        onPressed: () {
-          // Handle genre filter
-        },
+        onPressed: onPressed,
         child: Text(
           genre,
           style: GoogleFonts.poppins(color: Colors.white), // Poppins text style

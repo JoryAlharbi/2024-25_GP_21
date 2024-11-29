@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,17 +8,51 @@ import 'package:rawae_gp24/library.dart';
 import 'package:rawae_gp24/main.dart';
 import 'package:rawae_gp24/makethread.dart';
 import 'package:rawae_gp24/profile_page.dart';
-
-import 'package:google_fonts/google_fonts.dart';
-
 import 'package:rawae_gp24/custom_navigation_bar.dart';
 
-class EditProfilePage extends StatelessWidget {
+class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
 
   @override
+  _EditProfilePageState createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  final User? user = FirebaseAuth.instance.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    if (user != null) {
+      try {
+        // Fetch user data from Firestore
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('Writer')
+            .doc(user!.uid)
+            .get();
+
+        if (userDoc.exists) {
+          setState(() {
+            _usernameController.text = userDoc['username'] ?? '';
+            _emailController.text = userDoc['email'] ?? '';
+          });
+        }
+      } catch (e) {
+        print('Error fetching user data: $e');
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    User? user = FirebaseAuth.instance.currentUser;
     return Scaffold(
       backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
@@ -53,17 +88,19 @@ class EditProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             TextField(
+              controller: _usernameController,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: const Color(0xFF2C3E50),
-                hintText: user?.displayName ?? 'Username',
+                hintText: 'Username',
                 hintStyle: GoogleFonts.poppins(color: Colors.grey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
                 ),
               ),
-              style: GoogleFonts.poppins(color: Colors.white),
+              style: GoogleFonts.poppins(
+                  color: const Color.fromARGB(255, 227, 225, 225)),
             ),
             const SizedBox(height: 20),
             Text(
@@ -75,17 +112,19 @@ class EditProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             TextField(
+              controller: _emailController,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: const Color(0xFF2C3E50),
-                hintText: user?.email ?? 'No email available',
+                hintText: 'No email available',
                 hintStyle: GoogleFonts.poppins(color: Colors.grey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
                 ),
               ),
-              style: GoogleFonts.poppins(color: Colors.white),
+              style: GoogleFonts.poppins(
+                  color: const Color.fromARGB(255, 227, 225, 225)),
             ),
             const SizedBox(height: 20),
             Text(
@@ -97,6 +136,7 @@ class EditProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             TextField(
+              controller: _passwordController,
               obscureText: true,
               decoration: InputDecoration(
                 filled: true,
@@ -110,22 +150,6 @@ class EditProfilePage extends StatelessWidget {
               ),
               style: GoogleFonts.poppins(color: Colors.white),
             ),
-            const SizedBox(height: 5),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {
-                  // Handle change password action
-                },
-                child: Text(
-                  'Change password',
-                  style: GoogleFonts.poppins(
-                    color: Colors.grey,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ),
             const SizedBox(height: 40),
             Center(
               child: ElevatedButton(
@@ -133,8 +157,8 @@ class EditProfilePage extends StatelessWidget {
                   await FirebaseAuth.instance.signOut();
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                        builder: (context) =>
-                            MyApp()), // Replace with your welcome page
+                      builder: (context) => MyApp(),
+                    ),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Logged out')),
@@ -178,5 +202,13 @@ class EditProfilePage extends StatelessWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: CustomNavigationBar(selectedIndex: 3),
     );
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

@@ -10,7 +10,7 @@ class CharacterPreviewPage extends StatefulWidget {
   final String storyText;
   final String userId;
   final String publicUrl;
-  final String description;  // Changed from List<String> to String
+  final String description; // Changed from List<String> to String
   final String partId;
 
   const CharacterPreviewPage({
@@ -20,7 +20,7 @@ class CharacterPreviewPage extends StatefulWidget {
     required this.storyText,
     required this.userId,
     required this.publicUrl,
-    required this.description,  // Accepts String
+    required this.description, // Accepts String
     required this.partId,
   });
 
@@ -31,7 +31,7 @@ class CharacterPreviewPage extends StatefulWidget {
       storyText: args['storyText'] ?? '',
       userId: args['userId'] ?? '',
       publicUrl: args['publicUrl'] ?? '',
-      description: args['description'] ?? '',  // Ensure it's a String
+      description: args['description'] ?? '', // Ensure it's a String
       partId: args['partId'] ?? '',
     );
   }
@@ -42,13 +42,14 @@ class CharacterPreviewPage extends StatefulWidget {
 
 class _CharacterPreviewPageState extends State<CharacterPreviewPage> {
   String? updatedPublicUrl;
-  String? updatedDescription;  // Changed to String
+  String? updatedDescription; // Changed to String
 
   @override
   void initState() {
     super.initState();
     updatedPublicUrl = widget.publicUrl;
-    updatedDescription = widget.description;  // Directly assign String description
+    updatedDescription =
+        widget.description; // Directly assign String description
     print('Updated Public URL: $updatedPublicUrl');
     print('Updated Description: $updatedDescription');
   }
@@ -100,18 +101,23 @@ class _CharacterPreviewPageState extends State<CharacterPreviewPage> {
                   ),
                   child: ClipOval(
                     child: Image.network(
-                      updatedPublicUrl ?? widget.publicUrl, // Use the updated URL
-                      key: ValueKey(updatedPublicUrl), // Add key to force reload
-                      fit: BoxFit.cover, 
+                      updatedPublicUrl ??
+                          widget.publicUrl, // Use the updated URL
+                      key:
+                          ValueKey(updatedPublicUrl), // Add key to force reload
+                      fit: BoxFit.cover,
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) {
                           return child; // Image loaded
                         } else {
-                          return Center(child: CircularProgressIndicator()); // Show loading indicator
+                          return Center(
+                              child:
+                                  CircularProgressIndicator()); // Show loading indicator
                         }
                       },
                       errorBuilder: (context, error, stackTrace) {
-                        return Icon(Icons.error, color: Colors.red); // Show error icon
+                        return Icon(Icons.error,
+                            color: Colors.red); // Show error icon
                       },
                     ),
                   ),
@@ -119,7 +125,8 @@ class _CharacterPreviewPageState extends State<CharacterPreviewPage> {
                 const SizedBox(height: 20),
                 // Show description as a text
                 Text(
-                  updatedDescription ?? widget.description, // Use the updated description
+                  updatedDescription ??
+                      widget.description, // Use the updated description
                   style: GoogleFonts.poppins(
                     color: const Color.fromARGB(255, 211, 211, 211),
                     fontSize: 16,
@@ -142,7 +149,8 @@ class _CharacterPreviewPageState extends State<CharacterPreviewPage> {
                       MaterialPageRoute(
                         builder: (context) => EditCharacterPage(
                           userName: widget.charName,
-                          description: widget.description,  // Pass description as a String
+                          description: widget
+                              .description, // Pass description as a String
                           threadId: widget.threadId,
                           partId: widget.partId,
                         ),
@@ -151,7 +159,8 @@ class _CharacterPreviewPageState extends State<CharacterPreviewPage> {
                     if (result != null) {
                       setState(() {
                         updatedPublicUrl = result['publicUrl'];
-                        updatedDescription = result['description'];  // Update with the new description
+                        updatedDescription = result[
+                            'description']; // Update with the new description
                         print("Updated Public URL: $updatedPublicUrl");
                         print("Updated Description: $updatedDescription");
                       });

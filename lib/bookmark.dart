@@ -38,6 +38,7 @@ class BookmarkPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(0, 112, 28, 28),
         elevation: 0,
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

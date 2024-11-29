@@ -29,6 +29,7 @@ class GenreLibraryPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(0, 112, 28, 28),
         elevation: 0,
+        automaticallyImplyLeading: false,
         title: Text(
           genre,
           style: GoogleFonts.poppins(
@@ -63,12 +64,13 @@ class GenreLibraryPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    height: 190,
+                    height: 200,
+                    width: 130,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4.0),
                       image: DecorationImage(
                         image: AssetImage(book['image']!),
-                        fit: BoxFit.fill,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),

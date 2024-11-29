@@ -5,7 +5,7 @@ import 'threads.dart';
 import 'makethread.dart';
 import 'custom_navigation_bar.dart';
 import 'genre_button.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Add Firebase Auth to get the current user
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,6 +16,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int selectedIndex = 0;
+  String? selectedGenreRef; // Track the selected genre reference for filtering
 
   Future<String> _getGenreNames(List<dynamic> genreRefs) async {
     List<String> genreNames = [];
@@ -30,9 +31,61 @@ class _HomePageState extends State<HomePage> {
     return genreNames.join(', ');
   }
 
+  Future<List<String>> _getContributors(String threadId) async {
+    final threadDoc = await FirebaseFirestore.instance
+        .collection('Thread')
+        .doc(threadId)
+        .get();
+    final List<dynamic> contributorRefs = threadDoc['contributors'] ?? [];
+
+    List<String> profileImageUrls = [];
+    for (var ref in contributorRefs) {
+      if (ref is DocumentReference) {
+        final userSnapshot = await ref.get();
+        if (userSnapshot.exists) {
+          final data = userSnapshot.data() as Map<String, dynamic>;
+          final profileImageUrl = data['profileImageUrl'] ??
+              ''; // Default to empty string if missing
+          profileImageUrls.add(profileImageUrl);
+        }
+      }
+    }
+    return profileImageUrls;
+  }
+
+  Future<void> _toggleGenreFilter(String genreName) async {
+    setState(() {
+      selectedGenreRef = null; // Clear the filter while processing
+    });
+
+    if (genreName == 'null') {
+      // If "ALL" is clicked, reseting the filter
+      setState(() {
+        selectedGenreRef = null;
+      });
+      return;
+    }
+    // Fetch the genre reference corresponding to the genreName
+    final genreQuery = await FirebaseFirestore.instance
+        .collection('Genre')
+        .where('genreName', isEqualTo: genreName)
+        .get();
+
+    if (genreQuery.docs.isNotEmpty) {
+      final genreRef = genreQuery.docs.first.reference;
+      setState(() {
+        if (selectedGenreRef == genreRef.path) {
+          selectedGenreRef =
+              null; // Reset filter if clicking the same genre again
+        } else {
+          selectedGenreRef = genreRef.path; // Set new genre filter
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Fetch the current user's ID
     final String? userId = FirebaseAuth.instance.currentUser?.uid;
 
     if (userId == null) {
@@ -49,6 +102,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: const Color(0x00701C1C),
         elevation: 0,
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.search_rounded, color: Color(0xFF9DB2CE)),
@@ -68,18 +122,54 @@ class _HomePageState extends State<HomePage> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                GenreButton('Thriller'),
-                GenreButton('Fantasy'),
-                GenreButton('Fiction'),
-                GenreButton('Romance'),
-                GenreButton('Mystery'),
-                GenreButton('Science Fiction'),
-                GenreButton('Comedy'),
-                GenreButton('Drama'),
-                GenreButton('Adventure'),
-                GenreButton('Romance'),
-                GenreButton('Horror'),
-                GenreButton('Historical'),
+                GenreButton(
+                  'All', // Show all threads
+                  onPressed: () => _toggleGenreFilter('null'), // Reset filter
+                ),
+                GenreButton(
+                  'Thriller',
+                  onPressed: () => _toggleGenreFilter('Thriller'),
+                ),
+                GenreButton(
+                  'Fantasy',
+                  onPressed: () => _toggleGenreFilter('Fantasy'),
+                ),
+                GenreButton(
+                  'Fiction',
+                  onPressed: () => _toggleGenreFilter('Fiction'),
+                ),
+                GenreButton(
+                  'Romance',
+                  onPressed: () => _toggleGenreFilter('Romance'),
+                ),
+                GenreButton(
+                  'Mystery',
+                  onPressed: () => _toggleGenreFilter('Mystery'),
+                ),
+                GenreButton(
+                  'Science Fiction',
+                  onPressed: () => _toggleGenreFilter('Science Fiction'),
+                ),
+                GenreButton(
+                  'Comedy',
+                  onPressed: () => _toggleGenreFilter('Comedy'),
+                ),
+                GenreButton(
+                  'Drama',
+                  onPressed: () => _toggleGenreFilter('Drama'),
+                ),
+                GenreButton(
+                  'Adventure',
+                  onPressed: () => _toggleGenreFilter('Adventure'),
+                ),
+                GenreButton(
+                  'Horror',
+                  onPressed: () => _toggleGenreFilter('Horror'),
+                ),
+                GenreButton(
+                  'Historical',
+                  onPressed: () => _toggleGenreFilter('Historical'),
+                ),
               ],
             ),
           ),
@@ -88,11 +178,18 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 20),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('Thread')
-                  .where('status', isEqualTo: 'in_progress')
-                  // .orderBy('totalView', descending: true)
-                  .snapshots(),
+              stream: selectedGenreRef == null
+                  ? FirebaseFirestore.instance
+                      .collection('Thread')
+                      .where('status', isEqualTo: 'in_progress')
+                      .snapshots()
+                  : FirebaseFirestore.instance
+                      .collection('Thread')
+                      .where('status', isEqualTo: 'in_progress')
+                      .where('genreID',
+                          arrayContains:
+                              FirebaseFirestore.instance.doc(selectedGenreRef!))
+                      .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -124,10 +221,10 @@ class _HomePageState extends State<HomePage> {
                             title: threadData['title'] ?? 'Untitled',
                             genre: genreNames,
                             isPopular: index == 0,
-                            userIcons: 3,
                             bookCoverUrl: bookCoverUrl,
                             threadId: threadId,
-                            userId: userId, // Pass userId to BookListItem
+                            userId: userId,
+                            getContributors: _getContributors,
                           );
                         },
                       );
@@ -171,20 +268,20 @@ class BookListItem extends StatelessWidget {
   final String title;
   final String genre;
   final bool isPopular;
-  final int userIcons;
   final String? bookCoverUrl;
   final String threadId;
-  final String userId; // Add userId to pass to StoryView
+  final String userId;
+  final Future<List<String>> Function(String threadId) getContributors;
 
   const BookListItem({
     super.key,
     required this.title,
     required this.genre,
     required this.isPopular,
-    required this.userIcons,
     this.bookCoverUrl,
     required this.threadId,
-    required this.userId, // Add userId as a required parameter
+    required this.userId,
+    required this.getContributors,
   });
 
   @override
@@ -194,8 +291,7 @@ class BookListItem extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                StoryView(threadId: threadId, userId: userId), // Pass userId
+            builder: (context) => StoryView(threadId: threadId, userId: userId),
           ),
         );
       },
@@ -257,18 +353,53 @@ class BookListItem extends StatelessWidget {
                     Positioned(
                       bottom: 0,
                       right: 0,
-                      child: Row(
-                        children: List.generate(
-                          userIcons,
-                          (index) => Transform.translate(
-                            offset: Offset(-10.0 * index, 0),
-                            child: const Icon(
-                              Icons.account_circle_rounded,
-                              color: Color.fromARGB(255, 110, 125, 147),
-                              size: 35.0,
-                            ),
-                          ),
-                        ),
+                      child: FutureBuilder<List<String>>(
+                        future: getContributors(threadId),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const SizedBox(
+                              width: 35.0,
+                              height: 35.0,
+                              child: CircularProgressIndicator(),
+                            );
+                          } else if (snapshot.hasError ||
+                              !snapshot.hasData ||
+                              snapshot.data!.isEmpty) {
+                            return const Text(
+                              " ", //No Contributors
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 12.0),
+                            );
+                          } else {
+                            final profileImageUrls = snapshot.data!;
+                            return Row(
+                              children: List.generate(
+                                profileImageUrls.length,
+                                (index) => Transform.translate(
+                                  offset: Offset(-10.0 * index, 0),
+                                  child: ClipOval(
+                                    child: Image.network(
+                                      profileImageUrls[index],
+                                      width: 35.0,
+                                      height: 35.0,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return const Icon(
+                                          Icons.account_circle_rounded,
+                                          color: Color.fromARGB(
+                                              255, 110, 125, 147),
+                                          size: 35.0,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                        },
                       ),
                     ),
                   ],

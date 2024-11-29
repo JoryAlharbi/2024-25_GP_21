@@ -12,16 +12,17 @@ import 'package:rawae_gp24/homepage.dart';
 import 'package:rawae_gp24/library.dart';
 import 'package:rawae_gp24/makethread.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:rawae_gp24/custom_navigation_bar.dart'; // Import your CustomNavigationBar
+import 'package:rawae_gp24/custom_navigation_bar.dart'; // Import CustomNavigationBar
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  ProfilePage({super.key});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  int selectedIndex = 3;
   bool isPublishedSelected = true;
   String? profileImageUrl;
   String? username;
@@ -154,6 +155,24 @@ class _ProfilePageState extends State<ProfilePage> {
     User? user = FirebaseAuth.instance.currentUser;
     return Scaffold(
       backgroundColor: const Color(0xFF1B2835),
+      appBar: AppBar(
+        backgroundColor:
+            Colors.transparent, // Transparent to blend with the curve
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout,
+                color: Color.fromARGB(255, 255, 255, 255)),
+            iconSize: 30,
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut(); // Log out the user
+              Navigator.pushReplacementNamed(
+                  context, '/main'); // Navigate to login
+            },
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           SizedBox(
@@ -180,7 +199,7 @@ class _ProfilePageState extends State<ProfilePage> {
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               children: [
-                const SizedBox(height: 120),
+                const SizedBox(height: 90),
                 Stack(
                   children: [
                     GestureDetector(
@@ -251,12 +270,16 @@ class _ProfilePageState extends State<ProfilePage> {
                       borderRadius: BorderRadius.circular(15),
                     ),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 30, vertical: 20),
+                        horizontal: 30, vertical: 17),
                   ),
                   child: Text(
                     'Edit Profile',
-                    style:
-                        GoogleFonts.poppins(fontSize: 16, color: Colors.white),
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight:
+                          FontWeight.w500, // Move this inside the style method
+                    ),
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -300,7 +323,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         height: 3,
                                         width: 60,
                                         color: Colors.white,
-                                        margin: const EdgeInsets.only(top: 4),
+                                        margin: const EdgeInsets.only(top: 6),
                                       ),
                                   ],
                                 ),
@@ -314,7 +337,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 child: Column(
                                   children: [
                                     Text(
-                                      'InProgress',
+                                      'In Progress',
                                       style: GoogleFonts.poppins(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -328,46 +351,64 @@ class _ProfilePageState extends State<ProfilePage> {
                                         height: 3,
                                         width: 60,
                                         color: Colors.white,
-                                        margin: const EdgeInsets.only(top: 4),
+                                        margin: const EdgeInsets.only(top: 6),
                                       ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 8),
                           isPublishedSelected
                               ? Expanded(
                                   child: GridView.builder(
+                                    padding: const EdgeInsets.all(16),
                                     gridDelegate:
                                         SliverGridDelegateWithFixedCrossAxisCount(
                                       crossAxisCount: 2, // Two books per row
-                                      crossAxisSpacing:
-                                          10, // Space between columns
-                                      mainAxisSpacing: 10, // Space between rows
+                                      crossAxisSpacing: 16,
+                                      mainAxisSpacing: 16,
                                       childAspectRatio:
-                                          0.7, // Aspect ratio of each item (adjust as needed)
+                                          0.8, // Adjusted ratio for smaller cards
                                     ),
                                     itemCount: publishedThreads.length,
                                     itemBuilder: (context, index) {
-                                      return Card(
-                                        elevation: 5,
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors
+                                              .transparent, // Match the app background
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
                                         child: Column(
                                           crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                              CrossAxisAlignment.center,
                                           children: [
-                                            publishedThreads[index]
-                                                        ['bookCoverUrl'] !=
-                                                    null
-                                                ? Image.network(
-                                                    publishedThreads[index]
-                                                        ['bookCoverUrl'],
-                                                    width: double.infinity,
-                                                    height: 180,
-                                                    fit: BoxFit.cover,
-                                                  )
-                                                : const Icon(Icons.book,
-                                                    color: Colors.white),
+                                            ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              child: Image.network(
+                                                publishedThreads[index]
+                                                        ['bookCoverUrl'] ??
+                                                    '',
+                                                height: 160,
+                                                width: 110,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              publishedThreads[index]
+                                                      ['title'] ??
+                                                  'Untitled',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors
+                                                    .white, // Match text color to the theme
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
                                           ],
                                         ),
                                       );
@@ -376,35 +417,53 @@ class _ProfilePageState extends State<ProfilePage> {
                                 )
                               : Expanded(
                                   child: GridView.builder(
+                                    padding: const EdgeInsets.all(16),
                                     gridDelegate:
                                         SliverGridDelegateWithFixedCrossAxisCount(
                                       crossAxisCount: 2, // Two books per row
-                                      crossAxisSpacing:
-                                          10, // Space between columns
-                                      mainAxisSpacing: 10, // Space between rows
+                                      crossAxisSpacing: 16,
+                                      mainAxisSpacing: 16,
                                       childAspectRatio:
-                                          0.7, // Aspect ratio of each item (adjust as needed)
+                                          0.8, // Adjusted ratio for smaller cards
                                     ),
                                     itemCount: inProgressThreads.length,
                                     itemBuilder: (context, index) {
-                                      return Card(
-                                        elevation: 5,
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors
+                                              .transparent, // Match the app background
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
                                         child: Column(
                                           crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                              CrossAxisAlignment.center,
                                           children: [
-                                            inProgressThreads[index]
-                                                        ['bookCoverUrl'] !=
-                                                    null
-                                                ? Image.network(
-                                                    inProgressThreads[index]
-                                                        ['bookCoverUrl'],
-                                                    width: double.infinity,
-                                                    height: 200,
-                                                    fit: BoxFit.cover,
-                                                  )
-                                                : const Icon(Icons.book,
-                                                    color: Colors.white),
+                                            ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              child: Image.network(
+                                                inProgressThreads[index]
+                                                        ['bookCoverUrl'] ??
+                                                    'No books Avalible',
+                                                height: 160,
+                                                width: 110,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              inProgressThreads[index]
+                                                      ['title'] ??
+                                                  'Untitled',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w300,
+                                                color: Colors
+                                                    .white, // Match text color to the theme
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
                                           ],
                                         ),
                                       );
@@ -421,10 +480,23 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomNavigationBar(
-        selectedIndex:
-            0, // Pass the required argument/ Your custom navigation bar
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MakeThreadPage()),
+          );
+        },
+        backgroundColor: const Color(0xFFD35400),
+        elevation: 6,
+        child: const Icon(
+          Icons.add,
+          size: 36,
+          color: Colors.white,
+        ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: CustomNavigationBar(selectedIndex: 3),
     );
   }
 }

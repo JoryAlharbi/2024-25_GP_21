@@ -205,13 +205,13 @@ class _SignUpPageState extends State<SignUpPage> {
                               fontWeight: FontWeight.w400,
                               color: const Color(0xFFA4A4A4),
                             ),
-                            prefixIcon: const Icon(Icons.person_2_outlined,
+                            prefixIcon: const Icon(Icons.person,
                                 color: Color(0xFFA4A4A4)),
                             errorText: _nameError,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 15),
                       Container(
                         decoration: BoxDecoration(
                           color: Color.fromRGBO(0, 0, 0, 0.25),
@@ -384,7 +384,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       GestureDetector(
                         onTap: signUpAction,
                         child: Container(
-                          height: 55,
+                          height: 50,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [
@@ -392,10 +392,10 @@ class _SignUpPageState extends State<SignUpPage> {
                                 Color(0xFFD35400),
                                 Color(0xFFA2DED0),
                               ],
-                              begin: Alignment.centerRight,
-                              end: Alignment.centerLeft,
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           child: Center(
                             child: _isLoading
@@ -403,7 +403,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 : Text(
                                     'Create Account',
                                     style: GoogleFonts.poppins(
-                                      fontSize: 14,
+                                      fontSize: 17,
                                       fontWeight: FontWeight.w500,
                                       color: Colors.white,
                                     ),

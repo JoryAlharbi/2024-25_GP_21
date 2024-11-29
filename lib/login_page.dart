@@ -208,9 +208,8 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 10),
                     Align(
-                      alignment: Alignment.center,
+                      alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: _forgotPassword,
                         child: Text(
@@ -218,12 +217,12 @@ class _LoginPageState extends State<LoginPage> {
                           style: GoogleFonts.poppins(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: Color(0xFFD35400),
+                            color: Color(0xFFA4A4A4),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: 27),
                     GestureDetector(
                       onTap: _login,
                       child: Container(
