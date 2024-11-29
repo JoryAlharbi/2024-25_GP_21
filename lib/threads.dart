@@ -283,38 +283,49 @@ return FutureBuilder<Map<String, String>>(
     }
 
     if (writerSnapshot.hasData) {
-      final writerDetails = writerSnapshot.data!;
-      final characterId = data['characterId'];
+    final writerDetails = writerSnapshot.data!;
+    final characterId = data['characterId'];
 
-      // Check for missing or empty characterId
-      if (characterId == null || characterId.isEmpty) {
-        // No characterId found, fallback to default avatar
-        return _buildTimelineItem(
-          TimelineItem(
-            name: writerDetails['name']!,
-            username: '',
-            content: data['content'] ?? '',
-            timeAgo: _calculateTimeAgo(data['createdAt']),
-            avatarPath: 'assets/default.png',
-            avatarName: writerDetails['name']!,
-          ),
-          index == partsDocs.length - 1,
-        );
-      }
+    // Check for missing or empty characterId
+    if (characterId == null || characterId.isEmpty) {
+      // No characterId found, fallback to default avatar
+      return _buildTimelineItem(
+        TimelineItem(
+          name: writerDetails['name']!,
+          username: '',
+          content: data['content'] ?? '',
+          timeAgo: _calculateTimeAgo(data['createdAt']),
+          avatarPath: 'assets/default.png',
+          avatarName: writerDetails['name']!,
+        ),
+        index == partsDocs.length - 1,
+      );
+    }
 
-      return FutureBuilder<String>(
-        future: getCharacterAvatarPath(characterId), // Call the function to fetch the URL
-        builder: (context, characterSnapshot) {
-          String avatarPath = 'assets/default.png'; // Default avatar
+    String avatarPath = data['url'] ?? 'assets/default.png'; // Fallback to default if avatarPath is not available
 
-          // Check if the Future is still loading
-          if (characterSnapshot.connectionState == ConnectionState.waiting) {
-            avatarPath = 'assets/default.png'; // Loading state
-          } else if (characterSnapshot.hasData) {
-            avatarPath = characterSnapshot.data!; // Use the URL fetched
-          } else {
-            print("Error fetching character avatar.");
-          }
+    return FutureBuilder<String>(
+      future: getCharacterName(characterId), // The async function to get character name
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // While waiting for the data
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          // If there is an error fetching the data
+          return _buildTimelineItem(
+            TimelineItem(
+              name: 'Error',
+              username: '@error',
+              content: data['content'] ?? '',
+              timeAgo: _calculateTimeAgo(data['createdAt']),
+              avatarPath: 'assets/default.png',
+              avatarName: 'Error',
+            ),
+            index == partsDocs.length - 1,
+          );
+        } else if (snapshot.hasData) {
+          // Once the data is fetched, build the timeline item
+          String name = snapshot.data ?? 'mysterious'; // Fallback name if none is returned
 
           return _buildTimelineItem(
             TimelineItem(
@@ -322,27 +333,41 @@ return FutureBuilder<Map<String, String>>(
               username: '',
               content: data['content'] ?? '',
               timeAgo: _calculateTimeAgo(data['createdAt']),
-              avatarPath: avatarPath, // Pass the URL or default path
-              avatarName: writerDetails['name']!,
+              avatarPath: avatarPath, // Use the avatarPath from data
+              avatarName: name, // Use the fetched name
             ),
             index == partsDocs.length - 1,
           );
-        },
-      );
-    }
-
-    // Handle error or fallback
-    return _buildTimelineItem(
-      TimelineItem(
-        name: 'Error',
-        username: '@error',
-        content: data['content'] ?? '',
-        timeAgo: _calculateTimeAgo(data['createdAt']),
-        avatarPath: 'assets/default.png',
-        avatarName: 'Error',
-      ),
-      index == partsDocs.length - 1,
+        } else {
+          // Handle case where data is null
+          return _buildTimelineItem(
+            TimelineItem(
+              name: 'No Name',
+              username: '@unknown',
+              content: data['content'] ?? '',
+              timeAgo: _calculateTimeAgo(data['createdAt']),
+              avatarPath: 'assets/default.png',
+              avatarName: 'Unknown',
+            ),
+            index == partsDocs.length - 1,
+          );
+        }
+      },
     );
+  }
+
+  // Handle error or fallback
+  return _buildTimelineItem(
+    TimelineItem(
+      name: 'Error',
+      username: '@error',
+      content: data['content'] ?? '',
+      timeAgo: _calculateTimeAgo(data['createdAt']),
+      avatarPath: 'assets/default.png',
+      avatarName: 'Error',
+    ),
+    index == partsDocs.length - 1,
+  );
   },
 );
 
@@ -450,7 +475,7 @@ return FutureBuilder<Map<String, String>>(
       return '${difference.inDays}d ago';
     }
   }
-Future<String> getCharacterAvatarPath(String characterId) async {
+Future<String> getCharacterName(String characterId) async {
   try {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Character')
@@ -460,15 +485,15 @@ Future<String> getCharacterAvatarPath(String characterId) async {
     if (querySnapshot.docs.isNotEmpty) {
       // Assuming there's only one matching document
       final characterDoc = querySnapshot.docs.first;
-      print("Document found for characterId: $characterId "+ characterDoc['url'] );
-      return characterDoc['url'] ?? 'assets/default.png'; // Return URL or default
+      print("Document found for characterId: $characterId "+ characterDoc['CharacterName'] );
+      return characterDoc['CharacterName'] ?? ' mysterious'; // Return URL or default
     } else {
       print("No character document found for characterId: $characterId");
     }
   } catch (e) {
     print("Error fetching character avatar: $e");
   }
-  return 'assets/default.png'; // Fallback avatar if document is not found or an error occurs
+  return 'mysterious'; // Fallback avatar if document is not found or an error occurs
 }
   Widget _buildStoryAvatar(TimelineItem item) {
     return Container(
