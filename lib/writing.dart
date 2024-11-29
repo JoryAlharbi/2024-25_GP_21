@@ -170,17 +170,7 @@ class _WritingPageState extends State<WritingPage> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              alignment: WrapAlignment.center,
-              children: [
-                _buildCharacterAvatar('Evelyn', 'assets/h.png'),
-                _buildCharacterAvatar('Lucy', 'assets/cat.png'),
-                _buildCharacterAvatar('Oliver', 'assets/catm.png'),
-                _buildCharacterAvatar('Lucas', 'assets/hunter.png'),
-              ],
-            ),
+          
             const SizedBox(height: 20),
             _buildProfileSection(),
             const SizedBox(height: 20),

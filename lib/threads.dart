@@ -264,71 +264,88 @@ class _StoryViewState extends State<StoryView> {
                         final writerId = data['writerID'] ?? '';
 
                         // Useing FutureBuilder to fetch writer details
-                        return FutureBuilder<Map<String, String>>(
-                          future: getWriterDetails(writerId),
-                          builder: (context, writerSnapshot) {
-                            if (writerSnapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return _buildTimelineItem(
-                                TimelineItem(
-                                  name: 'Loading...',
-                                  username: '@loading',
-                                  content: data['content'] ?? '',
-                                  timeAgo: _calculateTimeAgo(data['createdAt']),
-                                  avatarPath: data['profileImageUrl'] ??
-                                      'assets/default.png',
-                                  avatarName: 'Loading',
-                                ),
-                                index == partsDocs.length - 1,
-                              );
-                            }
+                      
+return FutureBuilder<Map<String, String>>(
+  future: getWriterDetails(writerId),
+  builder: (context, writerSnapshot) {
+    if (writerSnapshot.connectionState == ConnectionState.waiting) {
+      return _buildTimelineItem(
+        TimelineItem(
+          name: 'Loading...',
+          username: '@loading',
+          content: data['content'] ?? '',
+          timeAgo: _calculateTimeAgo(data['createdAt']),
+          avatarPath: 'assets/default.png',
+          avatarName: 'Loading',
+        ),
+        index == partsDocs.length - 1,
+      );
+    }
 
-                            if (writerSnapshot.hasError) {
-                              print(
-                                  "Error loading writer details for $writerId");
-                              return _buildTimelineItem(
-                                TimelineItem(
-                                  name: 'Error',
-                                  username: '@error',
-                                  content: data['content'] ?? '',
-                                  timeAgo: _calculateTimeAgo(data['createdAt']),
-                                  avatarPath: 'assets/default.png',
-                                  avatarName: 'Error',
-                                ),
-                                index == partsDocs.length - 1,
-                              );
-                            }
+    if (writerSnapshot.hasData) {
+      final writerDetails = writerSnapshot.data!;
+      final characterId = data['characterId'];
 
-                            if (writerSnapshot.hasData) {
-                              final writerDetails = writerSnapshot.data!;
-                              return _buildTimelineItem(
-                                TimelineItem(
-                                  name: writerDetails['name']!,
-                                  username: '@${writerDetails['username']!}',
-                                  content: data['content'] ?? '',
-                                  timeAgo: _calculateTimeAgo(data['createdAt']),
-                                  avatarPath: data['avatarPath'] ??
-                                      'assets/default.png',
-                                  avatarName: writerDetails['name']!,
-                                ),
-                                index == partsDocs.length - 1,
-                              );
-                            }
+      // Check for missing or empty characterId
+      if (characterId == null || characterId.isEmpty) {
+        // No characterId found, fallback to default avatar
+        return _buildTimelineItem(
+          TimelineItem(
+            name: writerDetails['name']!,
+            username: '',
+            content: data['content'] ?? '',
+            timeAgo: _calculateTimeAgo(data['createdAt']),
+            avatarPath: 'assets/default.png',
+            avatarName: writerDetails['name']!,
+          ),
+          index == partsDocs.length - 1,
+        );
+      }
 
-                            // Fallback for unexpected cases
-                            return _buildTimelineItem(
-                              TimelineItem(
-                                name: 'Unknown',
-                                username: '@unknown',
-                                content: data['content'] ?? '',
-                                timeAgo: _calculateTimeAgo(data['createdAt']),
-                                avatarPath: 'assets/default.png',
-                                avatarName: 'Unknown',
-                              ),
-                              index == partsDocs.length - 1,
-                            );
-                          },
-                        );
+      return FutureBuilder<String>(
+        future: getCharacterAvatarPath(characterId), // Call the function to fetch the URL
+        builder: (context, characterSnapshot) {
+          String avatarPath = 'assets/default.png'; // Default avatar
+
+          // Check if the Future is still loading
+          if (characterSnapshot.connectionState == ConnectionState.waiting) {
+            avatarPath = 'assets/default.png'; // Loading state
+          } else if (characterSnapshot.hasData) {
+            avatarPath = characterSnapshot.data!; // Use the URL fetched
+          } else {
+            print("Error fetching character avatar.");
+          }
+
+          return _buildTimelineItem(
+            TimelineItem(
+              name: writerDetails['name']!,
+              username: '',
+              content: data['content'] ?? '',
+              timeAgo: _calculateTimeAgo(data['createdAt']),
+              avatarPath: avatarPath, // Pass the URL or default path
+              avatarName: writerDetails['name']!,
+            ),
+            index == partsDocs.length - 1,
+          );
+        },
+      );
+    }
+
+    // Handle error or fallback
+    return _buildTimelineItem(
+      TimelineItem(
+        name: 'Error',
+        username: '@error',
+        content: data['content'] ?? '',
+        timeAgo: _calculateTimeAgo(data['createdAt']),
+        avatarPath: 'assets/default.png',
+        avatarName: 'Error',
+      ),
+      index == partsDocs.length - 1,
+    );
+  },
+);
+
                       },
                     );
                   }
@@ -433,7 +450,26 @@ class _StoryViewState extends State<StoryView> {
       return '${difference.inDays}d ago';
     }
   }
+Future<String> getCharacterAvatarPath(String characterId) async {
+  try {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Character')
+        .where('characterId', isEqualTo: characterId) // Filter by characterId
+        .get();
 
+    if (querySnapshot.docs.isNotEmpty) {
+      // Assuming there's only one matching document
+      final characterDoc = querySnapshot.docs.first;
+      print("Document found for characterId: $characterId "+ characterDoc['url'] );
+      return characterDoc['url'] ?? 'assets/default.png'; // Return URL or default
+    } else {
+      print("No character document found for characterId: $characterId");
+    }
+  } catch (e) {
+    print("Error fetching character avatar: $e");
+  }
+  return 'assets/default.png'; // Fallback avatar if document is not found or an error occurs
+}
   Widget _buildStoryAvatar(TimelineItem item) {
     return Container(
       width: 90,
@@ -503,6 +539,7 @@ class TimelineItem {
   final String timeAgo;
   final String avatarPath;
   final String avatarName;
+  final String? characterId;
 
   TimelineItem({
     required this.name,
@@ -511,9 +548,9 @@ class TimelineItem {
     required this.timeAgo,
     required this.avatarPath,
     required this.avatarName,
+    this.characterId,
   });
 }
-
 Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
   return Row(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -535,7 +572,9 @@ Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
                 ),
                 child: CircleAvatar(
                   radius: 30,
-                  backgroundImage: AssetImage(item.avatarPath),
+                  backgroundImage: item.avatarPath.startsWith('http') || item.avatarPath.startsWith('https')
+                      ? NetworkImage(item.avatarPath) // If URL, use NetworkImage
+                      : AssetImage(item.avatarPath) as ImageProvider, // If asset, use AssetImage
                 ),
               ),
               Positioned(
