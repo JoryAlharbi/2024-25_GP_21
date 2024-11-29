@@ -597,7 +597,7 @@ Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
          if (!isLastItem)
   Container(
     width: 4,
-    height: (item.content.length * 0.87 < 90) ? 90 : item.content.length * 0.87,
+    height: (item.content.length * 0.87 < 90) ? 100 : item.content.length * 0.87,
     color: const Color(0xFFD35400),
   ),
 
