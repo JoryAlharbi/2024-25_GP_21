@@ -200,6 +200,20 @@ class _StoryViewState extends State<StoryView> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           children: [
+              Align(
+      alignment: Alignment.centerLeft,
+      child: const Text(
+        'Writers ', 
+        style: TextStyle(
+          fontSize: 18,
+       
+          color: Color.fromARGB(228, 255, 255, 255),
+           // Adjust the text color as needed
+        ),
+      ),
+    ),
+    const SizedBox(height: 10), // Space between the title and the avatar section
+
             // Horizontal Scroll for Avatars
            SizedBox(
   height: 100,
