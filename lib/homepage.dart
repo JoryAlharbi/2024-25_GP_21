@@ -332,12 +332,12 @@ class BookListItem extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            if (isPopular)
-                              const Icon(
-                                Icons.local_fire_department,
-                                color: Color(0xFFD35400),
-                                size: 18.0,
-                              ),
+                            //  if (isPopular)
+                            //    const Icon(
+                            //    Icons.local_fire_department,
+                            //       color: Color(0xFFD35400),
+                            //      size: 18.0,
+                            //    ),
                           ],
                         ),
                         const SizedBox(height: 4.0),

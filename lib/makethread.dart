@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'threads.dart';
+import 'writing.dart';
 
 class MakeThreadPage extends StatefulWidget {
   const MakeThreadPage({Key? key}) : super(key: key);
@@ -96,9 +97,9 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => StoryView(
+            builder: (context) => WritingPage(
               threadId: threadRef.id,
-              userId: user.uid,
+              //  userId: user.uid,
             ),
           ),
         );

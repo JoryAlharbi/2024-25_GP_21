@@ -5,7 +5,7 @@ import 'package:firebase_core/firebase_core.dart'; // Add Firebase core import
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
-
+import 'main.dart';
 import 'package:rawae_gp24/bookmark.dart';
 import 'package:rawae_gp24/edit_profile_page.dart';
 import 'package:rawae_gp24/homepage.dart';
@@ -167,8 +167,11 @@ class _ProfilePageState extends State<ProfilePage> {
             iconSize: 30,
             onPressed: () async {
               await FirebaseAuth.instance.signOut(); // Log out the user
-              Navigator.pushReplacementNamed(
-                  context, '/main'); // Navigate to login
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => MyApp()), // Navigate to MainPage
+              );
             },
           ),
         ],
@@ -402,7 +405,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                       ['title'] ??
                                                   'Untitled',
                                               style: GoogleFonts.poppins(
-                                                fontSize: 14,
+                                                fontSize: 10,
                                                 fontWeight: FontWeight.w500,
                                                 color: Colors
                                                     .white, // Match text color to the theme
@@ -457,7 +460,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                       ['title'] ??
                                                   'Untitled',
                                               style: GoogleFonts.poppins(
-                                                fontSize: 14,
+                                                fontSize: 10,
                                                 fontWeight: FontWeight.w300,
                                                 color: Colors
                                                     .white, // Match text color to the theme
