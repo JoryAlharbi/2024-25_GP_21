@@ -33,6 +33,8 @@ dependencies:
   firebase_messaging: 15.1.3
   http: ^1.2.2
   cached_network_image: ^3.4.1
+  googleapis_auth: ^1.0.0
+  fast_rsa: ^3.6.6
 
   dcdg: ^4.1.0 # this to generate the class diagram
   
@@ -56,6 +58,7 @@ flutter:
   assets:
     - assets/book.png
     - assets/book2.png
+    - assets/book3.png
     - assets/fantasy.png
     - assets/drama.png
     - assets/romance.png

@@ -38,12 +38,12 @@ class BookDetailsPage extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
             Image.asset(
-              'assets/book.png',
+              'assets/book2.png',
               height: 200,
             ),
             const SizedBox(height: 20),
             const Text(
-              'MEMORIES OF THE SEA',
+              'Think outside the boox',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,

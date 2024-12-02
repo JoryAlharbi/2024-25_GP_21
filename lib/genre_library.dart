@@ -16,10 +16,10 @@ class GenreLibraryPage extends StatelessWidget {
   GenreLibraryPage({super.key, required this.genre});
 
   final List<Map<String, String>> books = [
-    {'title': 'Memories of the Sea', 'image': 'assets/book.png'},
-    {'title': 'Meet Mr. Mulliner', 'image': 'assets/book2.png'},
-    {'title': 'P.G Wodehouse', 'image': 'assets/book.png'},
-    {'title': 'P.G Wodehouse', 'image': 'assets/book2.png'},
+    {'title': 'The Three Months Rule', 'image': 'assets/book3.png'},
+    {'title': 'Think outside the box', 'image': 'assets/book2.png'},
+    {'title': 'The Three Months Rule', 'image': 'assets/book3.png'},
+    {'title': 'Think outside the box', 'image': 'assets/book2.png'},
   ];
 
   @override

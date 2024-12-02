@@ -12,19 +12,19 @@ import 'package:rawae_gp24/custom_navigation_bar.dart'; // Import CustomNavigati
 class BookmarkPage extends StatelessWidget {
   final List<Map<String, String>> books = [
     {
-      'title': 'memories of the sea',
-      'image': 'assets/book.png',
+      'title': 'The Three Months Rule',
+      'image': 'assets/book3.png',
     },
     {
-      'title': 'Meet Mr. Mulliner',
+      'title': 'Think outside the box',
       'image': 'assets/book2.png',
     },
     {
-      'title': 'P.G Wodehouse',
-      'image': 'assets/book.png',
+      'title': 'The Three Months Rule',
+      'image': 'assets/book3.png',
     },
     {
-      'title': 'P.G Wodehouse',
+      'title': 'Think outside the box',
       'image': 'assets/book2.png',
     },
   ];
