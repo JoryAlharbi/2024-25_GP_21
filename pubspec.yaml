@@ -35,8 +35,10 @@ dependencies:
   cached_network_image: ^3.4.1
   googleapis_auth: ^1.0.0
   fast_rsa: ^3.6.6
+  flutter_local_notifications: ^15.0.0
 
   dcdg: ^4.1.0 # this to generate the class diagram
+  socket_io_client: ^2.0.0
   
   
 dev_dependencies:

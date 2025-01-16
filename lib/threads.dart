@@ -3,6 +3,7 @@ import 'writing.dart'; // Make sure to import your writing.dart file
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'; //for the norifications!!
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:rawae_gp24/notification_service.dart'; // Ensure this is the correct path
 
 class StoryView extends StatefulWidget {
   final String threadId;
@@ -16,19 +17,21 @@ class StoryView extends StatefulWidget {
 class _StoryViewState extends State<StoryView> {
   late final String userId;
   bool isBellClicked = false;
+  late NotificationService
+      notificationService; // Declare the notificationService variable
 
   @override
   void initState() {
     super.initState();
     userId = FirebaseAuth.instance.currentUser!.uid;
+    notificationService =
+        NotificationService(); // Initialize the notificationService
+    notificationService.connectToThread(
+        widget.threadId); // Connect to the thread via WebSocket
 
     // Increment the total view count when someone opens the thread
     _incrementViewCount();
   }
-
-// these methods to handel the user when someone is writing
-// there was also another method but it was a simplier one with no notification handeling
-//this has everything so its comperhensive
 
   void onBellClick() async {
     // First, update the bellClickers array in Firestore
@@ -49,7 +52,7 @@ class _StoryViewState extends State<StoryView> {
 
       // If no one is writing, send a push notification
       if (!isWriting) {
-        sendPushNotification();
+        sendWebSocketNotification();
       }
     } else {
       // Remove the user from bellClickers array
@@ -67,14 +70,8 @@ class _StoryViewState extends State<StoryView> {
     });
   }
 
-// Function to send push notification
-//there are two functions that sends the notifications , they work together.
-  Future<void> sendPushNotification() async {
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-
-    // Here you can send a notification to a topic or specific user.
-    // For simplicity, let's assume you send it to all users following this thread.
-
+  // Function to send WebSocket notification
+  Future<void> sendWebSocketNotification() async {
     try {
       await FirebaseFirestore.instance
           .collection('Thread')
@@ -82,42 +79,13 @@ class _StoryViewState extends State<StoryView> {
           .get()
           .then((doc) {
         List<String> bellClickers = List.from(doc['bellClickers'] ?? []);
-        // Notify each user who has clicked the bell
+        // Notify each user who has clicked the bell via WebSocket
         for (String userId in bellClickers) {
-          sendNotificationToUser(userId);
+          notificationService.sendNotificationToUser(userId);
         }
       });
     } catch (e) {
-      print("Error sending notification: $e");
-    }
-  }
-
-// Function to send notification to a specific user using their Firebase token
-// the token should be added when the user signup or signin
-//the token is added in the main page!!!
-//each user has a unique token so this method sends the notification to their token.
-
-  Future<void> sendNotificationToUser(String userId) async {
-    // Fetch the user's device token from Firestore
-    DocumentSnapshot userSnapshot =
-        await FirebaseFirestore.instance.collection('Users').doc(userId).get();
-
-    String? deviceToken = userSnapshot['deviceToken'];
-
-    if (deviceToken != null) {
-      try {
-        // Send a notification using FirebaseMessaging
-        await FirebaseMessaging.instance.sendMessage(
-          to: deviceToken,
-          data: {
-            'title': 'No one is writing!',
-            'body': 'Click here to join the story writing session.',
-          },
-        );
-        print("Notification sent to $userId");
-      } catch (e) {
-        print("Failed to send notification: $e");
-      }
+      print("Error sending WebSocket notification: $e");
     }
   }
 
@@ -132,6 +100,13 @@ class _StoryViewState extends State<StoryView> {
     }).catchError((e) {
       print("Error incrementing view count: $e");
     });
+  }
+
+  @override
+  void dispose() {
+    notificationService
+        .disconnect(); // Disconnect WebSocket when the page is disposed
+    super.dispose();
   }
 
   @override
@@ -200,113 +175,131 @@ class _StoryViewState extends State<StoryView> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           children: [
-              Align(
-      alignment: Alignment.centerLeft,
-      child: const Text(
-        'Writers ', 
-        style: TextStyle(
-          fontSize: 18,
-       
-          color: Color.fromARGB(228, 255, 255, 255),
-           // Adjust the text color as needed
-        ),
-      ),
-    ),
-    const SizedBox(height: 10), // Space between the title and the avatar section
+            Align(
+              alignment: Alignment.centerLeft,
+              child: const Text(
+                'Writers ',
+                style: TextStyle(
+                  fontSize: 18,
+
+                  color: Color.fromARGB(228, 255, 255, 255),
+                  // Adjust the text color as needed
+                ),
+              ),
+            ),
+            const SizedBox(
+                height: 10), // Space between the title and the avatar section
 
             // Horizontal Scroll for Avatars
-           SizedBox(
-  height: 100,
-  child: StreamBuilder<DocumentSnapshot>(
-    stream: FirebaseFirestore.instance
-        .collection('Thread')
-        .doc(widget.threadId)
-        .snapshots(),
-    builder: (context, snapshot) {
-      if (snapshot.hasData) {
-        final threadData = snapshot.data!.data() as Map<String, dynamic>;
-        final contributors = List<DocumentReference>.from(threadData['contributors'] ?? []);
+            SizedBox(
+              height: 100,
+              child: StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('Thread')
+                    .doc(widget.threadId)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final threadData =
+                        snapshot.data!.data() as Map<String, dynamic>;
+                    final contributors = List<DocumentReference>.from(
+                        threadData['contributors'] ?? []);
 
-        // Fetch contributor details based on references
-        return FutureBuilder<List<Map<String, dynamic>>>(
-          future: Future.wait(
-            contributors.map((ref) => ref.get().then((contributorSnapshot) {
-              if (contributorSnapshot.exists) {
-                final contributorData =
-                    contributorSnapshot.data() as Map<String, dynamic>;
-                return {
-                  'name': contributorData['name'] ?? 'Unknown',
-                  'profileImageUrl': contributorData['profileImageUrl'] ??
-                      'assets/default.png',
-                };
-              }
-              else {
-                return {
-                  'name': 'Unknown',
-                  'profileImageUrl': 'assets/default.png',
-                };
-              }
-            })).toList(),
-          ),
-          builder: (context, contributorSnapshot) {
-            if (contributorSnapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (contributorSnapshot.hasData) {
-              final contributorsDetails = contributorSnapshot.data!;
+                    // Fetch contributor details based on references
+                    return FutureBuilder<List<Map<String, dynamic>>>(
+                      future: Future.wait(
+                        contributors
+                            .map((ref) => ref.get().then((contributorSnapshot) {
+                                  if (contributorSnapshot.exists) {
+                                    final contributorData = contributorSnapshot
+                                        .data() as Map<String, dynamic>;
+                                    return {
+                                      'name':
+                                          contributorData['name'] ?? 'Unknown',
+                                      'profileImageUrl':
+                                          contributorData['profileImageUrl'] ??
+                                              'assets/default.png',
+                                    };
+                                  } else {
+                                    return {
+                                      'name': 'Unknown',
+                                      'profileImageUrl': 'assets/default.png',
+                                    };
+                                  }
+                                }))
+                            .toList(),
+                      ),
+                      builder: (context, contributorSnapshot) {
+                        if (contributorSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                        if (contributorSnapshot.hasData) {
+                          final contributorsDetails = contributorSnapshot.data!;
 
-              return ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: contributorsDetails.length,
-                itemBuilder: (context, index) {
-                  final contributor = contributorsDetails[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Avatar with blue circular border
-                        
-                        Container(
-                          width: 70, // Slightly bigger container for the border
-                          height: 60,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Color(0xFFA2DED0), width: 4), // Blue border
-                          ),
-                          child:  CircleAvatar(
-  radius: 28,
-  backgroundImage: contributor['profileImageUrl'].startsWith('assets/')
-      ? AssetImage(contributor['profileImageUrl']) // Load from assets
-      : NetworkImage(contributor['profileImageUrl']) as ImageProvider, // Load from network
-  backgroundColor: Colors.grey.shade300,
-),
+                          return ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: contributorsDetails.length,
+                            itemBuilder: (context, index) {
+                              final contributor = contributorsDetails[index];
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    // Avatar with blue circular border
 
-                        ),
-                        const SizedBox(height: 8),
-                        // Name text in white
-                        Text(
-                          contributor['name'],
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white, // Text color changed to white
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
+                                    Container(
+                                      width:
+                                          70, // Slightly bigger container for the border
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: Color(0xFFA2DED0),
+                                            width: 4), // Blue border
+                                      ),
+                                      child: CircleAvatar(
+                                        radius: 28,
+                                        backgroundImage: contributor[
+                                                    'profileImageUrl']
+                                                .startsWith('assets/')
+                                            ? AssetImage(contributor[
+                                                'profileImageUrl']) // Load from assets
+                                            : NetworkImage(contributor[
+                                                    'profileImageUrl'])
+                                                as ImageProvider, // Load from network
+                                        backgroundColor: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    // Name text in white
+                                    Text(
+                                      contributor['name'],
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors
+                                            .white, // Text color changed to white
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        }
+                        return const Center(
+                            child: Text('No contributors found.'));
+                      },
+                    );
+                  }
+                  return const Center(child: CircularProgressIndicator());
                 },
-              );
-            }
-            return const Center(child: Text('No contributors found.'));
-          },
-        );
-      }
-      return const Center(child: CircularProgressIndicator());
-    },
-  ),
-),
+              ),
+            ),
 
             const Divider(
               thickness: 1,
@@ -334,113 +327,123 @@ class _StoryViewState extends State<StoryView> {
                         final writerId = data['writerID'] ?? '';
 
                         // Useing FutureBuilder to fetch writer details
-                      
-return FutureBuilder<Map<String, String>>(
-  future: getWriterDetails(writerId),
-  builder: (context, writerSnapshot) {
-    if (writerSnapshot.connectionState == ConnectionState.waiting) {
-      return _buildTimelineItem(
-        TimelineItem(
-          name: 'Loading...',
-          username: '@loading',
-          content: data['content'] ?? '',
-          timeAgo: _calculateTimeAgo(data['createdAt']),
-          avatarPath: 'assets/default.png',
-          avatarName: 'Loading',
-        ),
-        index == partsDocs.length - 1,
-      );
-    }
 
-    if (writerSnapshot.hasData) {
-    final writerDetails = writerSnapshot.data!;
-    final characterId = data['characterId'];
+                        return FutureBuilder<Map<String, String>>(
+                          future: getWriterDetails(writerId),
+                          builder: (context, writerSnapshot) {
+                            if (writerSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return _buildTimelineItem(
+                                TimelineItem(
+                                  name: 'Loading...',
+                                  username: '@loading',
+                                  content: data['content'] ?? '',
+                                  timeAgo: _calculateTimeAgo(data['createdAt']),
+                                  avatarPath: 'assets/default.png',
+                                  avatarName: 'Loading',
+                                ),
+                                index == partsDocs.length - 1,
+                              );
+                            }
 
-    // Check for missing or empty characterId
-    if (characterId == null || characterId.isEmpty) {
-      // No characterId found, fallback to default avatar
-      return _buildTimelineItem(
-        TimelineItem(
-          name: writerDetails['name']!,
-          username: '',
-          content: data['content'] ?? '',
-          timeAgo: _calculateTimeAgo(data['createdAt']),
-          avatarPath: 'assets/default.png',
-          avatarName: writerDetails['name']!,
-        ),
-        index == partsDocs.length - 1,
-      );
-    }
+                            if (writerSnapshot.hasData) {
+                              final writerDetails = writerSnapshot.data!;
+                              final characterId = data['characterId'];
 
-    String avatarPath = data['url'] ?? 'assets/default.png'; // Fallback to default if avatarPath is not available
+                              // Check for missing or empty characterId
+                              if (characterId == null || characterId.isEmpty) {
+                                // No characterId found, fallback to default avatar
+                                return _buildTimelineItem(
+                                  TimelineItem(
+                                    name: writerDetails['name']!,
+                                    username: '',
+                                    content: data['content'] ?? '',
+                                    timeAgo:
+                                        _calculateTimeAgo(data['createdAt']),
+                                    avatarPath: 'assets/default.png',
+                                    avatarName: writerDetails['name']!,
+                                  ),
+                                  index == partsDocs.length - 1,
+                                );
+                              }
 
-    return FutureBuilder<String>(
-      future: getCharacterName(characterId), // The async function to get character name
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          // While waiting for the data
-          return CircularProgressIndicator();
-        } else if (snapshot.hasError) {
-          // If there is an error fetching the data
-          return _buildTimelineItem(
-            TimelineItem(
-              name: 'Error',
-              username: '@error',
-              content: data['content'] ?? '',
-              timeAgo: _calculateTimeAgo(data['createdAt']),
-              avatarPath: 'assets/default.png',
-              avatarName: 'Error',
-            ),
-            index == partsDocs.length - 1,
-          );
-        } else if (snapshot.hasData) {
-          // Once the data is fetched, build the timeline item
-          String name = snapshot.data ?? 'mysterious'; // Fallback name if none is returned
+                              String avatarPath = data['url'] ??
+                                  'assets/default.png'; // Fallback to default if avatarPath is not available
 
-          return _buildTimelineItem(
-            TimelineItem(
-              name: writerDetails['name']!,
-              username: '',
-              content: data['content'] ?? '',
-              timeAgo: _calculateTimeAgo(data['createdAt']),
-              avatarPath: avatarPath, // Use the avatarPath from data
-              avatarName: name, // Use the fetched name
-            ),
-            index == partsDocs.length - 1,
-          );
-        } else {
-          // Handle case where data is null
-          return _buildTimelineItem(
-            TimelineItem(
-              name: 'No Name',
-              username: '@unknown',
-              content: data['content'] ?? '',
-              timeAgo: _calculateTimeAgo(data['createdAt']),
-              avatarPath: 'assets/default.png',
-              avatarName: 'Unknown',
-            ),
-            index == partsDocs.length - 1,
-          );
-        }
-      },
-    );
-  }
+                              return FutureBuilder<String>(
+                                future: getCharacterName(
+                                    characterId), // The async function to get character name
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    // While waiting for the data
+                                    return CircularProgressIndicator();
+                                  } else if (snapshot.hasError) {
+                                    // If there is an error fetching the data
+                                    return _buildTimelineItem(
+                                      TimelineItem(
+                                        name: 'Error',
+                                        username: '@error',
+                                        content: data['content'] ?? '',
+                                        timeAgo: _calculateTimeAgo(
+                                            data['createdAt']),
+                                        avatarPath: 'assets/default.png',
+                                        avatarName: 'Error',
+                                      ),
+                                      index == partsDocs.length - 1,
+                                    );
+                                  } else if (snapshot.hasData) {
+                                    // Once the data is fetched, build the timeline item
+                                    String name = snapshot.data ??
+                                        'mysterious'; // Fallback name if none is returned
 
-  // Handle error or fallback
-  return _buildTimelineItem(
-    TimelineItem(
-      name: 'Error',
-      username: '@error',
-      content: data['content'] ?? '',
-      timeAgo: _calculateTimeAgo(data['createdAt']),
-      avatarPath: 'assets/default.png',
-      avatarName: 'Error',
-    ),
-    index == partsDocs.length - 1,
-  );
-  },
-);
+                                    return _buildTimelineItem(
+                                      TimelineItem(
+                                        name: writerDetails['name']!,
+                                        username: '',
+                                        content: data['content'] ?? '',
+                                        timeAgo: _calculateTimeAgo(
+                                            data['createdAt']),
+                                        avatarPath:
+                                            avatarPath, // Use the avatarPath from data
+                                        avatarName:
+                                            name, // Use the fetched name
+                                      ),
+                                      index == partsDocs.length - 1,
+                                    );
+                                  } else {
+                                    // Handle case where data is null
+                                    return _buildTimelineItem(
+                                      TimelineItem(
+                                        name: 'No Name',
+                                        username: '@unknown',
+                                        content: data['content'] ?? '',
+                                        timeAgo: _calculateTimeAgo(
+                                            data['createdAt']),
+                                        avatarPath: 'assets/default.png',
+                                        avatarName: 'Unknown',
+                                      ),
+                                      index == partsDocs.length - 1,
+                                    );
+                                  }
+                                },
+                              );
+                            }
 
+                            // Handle error or fallback
+                            return _buildTimelineItem(
+                              TimelineItem(
+                                name: 'Error',
+                                username: '@error',
+                                content: data['content'] ?? '',
+                                timeAgo: _calculateTimeAgo(data['createdAt']),
+                                avatarPath: 'assets/default.png',
+                                avatarName: 'Error',
+                              ),
+                              index == partsDocs.length - 1,
+                            );
+                          },
+                        );
                       },
                     );
                   }
@@ -545,26 +548,30 @@ return FutureBuilder<Map<String, String>>(
       return '${difference.inDays}d ago';
     }
   }
-Future<String> getCharacterName(String characterId) async {
-  try {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Character')
-        .where('characterId', isEqualTo: characterId) // Filter by characterId
-        .get();
 
-    if (querySnapshot.docs.isNotEmpty) {
-      // Assuming there's only one matching document
-      final characterDoc = querySnapshot.docs.first;
-      print("Document found for characterId: $characterId "+ characterDoc['CharacterName'] );
-      return characterDoc['CharacterName'] ?? ' mysterious'; // Return URL or default
-    } else {
-      print("No character document found for characterId: $characterId");
+  Future<String> getCharacterName(String characterId) async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Character')
+          .where('characterId', isEqualTo: characterId) // Filter by characterId
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Assuming there's only one matching document
+        final characterDoc = querySnapshot.docs.first;
+        print("Document found for characterId: $characterId " +
+            characterDoc['CharacterName']);
+        return characterDoc['CharacterName'] ??
+            ' mysterious'; // Return URL or default
+      } else {
+        print("No character document found for characterId: $characterId");
+      }
+    } catch (e) {
+      print("Error fetching character avatar: $e");
     }
-  } catch (e) {
-    print("Error fetching character avatar: $e");
+    return 'mysterious'; // Fallback avatar if document is not found or an error occurs
   }
-  return 'mysterious'; // Fallback avatar if document is not found or an error occurs
-}
+
   Widget _buildStoryAvatar(TimelineItem item) {
     return Container(
       width: 90,
@@ -646,6 +653,7 @@ class TimelineItem {
     this.characterId,
   });
 }
+
 Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
   return Row(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -662,14 +670,17 @@ Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
                   shape: BoxShape.circle,
                   border: Border.all(
                     width: 4,
-                    color: const Color(0xFFD35400),//image
+                    color: const Color(0xFFD35400), //image
                   ),
                 ),
                 child: CircleAvatar(
                   radius: 30,
-                  backgroundImage: item.avatarPath.startsWith('http') || item.avatarPath.startsWith('https')
-                      ? NetworkImage(item.avatarPath) // If URL, use NetworkImage
-                      : AssetImage(item.avatarPath) as ImageProvider, // If asset, use AssetImage
+                  backgroundImage: item.avatarPath.startsWith('http') ||
+                          item.avatarPath.startsWith('https')
+                      ? NetworkImage(
+                          item.avatarPath) // If URL, use NetworkImage
+                      : AssetImage(item.avatarPath)
+                          as ImageProvider, // If asset, use AssetImage
                 ),
               ),
               Positioned(
@@ -678,7 +689,7 @@ Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD35400),//name char
+                    color: const Color(0xFFD35400), //name char
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -689,13 +700,14 @@ Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
               ),
             ],
           ),
-         if (!isLastItem)
-  Container(
-    width: 4,
-    height: (item.content.length * 0.87 < 90) ? 100 : item.content.length * 0.87,
-    color: const Color(0xFFD35400),
-  ),
-
+          if (!isLastItem)
+            Container(
+              width: 4,
+              height: (item.content.length * 0.87 < 90)
+                  ? 100
+                  : item.content.length * 0.87,
+              color: const Color(0xFFD35400),
+            ),
         ],
       ),
       const SizedBox(width: 12),
