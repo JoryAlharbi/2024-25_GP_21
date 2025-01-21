@@ -40,86 +40,85 @@ class _WritingPageState extends State<WritingPage> {
     });
   }
 
- Future<void> _processStoryPart() async {
-  final storyText = _textController.text;
+  Future<void> _processStoryPart() async {
+    final storyText = _textController.text;
 
-  if (storyText.trim().isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Cannot submit an empty part!")),
-    );
-    return;
-  }
-
-  setState(() {
-    _isLoading = true;
-  });
-
-  try {
-    final partData = {
-      'content': storyText,
-      'createdAt': Timestamp.now(),
-      'writerID': userId,
-    };
-
-    // Add the part to Firestore
-    final partRef = await FirebaseFirestore.instance
-        .collection('Thread')
-        .doc(widget.threadId)
-        .collection('Parts')
-        .add(partData);
-
-    // Update thread contributors and writing status
-    await FirebaseFirestore.instance
-        .collection('Thread')
-        .doc(widget.threadId)
-        .update({
-      'contributors': FieldValue.arrayUnion([
-        FirebaseFirestore.instance.collection('Writer').doc(userId)
-      ]),
-      'isWriting': false,
-    });
-
-    // Send the story part to the API, including partId and threadId
-    final response = await _sendCharactersToAPI(storyText, widget.threadId, partRef.id);
-    print(response.statusCode);
-
-    if (response.statusCode == 200) {
-      // Handle the response from the server and navigate to the character page
-      Navigator.pushReplacementNamed(
-        context,
-        '/character_page', // Make sure this route is properly set
-        arguments: {
-          'charName': jsonDecode(response.body)['characters'][0]['name'],
-          'description': jsonDecode(response.body)['characters'][0]['description'],
-          'threadId': widget.threadId,
-          'partId': partRef.id,
-          'storyText': storyText,
-          'userId': userId,
-          'publicUrl': jsonDecode(response.body)['public_url'], 
-        },
-      );
-    } else if (response.statusCode == 404) {
-      // Handle 404 response
-        Navigator.pop(context);
-
-    } else {
-      // Handle other errors
+    if (storyText.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to process characters!")),
+        const SnackBar(content: Text("Cannot submit an empty part!")),
       );
+      return;
     }
-  } catch (e) {
-    print('Error occurred: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Failed to submit part")),
-    );
-  } finally {
-    setState(() {
-      _isLoading = false;
-    });
-  }
-}
 
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final partData = {
+        'content': storyText,
+        'createdAt': Timestamp.now(),
+        'writerID': userId,
+      };
+
+      // Add the part to Firestore
+      final partRef = await FirebaseFirestore.instance
+          .collection('Thread')
+          .doc(widget.threadId)
+          .collection('Parts')
+          .add(partData);
+
+      // Update thread contributors and writing status
+      await FirebaseFirestore.instance
+          .collection('Thread')
+          .doc(widget.threadId)
+          .update({
+        'contributors': FieldValue.arrayUnion(
+            [FirebaseFirestore.instance.collection('Writer').doc(userId)]),
+        'isWriting': false,
+      });
+
+      // Send the story part to the API, including partId and threadId
+      final response =
+          await _sendCharactersToAPI(storyText, widget.threadId, partRef.id);
+      print(response.statusCode);
+
+      if (response.statusCode == 200) {
+        // Handle the response from the server and navigate to the character page
+        Navigator.pushReplacementNamed(
+          context,
+          '/character_page', // Make sure this route is properly set
+          arguments: {
+            'charName': jsonDecode(response.body)['characters'][0]['name'],
+            'description': jsonDecode(response.body)['characters'][0]
+                ['description'],
+            'threadId': widget.threadId,
+            'partId': partRef.id,
+            'storyText': storyText,
+            'userId': userId,
+            'publicUrl': jsonDecode(response.body)['public_url'],
+          },
+        );
+      } else if (response.statusCode == 404) {
+        // Handle 404 response
+        Navigator.pop(context);
+      } else {
+        // Handle other errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to process characters!")),
+        );
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to submit part")),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   Future<http.Response> _sendCharactersToAPI(
       String storyText, String threadId, String partId) {
@@ -170,7 +169,6 @@ class _WritingPageState extends State<WritingPage> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-          
             const SizedBox(height: 20),
             _buildProfileSection(),
             const SizedBox(height: 20),
@@ -222,14 +220,16 @@ class _WritingPageState extends State<WritingPage> {
 
         if (!snapshot.hasData || !snapshot.data!.exists) {
           return const Center(
-            child: Text("User not found", style: TextStyle(color: Colors.white)),
+            child:
+                Text("User not found", style: TextStyle(color: Colors.white)),
           );
         }
 
         final userData = snapshot.data!.data() as Map<String, dynamic>;
         final name = userData['username'] ?? 'Unknown User';
         final username = userData['username'] ?? '@unknown';
-        final profileImageUrl = userData['profileImageUrl'] ?? 'assets/default.png';
+        final profileImageUrl =
+            userData['profileImageUrl'] ?? 'assets/default.png';
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -298,7 +298,19 @@ class _WritingPageState extends State<WritingPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
         children: [
-          // Add any action buttons here if needed
+          IconButton(
+            icon: const Icon(Icons.auto_fix_high, color: Color(0xFFA2DED0)),
+            onPressed: () {
+              // Add action for the undo button
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.auto_awesome_outlined,
+                color: Color(0xFFA2DED0)),
+            onPressed: () {
+              // Add action for the auto-format button
+            },
+          ),
         ],
       ),
     );
