@@ -4,9 +4,64 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
 import 'dart:io';
+import 'dart:convert';
 import 'threads.dart';
 import 'writing.dart';
+
+class CoverTypeToggle extends StatelessWidget {
+  final bool value;
+  final Function(bool) onChanged;
+
+  const CoverTypeToggle({
+    Key? key,
+    required this.value,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () => onChanged(false),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: !value ? const Color(0xFFD35400) : const Color(0xFF2A3B4D),
+              borderRadius: const BorderRadius.horizontal(left: Radius.circular(20)),
+            ),
+            child: Text(
+              'Upload',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: !value ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ),
+        GestureDetector(
+          onTap: () => onChanged(true),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: value ? const Color(0xFFD35400) : const Color(0xFF2A3B4D),
+              borderRadius: const BorderRadius.horizontal(right: Radius.circular(20)),
+            ),
+            child: Text(
+              'AI Generate',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: value ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class MakeThreadPage extends StatefulWidget {
   const MakeThreadPage({Key? key}) : super(key: key);
@@ -14,14 +69,16 @@ class MakeThreadPage extends StatefulWidget {
   @override
   _MakeThreadPageState createState() => _MakeThreadPageState();
 }
-
 class _MakeThreadPageState extends State<MakeThreadPage> {
   final _formKey = GlobalKey<FormState>();
   String? _threadTitle;
   List<DocumentReference> _selectedGenres = [];
   XFile? _bookCover;
   bool _isUploading = false;
+  bool _isGenerating = false;
   List<QueryDocumentSnapshot> availableGenres = [];
+  String? _generatedImageUrl;
+  bool _useGeneration = false; // Toggle between upload and generate
 
   @override
   void initState() {
@@ -34,6 +91,46 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
     setState(() {
       availableGenres = snapshot.docs;
     });
+  }
+
+  Future<String?> _generateCoverWithDalle() async {
+    setState(() => _isGenerating = true);
+    try {
+      // Get genre names instead of references for the API
+      List<String> genreNames = [];
+      for (var genreRef in _selectedGenres) {
+        final doc = await genreRef.get();
+        if (doc.exists) {
+          final data = doc.data() as Map<String, dynamic>;
+          genreNames.add(data['genreName'] ?? '');
+        }
+      }
+
+       print("Triggering image generation...");
+        const apiUrl = 'http://10.0.2.2:5000/generate-image';
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'title': _threadTitle,
+          'genres': genreNames,
+        }),
+      );
+      print("Request sent, response status: ${response.statusCode}");
+
+      print(response);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['image_url'];
+      }
+      return null;
+    } catch (e) {
+      print("Error generating image: $e");
+      return null;
+    } finally {
+      setState(() => _isGenerating = false);
+    }
   }
 
   Future<String?> uploadImage(XFile image) async {
@@ -64,7 +161,18 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
       _formKey.currentState!.save();
       String? bookCoverUrl;
 
-      if (_bookCover != null) {
+      if (_useGeneration) {
+        print("1111hjqjhhjahahjhjshjsjhs");
+        // Generate cover with DALL-E
+        bookCoverUrl = await _generateCoverWithDalle();
+        if (bookCoverUrl == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to generate cover image.')),
+          );
+          return;
+        }
+      } else if (_bookCover != null) {
+        // Upload user's image
         bookCoverUrl = await uploadImage(_bookCover!);
         if (bookCoverUrl == null) return;
       }
@@ -99,7 +207,6 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
           MaterialPageRoute(
             builder: (context) => WritingPage(
               threadId: threadRef.id,
-              //  userId: user.uid,
             ),
           ),
         );
@@ -114,7 +221,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
       spacing: 8.0,
       children: availableGenres.map((genreDoc) {
         final genreRef = genreDoc.reference;
-        final genreName = genreDoc['genreName'] ?? 'Unknown Genre';
+        final genreName = genreDoc.get('genreName') ?? 'Unknown Genre';
 
         return ChoiceChip(
           label: Text(
@@ -142,9 +249,8 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
     );
   }
 
-  bool _isLoading = false; // Add a loading state variable
-
-  @override
+  bool _isLoading = false;
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1B2835),
@@ -163,22 +269,21 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
             child: _isLoading
                 ? const Center(
                     child: CircularProgressIndicator(
-                      color: Colors.white, // Match your app's theme
+                      color: Colors.white,
                     ),
                   )
                 : ElevatedButton(
-                    onPressed: _isUploading
+                    onPressed: _isUploading || _isGenerating
                         ? null
                         : () async {
                             setState(() {
-                              _isLoading = true; // Show loading indicator
+                              _isLoading = true;
                             });
-
                             try {
-                              await _createThread(); // Perform thread creation
+                              await _createThread();
                             } finally {
                               setState(() {
-                                _isLoading = false; // Hide loading indicator
+                                _isLoading = false;
                               });
                             }
                           },
@@ -226,7 +331,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                     borderSide: BorderSide(color: Color(0xFF9DB2CE)),
                   ),
                 ),
-                onSaved: (value) => _threadTitle = value,
+                onChanged: (value) => _threadTitle = value,
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Title is required' : null,
               ),
@@ -241,51 +346,125 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
               ),
               buildGenreChips(),
               const SizedBox(height: 20),
-              Text(
-                'Book cover',
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Book cover',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  CoverTypeToggle(
+                    value: _useGeneration,
+                    onChanged: (value) {
+                      setState(() {
+                        _useGeneration = value;
+                        if (value) {
+                          _bookCover = null;
+                        } else {
+                          _generatedImageUrl = null;
+                        }
+                      });
+                    },
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
-              GestureDetector(
-                onTap: () async {
-                  final ImagePicker picker = ImagePicker();
-                  final XFile? image =
-                      await picker.pickImage(source: ImageSource.gallery);
-                  setState(() {
-                    _bookCover = image;
-                  });
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2A3B4D),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: _bookCover != null
-                      ? Image.file(
-                          File(_bookCover!.path),
-                          fit: BoxFit.cover,
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.image,
-                                color: Color(0xFF9DB2CE), size: 40),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Upload',
-                              style: GoogleFonts.poppins(
-                                  color: const Color(0xFF9DB2CE)),
+              if (!_useGeneration)
+                GestureDetector(
+                  onTap: () async {
+                    final ImagePicker picker = ImagePicker();
+                    final XFile? image =
+                        await picker.pickImage(source: ImageSource.gallery);
+                    if (image != null) {
+                      setState(() {
+                        _bookCover = image;
+                      });
+                    }
+                  },
+                  child: Container(
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A3B4D),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: _bookCover != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.file(
+                              File(_bookCover!.path),
+                              fit: BoxFit.contain,
                             ),
-                          ],
-                        ),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.upload_file,
+                                  color: Color(0xFF9DB2CE), size: 40),
+                              const SizedBox(height: 10),
+                              Text(
+                                '                     Upload Cover                     ',
+                                style: GoogleFonts.poppins(
+                                    color: const Color(0xFF9DB2CE)),
+                              ),
+                            ],
+                          ),
+                  ),
+                )
+              else
+                GestureDetector(
+                  onTap: () async {
+                    // Trigger DALL-E API call when the user taps on the generated image section
+                    if (_useGeneration && !_isGenerating) {
+                      String? generatedImageUrl = await _generateCoverWithDalle();
+                      if (generatedImageUrl != null) {
+                        setState(() {
+                          _generatedImageUrl = generatedImageUrl;
+                        });
+                      }
+                    }
+                  },
+                  child: Container(
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A3B4D),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: _generatedImageUrl != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              _generatedImageUrl!,
+                              fit: BoxFit.contain,
+                            ),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_isGenerating)
+                                const CircularProgressIndicator(
+                                  color: Color(0xFF9DB2CE),
+                                )
+                              else ...[
+                                const Icon(Icons.auto_awesome,
+                                    color: Color(0xFF9DB2CE), size: 40),
+                                const SizedBox(height: 10),
+                                Text(
+                                  '                   Generate Cover                   ',
+                                  style: GoogleFonts.poppins(
+                                    color: const Color(0xFF9DB2CE),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                  ),
                 ),
-              ),
+              const SizedBox(height: 20),
+              
             ],
           ),
         ),
