@@ -19,10 +19,96 @@ class _WritingPageState extends State<WritingPage> {
       FirebaseAuth.instance.currentUser!.uid; // Current User ID
   bool _isLoading = false;
 
+  Future<List<String>> fetchThreadParts() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('Thread')
+          .doc(widget.threadId)
+          .collection('Parts')
+          .orderBy('createdAt', descending: false)
+          .get();
+
+      // Extract the content of each part
+      return snapshot.docs.map((doc) => doc['content'] as String).toList();
+    } catch (e) {
+      print('Error fetching thread parts: $e');
+      return [];
+    }
+  }
+
+  Future<String?> _generateIdeaFromAPI(String combinedParts) async {
+    const apiUrl =
+        'http://10.0.2.2:5000/generate-idea'; // Replace with your actual endpoint
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'thread_text': combinedParts}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['idea']; // Adjust based on your API's response structure
+      } else {
+        print('Failed to generate idea: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error occurred while generating idea: $e');
+      return null;
+    }
+  }
+
+  Future<void> generateIdea() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Fetch all parts of the thread
+      final parts = await fetchThreadParts();
+      final combinedParts = parts.join(' ');
+
+      // Call the API to generate the idea
+      final idea = await _generateIdeaFromAPI(combinedParts);
+
+      if (idea != null) {
+        // Show the generated idea in a dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Generated Idea'),
+            content: Text(idea),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to generate an idea.")),
+        );
+      }
+    } catch (e) {
+      print('Error generating idea: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("An error occurred.")),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _textController = TextEditingController();
+    fetchThreadParts(); // Fetch parts on widget load
   }
 
   @override
@@ -307,9 +393,7 @@ class _WritingPageState extends State<WritingPage> {
           IconButton(
             icon: const Icon(Icons.auto_awesome_outlined,
                 color: Color(0xFFA2DED0)),
-            onPressed: () {
-              // Add action for the auto-format button
-            },
+            onPressed: _isLoading ? null : generateIdea,
           ),
         ],
       ),
