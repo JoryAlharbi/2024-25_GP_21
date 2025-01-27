@@ -18,6 +18,7 @@ class _WritingPageState extends State<WritingPage> {
   final String userId =
       FirebaseAuth.instance.currentUser!.uid; // Current User ID
   bool _isLoading = false;
+  String? idea; // Nullable String to hold the generated idea
 
   Future<List<String>> fetchThreadParts() async {
     try {
@@ -73,23 +74,12 @@ class _WritingPageState extends State<WritingPage> {
       final idea = await _generateIdeaFromAPI(combinedParts);
 
       if (idea != null) {
-        // Show the generated idea in a dialog
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Generated Idea'),
-            content: Text(idea),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-        );
+        setState(() {
+          this.idea = idea;
+        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to generate an idea.")),
+          const SnackBar(content: Text("Failed to generate idea")),
         );
       }
     } catch (e) {
@@ -382,19 +372,61 @@ class _WritingPageState extends State<WritingPage> {
   Widget _buildActionButtons() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            icon: const Icon(Icons.auto_fix_high, color: Color(0xFFA2DED0)),
-            onPressed: () {
-              // Add action for the undo button
-            },
+          // Row of buttons
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.auto_fix_high, color: Color(0xFFA2DED0)),
+                onPressed: () {
+                  // Add action for the undo button
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.auto_awesome_outlined,
+                    color: Color(0xFFA2DED0)),
+                onPressed: _isLoading ? null : generateIdea,
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.auto_awesome_outlined,
-                color: Color(0xFFA2DED0)),
-            onPressed: _isLoading ? null : generateIdea,
-          ),
+          const SizedBox(height: 8), // Space between buttons and the bubble
+          // Bubble appears below the buttons
+          if (idea != null) // Only display the bubble if an idea is available
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: idea != null ? 1.0 : 0.0, // Fades in/out based on state
+              child: Container(
+                width: double
+                    .infinity, // Ensures the bubble takes up available width
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 10.0), // Bubble padding
+                margin: const EdgeInsets.symmetric(
+                    horizontal: 16.0), // Side margins
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4A5568), // Bubble background color
+                  borderRadius: BorderRadius.circular(12.0), // Rounded corners
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2), // Subtle shadow
+                      offset: const Offset(0, 4),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  idea ?? '',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14, // Matches desired font size
+                  ),
+                  textAlign: TextAlign.left, // Aligns text to the left
+                  softWrap: true, // Wraps text within the bubble
+                  overflow: TextOverflow.visible, // Prevents clipping
+                ),
+              ),
+            ),
         ],
       ),
     );
