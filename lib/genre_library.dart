@@ -1,112 +1,103 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:rawae_gp24/makethread.dart';
-import 'package:rawae_gp24/homepage.dart';
-import 'package:rawae_gp24/library.dart';
-import 'package:rawae_gp24/bookmark.dart';
-import 'package:rawae_gp24/profile_page.dart';
-import 'package:rawae_gp24/book.dart'; // Ensure this path is correct for your existing book.dart file
-
-import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rawae_gp24/book.dart';
 import 'package:rawae_gp24/custom_navigation_bar.dart';
 
-class GenreLibraryPage extends StatelessWidget {
-  final String genre;
+class GenreLibraryPage extends StatefulWidget {
+  final String genreID;
+  final String genreName;
 
-  GenreLibraryPage({super.key, required this.genre});
+  const GenreLibraryPage(
+      {super.key, required this.genreID, required this.genreName});
 
-  final List<Map<String, String>> books = [
-    {'title': 'The Three Months Rule', 'image': 'assets/book3.png'},
-    {'title': 'Think outside the box', 'image': 'assets/book2.png'},
-    {'title': 'The Three Months Rule', 'image': 'assets/book3.png'},
-    {'title': 'Think outside the box', 'image': 'assets/book2.png'},
-  ];
+  @override
+  _GenreLibraryPageState createState() => _GenreLibraryPageState();
+}
+
+class _GenreLibraryPageState extends State<GenreLibraryPage> {
+  List<Map<String, dynamic>> threads = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchThreadsByGenre();
+  }
+
+  void fetchThreadsByGenre() async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('Thread')
+        .where('status', isEqualTo: 'Published')
+        .where('genreID',
+            arrayContains:
+                FirebaseFirestore.instance.doc('Genre/${widget.genreID}'))
+        .get();
+
+    setState(() {
+      threads = querySnapshot.docs.map((doc) {
+        Map<String, dynamic> threadData = doc.data() as Map<String, dynamic>;
+        threadData['docID'] =
+            doc.id; // ✅ Store Firestore document ID inside the thread data
+        return threadData;
+      }).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(0, 112, 28, 28),
+        title: Text(widget.genreName,
+            style: const TextStyle(color: Colors.white, fontSize: 24)),
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Text(
-          genre,
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.builder(
-          itemCount: books.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 19.0,
-            crossAxisSpacing: 22.0,
-            childAspectRatio: 0.7,
-          ),
-          itemBuilder: (context, index) {
-            final book = books[index];
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => BookDetailsPage(),
+      body: threads.isEmpty
+          ? const Center(
+              child: Text("No threads available",
+                  style: TextStyle(color: Colors.white, fontSize: 16)))
+          : GridView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: threads.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 19.0,
+                  crossAxisSpacing: 22.0,
+                  childAspectRatio: 0.7),
+              itemBuilder: (context, index) {
+                final thread = threads[index];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          print(
+                              "📢 Navigating to BookDetailsPage with Firestore document ID: ${thread['docID']}");
+                          return BookDetailsPage(
+                              threadID: thread['docID']); // ✅ Use docID
+                        },
+                      ),
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      Image.network(thread['bookCoverUrl'],
+                          height: 200, width: 130, fit: BoxFit.cover),
+                      const SizedBox(height: 8.0),
+                      Text(thread['title'],
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                    ],
                   ),
                 );
               },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    height: 200,
-                    width: 130,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4.0),
-                      image: DecorationImage(
-                        image: AssetImage(book['image']!),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8.0),
-                  Text(
-                    book['title']!,
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => MakeThreadPage()),
-          );
-        },
-        backgroundColor: const Color(0xFFD35400),
-        elevation: 6,
-        child: const Icon(
-          Icons.add,
-          size: 36,
-          color: Colors.white,
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: CustomNavigationBar(selectedIndex: 1),
+            ),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:rawae_gp24/bookmark.dart';
 import 'package:rawae_gp24/genre_library.dart';
 import 'package:rawae_gp24/homepage.dart';
@@ -9,12 +10,36 @@ import 'package:rawae_gp24/custom_navigation_bar.dart'; // Import CustomNavigati
 
 class LibraryPage extends StatelessWidget {
   final List<Map<String, dynamic>> genres = [
-    {'name': 'Fantasy', 'image': 'assets/fantasy.png'},
-    {'name': 'Drama', 'image': 'assets/drama.png'},
-    {'name': 'Romance', 'image': 'assets/romance.png'},
-    {'name': 'Comedy', 'image': 'assets/comedy.png'},
-    {'name': 'Crime Fiction', 'image': 'assets/crime_fiction.png'},
-    {'name': 'Adventure', 'image': 'assets/adventure.png'},
+    {
+      'id': 'EUw4wq33ai6Xxe6jbDUY',
+      'name': 'Fantasy',
+      'image': 'assets/fantasy.png'
+    },
+    {
+      'id': 'XJDqFYj72YT0hBL25yOb',
+      'name': 'Drama',
+      'image': 'assets/drama.png'
+    },
+    {
+      'id': 'KyMtx16Rq28JCMrKKzF7',
+      'name': 'Romance',
+      'image': 'assets/romance.png'
+    },
+    {
+      'id': '2NlCMfmRJAUaLADs8t6Q',
+      'name': 'Comedy',
+      'image': 'assets/comedy.png'
+    },
+    {
+      'id': 'XJpqFJy72Y7bh0L25y0b',
+      'name': 'Crime Fiction',
+      'image': 'assets/crime_fiction.png'
+    },
+    {
+      'id': 'YRdkEdiEZ9NZeQIMDTi',
+      'name': 'Adventure',
+      'image': 'assets/adventure.png'
+    },
   ];
 
   LibraryPage({super.key});
@@ -85,16 +110,16 @@ class LibraryPage extends StatelessWidget {
           // Main body content
           Column(
             children: [
-              SizedBox(height: 25.0),
+              const SizedBox(height: 25.0),
               Padding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 16.0, vertical: 20.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Explore',
-                      style: TextStyle(
+                      style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 28,
@@ -129,8 +154,10 @@ class LibraryPage extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  GenreLibraryPage(genre: genre['name']),
+                              builder: (context) => GenreLibraryPage(
+                                genreID: genre['id'],
+                                genreName: genre['name'],
+                              ),
                             ),
                           );
                         },
@@ -148,7 +175,7 @@ class LibraryPage extends StatelessWidget {
                             const SizedBox(height: 8.0),
                             Text(
                               genre['name'],
-                              style: const TextStyle(
+                              style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,

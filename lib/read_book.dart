@@ -1,22 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class ReadBookPage extends StatelessWidget {
-  final String bookTitle;
+class ReadBookPage extends StatefulWidget {
+  final String threadID; // Book ID from Firestore
 
-  const ReadBookPage({super.key, this.bookTitle = 'MEMORIES OF THE SEA'});
+  const ReadBookPage({super.key, required this.threadID});
 
-  final String bookContent = '''
-    In a world where dreams bleed into reality, Evelyn embarked on a journey across the seas. The whispers of the ocean were her only companions, guiding her toward a future that held more mysteries than she could fathom.
-    
-    Each wave that crashed against the bow of her small boat seemed to carry a fragment of her past, reminding her of the life she once knew. Yet, she pressed on, knowing that the key to her destiny lay beyond the horizon.
-    
-    The sky painted itself with shades of twilight as Evelyn ventured deeper into the unknown. Stars began to twinkle, reflecting on the calm waters, weaving a path of light that she felt destined to follow.
-    
-    She clutched a worn map in her hands, its edges frayed and faded, but the promise of adventure shimmered in her eyes. For Evelyn, the sea was not just a vast expanse of water, but a living tapestry of secrets, waiting to be discovered.
-    
-    As the night grew darker, the line between reality and dreams blurred, and Evelyn found herself questioning what was real. But she knew one thing for certain—she would find what she sought, no matter how far the sea carried her.
-  ''';
+  @override
+  _ReadBookPageState createState() => _ReadBookPageState();
+}
+
+class _ReadBookPageState extends State<ReadBookPage> {
+  String bookTitle = "";
+  String bookContent = "";
+
+  @override
+  void initState() {
+    super.initState();
+    fetchBookContent();
+  }
+
+  void fetchBookContent() async {
+    DocumentSnapshot bookDoc = await FirebaseFirestore.instance
+        .collection('Thread')
+        .doc(widget.threadID)
+        .get();
+
+    if (bookDoc.exists) {
+      setState(() {
+        bookTitle = bookDoc['title'];
+        bookContent =
+            bookDoc['content']; // Ensure Firestore has a "content" field
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,12 +45,10 @@ class ReadBookPage extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          bookTitle,
+          bookTitle.isEmpty ? "Loading..." : bookTitle,
           style: GoogleFonts.poppins(
             color: Colors.white,
             fontSize: 20,
@@ -40,24 +56,28 @@ class ReadBookPage extends StatelessWidget {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                bookContent,
-                style: GoogleFonts.poppins(
-                  color: Colors.grey[300],
-                  fontSize: 16,
-                  height: 1.5,
+      body: bookContent.isEmpty
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFD35400)),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      bookContent,
+                      style: GoogleFonts.poppins(
+                        color: Colors.grey[300],
+                        fontSize: 16,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }

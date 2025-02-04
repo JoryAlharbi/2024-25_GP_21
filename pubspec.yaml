@@ -35,7 +35,7 @@ dependencies:
   cached_network_image: ^3.4.1
   googleapis_auth: ^1.0.0
   fast_rsa: ^3.6.6
-  flutter_local_notifications: ^15.0.0
+  flutter_local_notifications: 17.2.1 
 
   dcdg: ^4.1.0 # this to generate the class diagram
   socket_io_client: ^2.0.0
@@ -73,6 +73,11 @@ flutter:
     - assets/cat.png
     - assets/catm.png
     - assets/profile2.png
+    - assets/horror.png
+    - assets/Thriller.png
+    - assets/Mystery.png
+    - assets/Historical.png
+    - assets/Science Fiction.png
 
 
 

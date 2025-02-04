@@ -109,6 +109,43 @@ class _StoryViewState extends State<StoryView> {
     super.dispose();
   }
 
+  void onEndThread(BuildContext context, String writerId) {
+    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    if (writerId == currentUserId) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('End Thread'),
+            content:
+                Text('Are you sure you want to end and publish this thread?'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  FirebaseFirestore.instance
+                      .collection('Thread')
+                      .doc(widget.threadId)
+                      .update({'status': 'Published'});
+                  Navigator.of(context).pop();
+                },
+                child: Text('Confirm'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("You do not have permission to end this thread.")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -454,55 +491,92 @@ class _StoryViewState extends State<StoryView> {
 
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: GestureDetector(
-                onTap: () => onWritingBoxClick(context),
-                child: Container(
-                  width: double.infinity,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 42, 60, 76),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 16.0),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.edit_rounded,
-                            color: Color(0xFF9DB2CE),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => onWritingBoxClick(context),
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 42, 60, 76),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: StreamBuilder<DocumentSnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('Thread')
+                                  .doc(widget.threadId)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  bool isWriting =
+                                      snapshot.data!['isWriting'] ?? false;
+                                  return Text(
+                                    isWriting
+                                        ? 'Someone is writing...'
+                                        : 'What happens next?',
+                                    style: TextStyle(color: Color(0xFF9DB2CE)),
+                                  );
+                                }
+                                return Text('What happens next...',
+                                    style: TextStyle(color: Color(0xFF9DB2CE)));
+                              },
+                            ),
                           ),
-                          SizedBox(width: 8),
-                          StreamBuilder<DocumentSnapshot>(
-                            stream: FirebaseFirestore.instance
-                                .collection('Thread')
-                                .doc(widget.threadId)
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                bool isWriting =
-                                    snapshot.data!['isWriting'] ?? false;
-                                return Text(
-                                  isWriting
-                                      ? 'Someone is writing... !!'
-                                      : 'What happens next?',
-                                  style: TextStyle(color: Color(0xFF9DB2CE)),
-                                );
-                              }
-                              return const Text(
-                                'What happens next...',
-                                style: TextStyle(color: Color(0xFF9DB2CE)),
-                              );
-                            },
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  SizedBox(width: 8),
+                  StreamBuilder<DocumentSnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('Thread')
+                        .doc(widget.threadId)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData && snapshot.data!.data() != null) {
+                        DocumentReference writerRef =
+                            snapshot.data!['writerID'];
+                        return FutureBuilder<DocumentSnapshot>(
+                          future: writerRef.get(),
+                          builder: (context, writerSnapshot) {
+                            if (writerSnapshot.hasData) {
+                              String writerId = writerSnapshot.data!.id;
+                              bool isCreator = writerId ==
+                                  FirebaseAuth.instance.currentUser!.uid;
+                              if (isCreator) {
+                                return ElevatedButton(
+                                  onPressed: () =>
+                                      onEndThread(context, writerId),
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Colors.red, // Background color
+                                      foregroundColor:
+                                          Colors.white, // Text color
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                              6) // Button corner radius
+                                          )),
+                                  child: Text('End'),
+                                );
+                              }
+                            }
+                            return SizedBox
+                                .shrink(); // Ensures no extra space if not the creator
+                          },
+                        );
+                      }
+                      return SizedBox
+                          .shrink(); // Ensures no extra space if data isn't available
+                    },
+                  ),
+                ],
               ),
-            ),
+            )
           ],
         ),
       ),
