@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'; //for the norifications!!
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rawae_gp24/notification_service.dart'; // Ensure this is the correct path
+import 'package:flutter/material.dart';
 
 class StoryView extends StatefulWidget {
   final String threadId;
@@ -380,6 +381,7 @@ class _StoryViewState extends State<StoryView> {
                                   avatarName: 'Loading',
                                 ),
                                 index == partsDocs.length - 1,
+                                context,
                               );
                             }
 
@@ -401,6 +403,7 @@ class _StoryViewState extends State<StoryView> {
                                     avatarName: writerDetails['name']!,
                                   ),
                                   index == partsDocs.length - 1,
+                                  context,
                                 );
                               }
 
@@ -428,6 +431,7 @@ class _StoryViewState extends State<StoryView> {
                                         avatarName: 'Error',
                                       ),
                                       index == partsDocs.length - 1,
+                                      context,
                                     );
                                   } else if (snapshot.hasData) {
                                     // Once the data is fetched, build the timeline item
@@ -447,6 +451,7 @@ class _StoryViewState extends State<StoryView> {
                                             name, // Use the fetched name
                                       ),
                                       index == partsDocs.length - 1,
+                                      context,
                                     );
                                   } else {
                                     // Handle case where data is null
@@ -461,6 +466,7 @@ class _StoryViewState extends State<StoryView> {
                                         avatarName: 'Unknown',
                                       ),
                                       index == partsDocs.length - 1,
+                                      context,
                                     );
                                   }
                                 },
@@ -478,6 +484,7 @@ class _StoryViewState extends State<StoryView> {
                                 avatarName: 'Error',
                               ),
                               index == partsDocs.length - 1,
+                              context,
                             );
                           },
                         );
@@ -716,6 +723,7 @@ class TimelineItem {
   final String avatarPath;
   final String avatarName;
   final String? characterId;
+  String? reaction; // Nullable field for storing reaction
 
   TimelineItem({
     required this.name,
@@ -725,10 +733,12 @@ class TimelineItem {
     required this.avatarPath,
     required this.avatarName,
     this.characterId,
+    this.reaction, // Optional at first
   });
 }
 
-Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
+Widget _buildTimelineItem(
+    TimelineItem item, bool isLastItem, BuildContext context) {
   return Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -744,17 +754,15 @@ Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
                   shape: BoxShape.circle,
                   border: Border.all(
                     width: 4,
-                    color: const Color(0xFFD35400), //image
+                    color: const Color(0xFFD35400),
                   ),
                 ),
                 child: CircleAvatar(
                   radius: 30,
                   backgroundImage: item.avatarPath.startsWith('http') ||
                           item.avatarPath.startsWith('https')
-                      ? NetworkImage(
-                          item.avatarPath) // If URL, use NetworkImage
-                      : AssetImage(item.avatarPath)
-                          as ImageProvider, // If asset, use AssetImage
+                      ? NetworkImage(item.avatarPath)
+                      : AssetImage(item.avatarPath) as ImageProvider,
                 ),
               ),
               Positioned(
@@ -763,7 +771,7 @@ Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD35400), //name char
+                    color: const Color(0xFFD35400),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -828,16 +836,27 @@ Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
                 ),
               ),
             ),
+            if (item.reaction != null) // Show reaction if available
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  'Reaction: ${item.reaction}',
+                  style: const TextStyle(
+                      fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Align(
-                alignment: Alignment.centerRight, // Align to the right
-                child: IconButton(
-                  icon: const Icon(Icons.add_reaction_outlined,
-                      color: Color(0xFFA2DED0)),
-                  onPressed: () {
-                    print('Reacted to: ${item.name}');
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () {
+                    _showReactionDialog(context, item);
                   },
+                  child: const Icon(
+                    Icons.add_reaction_outlined,
+                    color: Color(0xFFA2DED0),
+                  ),
                 ),
               ),
             ),
@@ -845,5 +864,38 @@ Widget _buildTimelineItem(TimelineItem item, bool isLastItem) {
         ),
       ),
     ],
+  );
+}
+
+void _showReactionDialog(BuildContext context, TimelineItem item) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: const Color.fromARGB(101, 118, 143, 144),
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _reactionButton(context, item, '👍'),
+            _reactionButton(context, item, '❤️'),
+            _reactionButton(context, item, '😂'),
+            _reactionButton(context, item, '😲'),
+            _reactionButton(context, item, '😢'),
+            _reactionButton(context, item, '🙏'),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Widget _reactionButton(BuildContext context, TimelineItem item, String emoji) {
+  return GestureDetector(
+    onTap: () {
+      Navigator.pop(context); // Close dialog
+      item.reaction = emoji; // Update the item's reaction
+      (context as Element).markNeedsBuild(); // Force UI update
+    },
+    child: Text(emoji, style: const TextStyle(fontSize: 24)),
   );
 }
