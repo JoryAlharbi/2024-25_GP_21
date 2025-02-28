@@ -40,6 +40,9 @@ dependencies:
   dcdg: ^4.1.0 # this to generate the class diagram
   socket_io_client: ^2.0.0
   
+  provider: # For state management
+  flutter_emoji_feedback: # Optional package for reactions
+  
   
 dev_dependencies:
   flutter_test:
