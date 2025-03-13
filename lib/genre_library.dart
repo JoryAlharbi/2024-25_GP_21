@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart'; // ✅ Import Poppins font
 import 'package:rawae_gp24/book.dart';
 import 'package:rawae_gp24/custom_navigation_bar.dart';
 
@@ -47,11 +48,22 @@ class _GenreLibraryPageState extends State<GenreLibraryPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
-        title: Text(widget.genreName,
-            style: const TextStyle(color: Colors.white, fontSize: 24)),
+        title: Text(
+          widget.genreName,
+          style: GoogleFonts.poppins(
+            // ✅ Changed font to Poppins
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: false, // ✅ Prevents title from being centered
+        titleSpacing: 0, // ✅ Removes extra spacing between the icon & text
         leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context)),
+          icon: const Icon(Icons.arrow_back,
+              color: Color(0xFF9DB2CE), size: 26), // ✅ Slightly larger arrow
+          onPressed: () => Navigator.pop(context),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -89,8 +101,10 @@ class _GenreLibraryPageState extends State<GenreLibraryPage> {
                           height: 200, width: 130, fit: BoxFit.cover),
                       const SizedBox(height: 8.0),
                       Text(thread['title'],
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 14),
+                          style: GoogleFonts.poppins(
+                              // ✅ Poppins for consistency
+                              color: Colors.white,
+                              fontSize: 14),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                     ],

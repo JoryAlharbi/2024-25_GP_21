@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rawae_gp24/PublishThread.dart';
 import 'writing.dart'; // Make sure to import your writing.dart file
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'; //for the norifications!!
@@ -115,23 +116,51 @@ class _StoryViewState extends State<StoryView> {
     if (writerId == currentUserId) {
       showDialog(
         context: context,
-        builder: (BuildContext context) {
+        builder: (BuildContext dialogContext) {
+          // Use dialogContext to avoid issues
           return AlertDialog(
             title: Text('End Thread'),
             content:
                 Text('Are you sure you want to end and publish this thread?'),
             actions: <Widget>[
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => Navigator.of(dialogContext).pop(),
                 child: Text('Cancel'),
               ),
               TextButton(
-                onPressed: () {
-                  FirebaseFirestore.instance
-                      .collection('Thread')
-                      .doc(widget.threadId)
-                      .update({'status': 'Published'});
-                  Navigator.of(context).pop();
+                onPressed: () async {
+                  Navigator.of(dialogContext).pop(); // Close the dialog safely
+                  print("🟡 Updating Firestore to add description...");
+
+                  try {
+                    await FirebaseFirestore.instance
+                        .collection('Thread')
+                        .doc(widget.threadId)
+                        .set({
+                      'description': 'No summary yet',
+                    }, SetOptions(merge: true));
+
+                    print("✅ Firestore update successful!");
+
+                    // ✅ Delay navigation slightly to ensure the widget tree is stable
+                    Future.delayed(Duration.zero, () {
+                      if (mounted) {
+                        print("🚀 Navigating to PublishThreadPage...");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PublishThreadPage(threadID: widget.threadId),
+                          ),
+                        );
+                      } else {
+                        print(
+                            "❌ Navigation skipped because widget is unmounted.");
+                      }
+                    });
+                  } catch (e) {
+                    print("❌ Firestore update failed: $e");
+                  }
                 },
                 child: Text('Confirm'),
               ),

@@ -6,6 +6,7 @@ import 'makethread.dart';
 import 'custom_navigation_bar.dart';
 import 'genre_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'SearchPage.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -108,7 +109,8 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.search_rounded, color: Color(0xFF9DB2CE)),
             iconSize: 31,
             onPressed: () {
-              // Handle search functionality
+              Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (context) => SearchPage()));
             },
           ),
         ],
@@ -199,6 +201,19 @@ class _HomePageState extends State<HomePage> {
                   return const Center(child: Text('No threads available.'));
                 } else {
                   final threads = snapshot.data!.docs;
+
+                  DocumentSnapshot? mostPopularThread;
+                  int highestViewCount = -1;
+
+                  for (var thread in threads) {
+                    final data = thread.data() as Map<String, dynamic>;
+                    final int totalViews = data['totalView'] ?? 0;
+                    if (totalViews > highestViewCount) {
+                      highestViewCount = totalViews;
+                      mostPopularThread = thread;
+                    }
+                  }
+
                   return ListView.builder(
                     itemCount: threads.length,
                     itemBuilder: (context, index) {
@@ -208,6 +223,8 @@ class _HomePageState extends State<HomePage> {
                           threadData['genreID'] ?? [];
                       final String? bookCoverUrl = threadData['bookCoverUrl'];
                       final String threadId = threads[index].id;
+
+                      bool isPopular = mostPopularThread?.id == threadId;
 
                       return FutureBuilder<String>(
                         future: _getGenreNames(genreRefs),
@@ -220,7 +237,7 @@ class _HomePageState extends State<HomePage> {
                           return BookListItem(
                             title: threadData['title'] ?? 'Untitled',
                             genre: genreNames,
-                            isPopular: index == 0,
+                            isPopular: isPopular,
                             bookCoverUrl: bookCoverUrl,
                             threadId: threadId,
                             userId: userId,
@@ -332,12 +349,16 @@ class BookListItem extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            //  if (isPopular)
-                            //    const Icon(
-                            //    Icons.local_fire_department,
-                            //       color: Color(0xFFD35400),
-                            //      size: 18.0,
-                            //    ),
+                            if (isPopular)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 5),
+                                child: Icon(
+                                  Icons.local_fire_department,
+                                  color: Color(
+                                      0xFFD35400), // Orange color for fire icon
+                                  size: 18.0,
+                                ),
+                              ),
                           ],
                         ),
                         const SizedBox(height: 4.0),
@@ -361,7 +382,10 @@ class BookListItem extends StatelessWidget {
                             return const SizedBox(
                               width: 35.0,
                               height: 35.0,
-                              child: CircularProgressIndicator(),
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFFD35400)), // Orange color
+                              ),
                             );
                           } else if (snapshot.hasError ||
                               !snapshot.hasData ||

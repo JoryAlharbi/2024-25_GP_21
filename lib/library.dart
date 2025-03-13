@@ -21,6 +21,11 @@ class LibraryPage extends StatelessWidget {
       'image': 'assets/drama.png'
     },
     {
+      'id': 'fkO0jS1GlUQcWb5yeCOq',
+      'name': 'Thriller',
+      'image': 'assets/Thriller.png'
+    },
+    {
       'id': 'KyMtx16Rq28JCMrKKzF7',
       'name': 'Romance',
       'image': 'assets/romance.png'
@@ -36,9 +41,24 @@ class LibraryPage extends StatelessWidget {
       'image': 'assets/crime_fiction.png'
     },
     {
+      'id': 'awLGlCFxrS60Kvzq2eq6',
+      'name': 'Horror',
+      'image': 'assets/horror.png'
+    },
+    {
       'id': 'YRdkEdiEZ9NZeQIMDTi',
       'name': 'Adventure',
       'image': 'assets/adventure.png'
+    },
+    {
+      'id': 'jBZ5tvemmCEpG5NHTyaj',
+      'name': 'Mystery',
+      'image': 'assets/Mystery.png'
+    },
+    {
+      'id': 'qCmOjByIJWjGeLjUMfb4',
+      'name': 'Historical',
+      'image': 'assets/Historical.png'
     },
   ];
 
@@ -122,7 +142,7 @@ class LibraryPage extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 28,
+                        fontSize: 32,
                       ),
                     ),
                     IconButton(
@@ -138,7 +158,7 @@ class LibraryPage extends StatelessWidget {
               // Main content: Genres grid
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: GridView.builder(
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
@@ -167,20 +187,12 @@ class LibraryPage extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8.0),
                               child: Image.asset(
                                 genre['image'],
-                                width: 120,
-                                height: 120,
+                                width: 160,
+                                height: 160,
                                 fit: BoxFit.cover,
                               ),
                             ),
-                            const SizedBox(height: 8.0),
-                            Text(
-                              genre['name'],
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
+                            const SizedBox(height: 1.0),
                           ],
                         ),
                       );

@@ -7,10 +7,12 @@ version: 0.1.0
 
 environment:
   sdk: ^3.5.3
+  
 
 dependencies:
   flutter:
     sdk: flutter
+    
 
 
 
@@ -18,7 +20,6 @@ dependencies:
   google_fonts: ^6.2.1
   delightful_toast: ^1.1.0
   get_it: ^8.0.0
-  
   
   
 
@@ -39,6 +40,8 @@ dependencies:
 
   dcdg: ^4.1.0 # this to generate the class diagram
   socket_io_client: ^2.0.0
+  shared_preferences: ^2.5.1
+  
   
   provider: # For state management
   flutter_emoji_feedback: # Optional package for reactions
@@ -80,7 +83,6 @@ flutter:
     - assets/Thriller.png
     - assets/Mystery.png
     - assets/Historical.png
-    - assets/Science Fiction.png
 
 
 

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rawae_gp24/makethread.dart';
 import 'package:rawae_gp24/read_book.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rawae_gp24/custom_navigation_bar.dart';
 
 class BookDetailsPage extends StatefulWidget {
@@ -16,73 +18,111 @@ class BookDetailsPage extends StatefulWidget {
 class _BookDetailsPageState extends State<BookDetailsPage> {
   Map<String, dynamic>? bookData;
   List<String> authors = [];
+  bool isBookmarked = false; // Track bookmark status
 
   @override
   void initState() {
     super.initState();
     fetchBookDetails();
+    checkIfBookmarked();
   }
 
-  /// **Fetch only author names from Firestore**
+  /// Fetch author names from Firestore references
   Future<List<String>> fetchAuthors(List<dynamic> authorRefs) async {
     List<String> authorNamesList = [];
 
     for (var authorRef in authorRefs) {
       if (authorRef is DocumentReference) {
         DocumentSnapshot authorDoc = await authorRef.get();
-
         if (authorDoc.exists) {
-          authorNamesList
-              .add(authorDoc['name'] ?? 'Unknown'); // ✅ Only get names
+          authorNamesList.add(authorDoc['name'] ?? 'Unknown');
         }
       }
     }
-
     return authorNamesList;
   }
 
-  /// **Fetch book details, including authors, from Firestore**
+  /// Fetch book details from Firestore
   void fetchBookDetails() async {
-    print(
-        "📢 Fetching book details for Firestore document ID: ${widget.threadID}");
-
     DocumentSnapshot doc = await FirebaseFirestore.instance
-        .collection('Thread') // 🔍 Searching in 'Thread' collection
-        .doc(widget.threadID) // ✅ Use Firestore document ID here
+        .collection('Thread')
+        .doc(widget.threadID)
         .get();
 
     if (doc.exists) {
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      print("✅ Book found: ${data['title']}");
 
-      List<dynamic> authorRefs =
-          data['contributors'] ?? []; // ✅ Get list of author references
-
-      // Fetch author names only
+      List<dynamic> authorRefs = data['contributors'] ?? [];
       List<String> authorNames = await fetchAuthors(authorRefs);
 
       setState(() {
         bookData = data;
-        authors = authorNames; // ✅ Store only names
+        authors = authorNames;
       });
     } else {
-      print("❌ Book not found in Firestore. Check the document ID.");
+      print("❌ Thread not found in Firestore.");
     }
   }
 
-  /// **Build the Authors Section**
-  Widget buildAuthorsSection() {
-    if (authors.isEmpty) {
-      return Text(
-        "Authors: Unknown",
-        style: TextStyle(color: Colors.grey[400], fontSize: 14),
-      );
+  /// Check if the user has bookmarked this thread
+  Future<void> checkIfBookmarked() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    final bookmarkQuery = await FirebaseFirestore.instance
+        .collection('BookMark')
+        .where('userID', isEqualTo: userId)
+        .where('threadID', isEqualTo: widget.threadID)
+        .get();
+
+    setState(() {
+      isBookmarked = bookmarkQuery.docs.isNotEmpty;
+    });
+  }
+
+  /// Add bookmark
+  Future<void> addBookmark() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    await FirebaseFirestore.instance.collection('BookMark').add({
+      'userID': userId,
+      'threadID': widget.threadID,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    setState(() {
+      isBookmarked = true;
+    });
+  }
+
+  /// Remove bookmark
+  Future<void> removeBookmark() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    final bookmarkQuery = await FirebaseFirestore.instance
+        .collection('BookMark')
+        .where('userID', isEqualTo: userId)
+        .where('threadID', isEqualTo: widget.threadID)
+        .get();
+
+    for (var doc in bookmarkQuery.docs) {
+      await doc.reference.delete();
     }
 
-    return Text(
-      "Authors: ${authors.join(', ')}", // ✅ Display names as a comma-separated list
-      style: TextStyle(color: Colors.grey[400], fontSize: 14),
-    );
+    setState(() {
+      isBookmarked = false;
+    });
+  }
+
+  /// Toggle Bookmark
+  Future<void> toggleBookmark() async {
+    if (isBookmarked) {
+      await removeBookmark();
+    } else {
+      await addBookmark();
+    }
   }
 
   @override
@@ -92,12 +132,29 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1B2835),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12.0),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back,
+                color: Color(0xFF9DB2CE), size: 28),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: IconButton(
+              icon: Icon(
+                isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                size: 36,
+                color: isBookmarked ? Color(0xFF9DB2CE) : Color(0xFF9DB2CE),
+              ),
+              onPressed: toggleBookmark,
+            ),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -106,17 +163,23 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
           children: [
             const SizedBox(height: 20),
             if (bookData != null) ...[
-              Image.network(
-                bookData!['bookCoverUrl'],
-                height: 200,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.image_not_supported,
-                      size: 100, color: Colors.grey);
-                },
-              ),
+              // Book Cover with Placeholder if None
+              bookData!['bookCoverUrl'] != null &&
+                      bookData!['bookCoverUrl'].isNotEmpty
+                  ? Image.network(
+                      bookData!['bookCoverUrl'],
+                      height: 200,
+                      fit: BoxFit.cover,
+                    )
+                  : Image.asset(
+                      'assets/placeholder_book.png',
+                      height: 200,
+                      fit: BoxFit.cover,
+                    ),
               const SizedBox(height: 20),
+              // Title
               Text(
-                bookData!['title'],
+                bookData!['title'] ?? 'Untitled',
                 style: GoogleFonts.poppins(
                   color: Colors.white,
                   fontSize: 24,
@@ -124,21 +187,31 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
                 ),
               ),
               const SizedBox(height: 10),
-              buildAuthorsSection(), // ✅ Now shows authors dynamically
-              const SizedBox(height: 20),
+              // Authors
               Text(
-                bookData!['description'] ?? "No description available.",
-                textAlign: TextAlign.center,
+                "Authors: ${authors.join(', ')}",
                 style: TextStyle(color: Colors.grey[400], fontSize: 14),
               ),
+              const SizedBox(height: 10),
+              // Description with "Description: "
+              Text(
+                "Description: ${bookData!['description'] ?? 'Not available.'}",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  color: Colors.white70,
+                  fontSize: 14,
+                ),
+              ),
               const SizedBox(height: 20),
+              // Start Reading Button
               GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) =>
-                            ReadBookPage(threadID: widget.threadID)),
+                      builder: (context) =>
+                          ReadBookPage(threadID: widget.threadID),
+                    ),
                   );
                 },
                 child: Container(
@@ -169,10 +242,27 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
                 ),
               ),
             ] else
-              const CircularProgressIndicator(), // ✅ Show loading until book data is fetched
+              const CircularProgressIndicator(),
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MakeThreadPage()),
+          );
+        },
+        backgroundColor: const Color.fromRGBO(211, 84, 0, 1),
+        elevation: 6,
+        child: const Icon(
+          Icons.add,
+          size: 36,
+          color: Colors.white,
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: CustomNavigationBar(selectedIndex: 2),
     );
   }
 }
