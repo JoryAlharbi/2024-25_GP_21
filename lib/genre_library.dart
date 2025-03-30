@@ -72,7 +72,7 @@ class _GenreLibraryPageState extends State<GenreLibraryPage> {
               child: Text("No threads available",
                   style: TextStyle(color: Colors.white, fontSize: 16)))
           : GridView.builder(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(18.0),
               itemCount: threads.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
@@ -97,16 +97,26 @@ class _GenreLibraryPageState extends State<GenreLibraryPage> {
                   },
                   child: Column(
                     children: [
-                      Image.network(thread['bookCoverUrl'],
-                          height: 200, width: 130, fit: BoxFit.cover),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                            4), // 👈 Adjust the radius as needed
+                        child: Image.network(
+                          thread['bookCoverUrl'],
+                          height: 190,
+                          width: 132,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                       const SizedBox(height: 8.0),
-                      Text(thread['title'],
-                          style: GoogleFonts.poppins(
-                              // ✅ Poppins for consistency
-                              color: Colors.white,
-                              fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
+                      Text(
+                        thread['title'],
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 );

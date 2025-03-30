@@ -154,6 +154,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     User? user = FirebaseAuth.instance.currentUser;
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: const Color(0xFF1B2835),
       appBar: AppBar(
         backgroundColor:
@@ -162,8 +163,7 @@ class _ProfilePageState extends State<ProfilePage> {
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout,
-                color: Color.fromARGB(255, 255, 255, 255)),
+            icon: const Icon(Icons.logout, color: Color(0xFF1B2835)),
             iconSize: 30,
             onPressed: () async {
               await FirebaseAuth.instance.signOut(); // Log out the user
@@ -178,22 +178,20 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: Stack(
         children: [
-          SizedBox(
-            height: 110,
-            child: CustomPaint(
-              painter: CurvePainter(),
-              child: Container(
-                height: 300,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      const Color(0xFFD35400).withOpacity(0.8),
-                      const Color(0xFF344C64).withOpacity(0.8),
-                      const Color(0xFFA2DED0).withOpacity(0.8),
-                    ],
-                  ),
+          ClipPath(
+            clipper: WaveClipper(),
+            child: Container(
+              height: 280,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFD35400),
+                    Color(0xFF344C64),
+                    Color(0xFFA2DED0),
+                  ],
                 ),
               ),
             ),
@@ -202,7 +200,7 @@ class _ProfilePageState extends State<ProfilePage> {
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               children: [
-                const SizedBox(height: 90),
+                const SizedBox(height: 88),
                 Stack(
                   children: [
                     GestureDetector(
@@ -244,7 +242,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 55),
                 Text(
                   username ?? 'Loading...',
                   style: GoogleFonts.poppins(
@@ -290,7 +288,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Center(
                     child: Container(
                       width: MediaQuery.of(context).size.width - 40,
-                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      padding: const EdgeInsets.only(top: 20, bottom: 0),
                       decoration: const BoxDecoration(
                         color: Color.fromRGBO(23, 32, 45, 1),
                         borderRadius: BorderRadius.only(
@@ -361,7 +359,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           isPublishedSelected
                               ? Expanded(
                                   child: GridView.builder(
@@ -389,7 +387,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                           children: [
                                             ClipRRect(
                                               borderRadius:
-                                                  BorderRadius.circular(10),
+                                                  BorderRadius.circular(4),
                                               child: Image.network(
                                                 publishedThreads[index]
                                                         ['bookCoverUrl'] ??
@@ -505,23 +503,41 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
 // Custom Clipper for the curved background shape
-class CurvePainter extends CustomPainter {
+class WaveClipper extends CustomClipper<Path> {
   @override
-  void paint(Canvas canvas, Size size) {
-    var paint = Paint()
-      ..color = Colors.transparent
-      ..style = PaintingStyle.fill;
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - 40);
 
-    var path = Path();
-    path.lineTo(0, size.height * 0.6);
+    // First dip (goes down)
     path.quadraticBezierTo(
-        size.width * 0.5, size.height * 1.2, size.width, size.height * 0.6);
-    path.lineTo(size.width, 0);
-    path.close();
+      size.width * 0.16,
+      size.height,
+      size.width * 0.33,
+      size.height - 40,
+    );
 
-    canvas.drawPath(path, paint);
+    // Middle bump (goes up)
+    path.quadraticBezierTo(
+      size.width * 0.5,
+      size.height - 80,
+      size.width * 0.66,
+      size.height - 40,
+    );
+
+    // Last dip (goes down)
+    path.quadraticBezierTo(
+      size.width * 0.83,
+      size.height,
+      size.width,
+      size.height - 40,
+    );
+
+    path.lineTo(size.width, 0); // Top-right corner
+    path.close();
+    return path;
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }

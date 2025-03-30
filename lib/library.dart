@@ -7,58 +7,71 @@ import 'package:rawae_gp24/makethread.dart';
 import 'package:rawae_gp24/profile_page.dart';
 import 'package:rawae_gp24/search.dart';
 import 'package:rawae_gp24/custom_navigation_bar.dart'; // Import CustomNavigationBar
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LibraryPage extends StatelessWidget {
   final List<Map<String, dynamic>> genres = [
     {
       'id': 'EUw4wq33ai6Xxe6jbDUY',
       'name': 'Fantasy',
-      'image': 'assets/fantasy.png'
+      'image': 'assets/fantasy.png',
+      'color': Color(0xFFFF69B4),
     },
     {
       'id': 'XJDqFYj72YT0hBL25yOb',
       'name': 'Drama',
-      'image': 'assets/drama.png'
+      'image': 'assets/drama.png',
+      'color': Color(0xFFFF69B4),
     },
     {
       'id': 'fkO0jS1GlUQcWb5yeCOq',
       'name': 'Thriller',
-      'image': 'assets/Thriller.png'
+      'image': 'assets/Thriller.png',
+      'color': Color(0xFFFF69B4),
     },
     {
       'id': 'KyMtx16Rq28JCMrKKzF7',
       'name': 'Romance',
-      'image': 'assets/romance.png'
+      'image': 'assets/romance.png',
+      'color': Color(0xFFFF69B4),
     },
     {
       'id': '2NlCMfmRJAUaLADs8t6Q',
       'name': 'Comedy',
-      'image': 'assets/comedy.png'
+      'image': 'assets/comedy.png',
+      'color': Color(0xFFFF69B4),
     },
     {
       'id': 'XJpqFJy72Y7bh0L25y0b',
       'name': 'Crime Fiction',
-      'image': 'assets/crime_fiction.png'
+      'image': 'assets/crime_fiction.png',
+      'color': Color(0xFFFF69B4),
     },
     {
       'id': 'awLGlCFxrS60Kvzq2eq6',
       'name': 'Horror',
-      'image': 'assets/horror.png'
+      'image': 'assets/horror.png',
+      'color': Color(0xFFFF69B4),
     },
     {
       'id': 'YRdkEdiEZ9NZeQIMDTi',
       'name': 'Adventure',
-      'image': 'assets/adventure.png'
+      'image': 'assets/adventure.png',
+      'color': Color(0xFFFF69B4),
     },
     {
       'id': 'jBZ5tvemmCEpG5NHTyaj',
       'name': 'Mystery',
-      'image': 'assets/Mystery.png'
+      'image': 'assets/Mystery.png',
+      'color': Color(0xFFFF69B4),
     },
     {
       'id': 'qCmOjByIJWjGeLjUMfb4',
       'name': 'Historical',
-      'image': 'assets/Historical.png'
+      'image': 'assets/Historical.png',
+      'color': Color(0xFFFF69B4),
     },
   ];
 
@@ -181,19 +194,11 @@ class LibraryPage extends StatelessWidget {
                             ),
                           );
                         },
-                        child: Column(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8.0),
-                              child: Image.asset(
-                                genre['image'],
-                                width: 160,
-                                height: 160,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            const SizedBox(height: 1.0),
-                          ],
+                        child: FlippableGenreCard(
+                          genreName: genre['name'],
+                          genreId: genre['id'],
+                          frontImagePath: genre['image'],
+                          backgroundColor: genre['color'],
                         ),
                       );
                     },
@@ -221,6 +226,135 @@ class LibraryPage extends StatelessWidget {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: CustomNavigationBar(selectedIndex: 1),
+    );
+  }
+}
+
+class FlippableGenreCard extends StatefulWidget {
+  final String genreName;
+  final String genreId;
+  final String frontImagePath;
+  final Color backgroundColor;
+
+  const FlippableGenreCard({
+    super.key,
+    required this.genreName,
+    required this.genreId,
+    required this.frontImagePath,
+    required this.backgroundColor,
+  });
+
+  @override
+  State<FlippableGenreCard> createState() => _FlippableGenreCardState();
+}
+
+class _FlippableGenreCardState extends State<FlippableGenreCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  bool isFlipped = false;
+  String? bookCoverUrl;
+  String? bookTitle;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _animation = Tween<double>(begin: 0, end: pi).animate(_controller);
+
+    fetchMostViewedBook();
+    maybeFlip();
+  }
+
+  Future<void> fetchMostViewedBook() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Thread')
+        .where('genreID',
+            arrayContains:
+                FirebaseFirestore.instance.doc('Genre/${widget.genreId}'))
+        .orderBy('totalView', descending: true)
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final data = querySnapshot.docs.first.data();
+      setState(() {
+        bookCoverUrl = data['bookCoverUrl'];
+        bookTitle = data['title'];
+      });
+    }
+  }
+
+  void maybeFlip() {
+    Future.delayed(Duration(milliseconds: Random().nextInt(4000)), () {
+      if (mounted) {
+        _controller.forward();
+        setState(() {
+          isFlipped = true;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget _buildFront() {
+    return Container(
+      color: widget.backgroundColor,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(widget.frontImagePath, height: 60),
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBack() {
+    return Container(
+      color: widget.backgroundColor,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (bookCoverUrl != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child:
+                  Image.network(bookCoverUrl!, height: 80, fit: BoxFit.cover),
+            ),
+          const SizedBox(height: 8),
+          Text(
+            bookTitle ?? '',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, color: Colors.white),
+          )
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final isBack = _animation.value > pi / 2;
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.rotationY(_animation.value),
+          child: isBack ? _buildBack() : _buildFront(),
+        );
+      },
     );
   }
 }

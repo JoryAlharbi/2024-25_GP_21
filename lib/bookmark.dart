@@ -96,7 +96,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                 'Bookmarked', // ✅ Kept original text style
                 style: GoogleFonts.poppins(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -137,8 +137,8 @@ class _BookmarkPageState extends State<BookmarkPage> {
                             child: Column(
                               children: [
                                 Container(
-                                  width: 130,
-                                  height: 200,
+                                  height: 190,
+                                  width: 132,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(4.0),
                                     image: book['image']!.isNotEmpty

@@ -16,6 +16,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String? selectedGenreName;
   int selectedIndex = 0;
   String? selectedGenreRef; // Track the selected genre reference for filtering
 
@@ -63,6 +64,7 @@ class _HomePageState extends State<HomePage> {
       // If "ALL" is clicked, reseting the filter
       setState(() {
         selectedGenreRef = null;
+        selectedGenreName = null;
       });
       return;
     }
@@ -78,8 +80,10 @@ class _HomePageState extends State<HomePage> {
         if (selectedGenreRef == genreRef.path) {
           selectedGenreRef =
               null; // Reset filter if clicking the same genre again
+          selectedGenreName = null;
         } else {
           selectedGenreRef = genreRef.path; // Set new genre filter
+          selectedGenreName = genreName;
         }
       });
     }
@@ -123,53 +127,66 @@ class _HomePageState extends State<HomePage> {
             height: 34.0,
             child: ListView(
               scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               children: [
                 GenreButton(
-                  'All', // Show all threads
-                  onPressed: () => _toggleGenreFilter('null'), // Reset filter
+                  'All',
+                  isSelected: selectedGenreName == null,
+                  onPressed: () => _toggleGenreFilter('null'),
                 ),
                 GenreButton(
                   'Thriller',
+                  isSelected: selectedGenreName == 'Thriller',
                   onPressed: () => _toggleGenreFilter('Thriller'),
                 ),
                 GenreButton(
                   'Fantasy',
+                  isSelected: selectedGenreName == 'Fantasy',
                   onPressed: () => _toggleGenreFilter('Fantasy'),
                 ),
                 GenreButton(
                   'Fiction',
+                  isSelected: selectedGenreName == 'Fiction',
                   onPressed: () => _toggleGenreFilter('Fiction'),
                 ),
                 GenreButton(
                   'Romance',
+                  isSelected: selectedGenreName == 'Romance',
                   onPressed: () => _toggleGenreFilter('Romance'),
                 ),
                 GenreButton(
                   'Mystery',
+                  isSelected: selectedGenreName == 'Mystery',
                   onPressed: () => _toggleGenreFilter('Mystery'),
                 ),
                 GenreButton(
                   'Science Fiction',
+                  isSelected: selectedGenreName == 'Science Fiction',
                   onPressed: () => _toggleGenreFilter('Science Fiction'),
                 ),
                 GenreButton(
                   'Comedy',
+                  isSelected: selectedGenreName == 'Comedy',
                   onPressed: () => _toggleGenreFilter('Comedy'),
                 ),
                 GenreButton(
                   'Drama',
+                  isSelected: selectedGenreName == 'Drama',
                   onPressed: () => _toggleGenreFilter('Drama'),
                 ),
                 GenreButton(
                   'Adventure',
+                  isSelected: selectedGenreName == 'Adventure',
                   onPressed: () => _toggleGenreFilter('Adventure'),
                 ),
                 GenreButton(
                   'Horror',
+                  isSelected: selectedGenreName == 'Horror',
                   onPressed: () => _toggleGenreFilter('Horror'),
                 ),
                 GenreButton(
                   'Historical',
+                  isSelected: selectedGenreName == 'Historical',
                   onPressed: () => _toggleGenreFilter('Historical'),
                 ),
               ],
@@ -177,7 +194,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 10),
           const Divider(color: Color.fromARGB(222, 62, 72, 72)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: selectedGenreRef == null
@@ -318,8 +335,8 @@ class BookListItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 80.0,
-              height: 120.0,
+              width: 88.0,
+              height: 132.0,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4.0),
                 image: DecorationImage(

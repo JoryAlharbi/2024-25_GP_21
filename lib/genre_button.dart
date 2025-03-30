@@ -3,9 +3,15 @@ import 'package:google_fonts/google_fonts.dart';
 
 class GenreButton extends StatelessWidget {
   final String genre;
-  final VoidCallback onPressed; // Add a callback
+  final VoidCallback onPressed;
+  final bool isSelected; // <-- Add this
 
-  const GenreButton(this.genre, {required this.onPressed, super.key});
+  const GenreButton(
+    this.genre, {
+    required this.onPressed,
+    this.isSelected = false, // <-- Default to false
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,15 +19,18 @@ class GenreButton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF313E4F), // Genre box color
+          backgroundColor:
+              isSelected ? const Color(0xFFD35400) : const Color(0xFF313E4F),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0), // Corner radius set to 8
+            borderRadius: BorderRadius.circular(8.0),
           ),
         ),
         onPressed: onPressed,
         child: Text(
           genre,
-          style: GoogleFonts.poppins(color: Colors.white), // Poppins text style
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+          ),
         ),
       ),
     );
