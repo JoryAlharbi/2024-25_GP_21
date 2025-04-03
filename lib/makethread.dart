@@ -30,7 +30,8 @@ class CoverTypeToggle extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: !value ? const Color(0xFFD35400) : const Color(0xFF2A3B4D),
-              borderRadius: const BorderRadius.horizontal(left: Radius.circular(20)),
+              borderRadius:
+                  const BorderRadius.horizontal(left: Radius.circular(20)),
             ),
             child: Text(
               'Upload',
@@ -47,7 +48,8 @@ class CoverTypeToggle extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: value ? const Color(0xFFD35400) : const Color(0xFF2A3B4D),
-              borderRadius: const BorderRadius.horizontal(right: Radius.circular(20)),
+              borderRadius:
+                  const BorderRadius.horizontal(right: Radius.circular(20)),
             ),
             child: Text(
               'AI Generate',
@@ -69,6 +71,7 @@ class MakeThreadPage extends StatefulWidget {
   @override
   _MakeThreadPageState createState() => _MakeThreadPageState();
 }
+
 class _MakeThreadPageState extends State<MakeThreadPage> {
   final _formKey = GlobalKey<FormState>();
   String? _threadTitle;
@@ -106,8 +109,8 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
         }
       }
 
-       print("Triggering image generation...");
-        const apiUrl = 'http://10.0.2.2:5000/generate-image';
+      print("Triggering image generation...");
+      const apiUrl = 'http://10.0.2.2:5000/generate-image';
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {'Content-Type': 'application/json'},
@@ -250,7 +253,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
   }
 
   bool _isLoading = false;
- @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1B2835),
@@ -372,7 +375,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 18),
               if (!_useGeneration)
                 GestureDetector(
                   onTap: () async {
@@ -419,7 +422,8 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                   onTap: () async {
                     // Trigger DALL-E API call when the user taps on the generated image section
                     if (_useGeneration && !_isGenerating) {
-                      String? generatedImageUrl = await _generateCoverWithDalle();
+                      String? generatedImageUrl =
+                          await _generateCoverWithDalle();
                       if (generatedImageUrl != null) {
                         setState(() {
                           _generatedImageUrl = generatedImageUrl;
@@ -464,7 +468,6 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                   ),
                 ),
               const SizedBox(height: 20),
-              
             ],
           ),
         ),

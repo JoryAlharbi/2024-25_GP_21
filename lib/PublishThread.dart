@@ -22,6 +22,9 @@ class _PublishThreadPageState extends State<PublishThreadPage> {
   bool isLoading = true;
   bool isGeneratingCover = false;
   bool isGeneratingSummary = false;
+  bool isSummaryClicked = false;
+  bool isUploadClicked = false;
+  bool isAIGenerateClicked = false;
 
   @override
   void initState() {
@@ -29,10 +32,8 @@ class _PublishThreadPageState extends State<PublishThreadPage> {
     fetchThreadData();
   }
 
-  /// **Fetches thread details, generates summary if missing**
   Future<void> fetchThreadData() async {
     setState(() => isLoading = true);
-
     DocumentSnapshot threadDoc = await FirebaseFirestore.instance
         .collection('Thread')
         .doc(widget.threadID)
@@ -41,7 +42,6 @@ class _PublishThreadPageState extends State<PublishThreadPage> {
     if (threadDoc.exists) {
       String? existingSummary = threadDoc['description'];
       bookCoverUrl = threadDoc['bookCoverUrl'];
-
       if (existingSummary != null && existingSummary.isNotEmpty) {
         setState(() {
           summaryController.text = existingSummary;
@@ -53,10 +53,8 @@ class _PublishThreadPageState extends State<PublishThreadPage> {
     }
   }
 
-  /// **Generates summary from thread parts**
   Future<void> generateSummaryFromParts() async {
     setState(() => isGeneratingSummary = true);
-
     QuerySnapshot partsSnapshot = await FirebaseFirestore.instance
         .collection('Thread')
         .doc(widget.threadID)
@@ -78,7 +76,7 @@ class _PublishThreadPageState extends State<PublishThreadPage> {
     try {
       var response = await http
           .post(
-            Uri.parse("http://127.0.0.1:5000/summarize"),
+            Uri.parse("http://10.0.2.2:5000/summarize"),
             headers: {"Content-Type": "application/json"},
             body: jsonEncode({"text": fullContent}),
           )
@@ -86,29 +84,29 @@ class _PublishThreadPageState extends State<PublishThreadPage> {
 
       if (response.statusCode == 200) {
         String summaryText = jsonDecode(response.body)['summary'];
-
         await FirebaseFirestore.instance
             .collection('Thread')
             .doc(widget.threadID)
             .update({"description": summaryText});
-
         setState(() {
           summaryController.text = summaryText;
-          isGeneratingSummary = false;
         });
       }
     } catch (e) {
-      print("⏳ Timeout or Error: $e");
+      print("Summary error: $e");
     }
 
     setState(() => isGeneratingSummary = false);
   }
 
-  /// **Uploads an image from the gallery**
   Future<void> pickImage() async {
+    setState(() => isUploadClicked = true);
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile == null) return;
+    if (pickedFile == null) {
+      setState(() => isUploadClicked = false);
+      return;
+    }
 
     File imageFile = File(pickedFile.path);
     String fileName = "cover_${widget.threadID}.jpg";
@@ -120,12 +118,15 @@ class _PublishThreadPageState extends State<PublishThreadPage> {
 
     setState(() {
       bookCoverUrl = newCoverUrl;
+      isUploadClicked = false;
     });
   }
 
-  /// **Generates AI Cover using DALL-E**
   Future<void> generateAICover() async {
-    setState(() => isGeneratingCover = true);
+    setState(() {
+      isGeneratingCover = true;
+      isAIGenerateClicked = true;
+    });
 
     try {
       DocumentSnapshot threadDoc = await FirebaseFirestore.instance
@@ -133,10 +134,10 @@ class _PublishThreadPageState extends State<PublishThreadPage> {
           .doc(widget.threadID)
           .get();
 
-      String threadTitle = threadDoc['title'] ?? 'Unknown Title';
+      String threadTitle = threadDoc['title'];
+      List<dynamic> genreRefs = threadDoc['genreID'];
       List<String> genres = [];
 
-      List<dynamic> genreRefs = threadDoc['genreID'];
       for (var ref in genreRefs) {
         DocumentSnapshot genreDoc = await (ref as DocumentReference).get();
         if (genreDoc.exists) {
@@ -144,39 +145,30 @@ class _PublishThreadPageState extends State<PublishThreadPage> {
         }
       }
 
-      print("📸 Generating AI Cover for: $threadTitle - Genres: $genres");
-
       var response = await http.post(
-        Uri.parse("http://127.0.0.1:5000/generate-image"),
+        Uri.parse("http://10.0.2.2:5000/generate-image"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"title": threadTitle, "genres": genres}),
       );
 
       if (response.statusCode == 200) {
         String generatedImageUrl = jsonDecode(response.body)['image_url'];
-
         await FirebaseFirestore.instance
             .collection('Thread')
             .doc(widget.threadID)
             .update({"bookCoverUrl": generatedImageUrl});
-
-        setState(() {
-          bookCoverUrl = generatedImageUrl;
-          isGeneratingCover = false;
-        });
-
-        print("✅ AI Cover Generated: $generatedImageUrl");
-      } else {
-        print("❌ AI Cover Error: ${response.body}");
+        setState(() => bookCoverUrl = generatedImageUrl);
       }
     } catch (e) {
-      print("🚨 AI Cover Generation Failed: $e");
+      print("AI Cover Error: $e");
     }
 
-    setState(() => isGeneratingCover = false);
+    setState(() {
+      isGeneratingCover = false;
+      isAIGenerateClicked = false;
+    });
   }
 
-  /// **Publishes the thread**
   Future<void> publishThread() async {
     await FirebaseFirestore.instance
         .collection('Thread')
@@ -186,7 +178,6 @@ class _PublishThreadPageState extends State<PublishThreadPage> {
       'bookCoverUrl': bookCoverUrl,
       'status': 'Published',
     });
-
     Navigator.pop(context);
   }
 
@@ -204,13 +195,32 @@ class _PublishThreadPageState extends State<PublishThreadPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
-            child: ElevatedButton(
-              onPressed: publishThread,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFD35400),
-              ),
-              child: Text("Publish", style: TextStyle(color: Colors.white)),
-            ),
+            child: isLoading
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(color: Colors.white),
+                  )
+                : ElevatedButton(
+                    onPressed: () async {
+                      setState(() => isLoading = true);
+                      await publishThread();
+                      setState(() => isLoading = false);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD35400),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      'Publish',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -229,40 +239,131 @@ class _PublishThreadPageState extends State<PublishThreadPage> {
                           fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   TextField(
-                      controller: summaryController,
-                      maxLines: 6,
-                      style: GoogleFonts.poppins(color: Colors.white)),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed:
-                        isGeneratingSummary ? null : generateSummaryFromParts,
-                    child: isGeneratingSummary
-                        ? CircularProgressIndicator(color: Colors.white)
-                        : Text("Generate Summary"),
+                    controller: summaryController,
+                    maxLines: 6,
+                    style: GoogleFonts.poppins(color: Colors.white),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: () async {
+                      setState(() => isSummaryClicked = true);
+                      await generateSummaryFromParts();
+                      await Future.delayed(Duration(milliseconds: 500));
+                      setState(() => isSummaryClicked = false);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A3B4D),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.summarize,
+                              color: isSummaryClicked
+                                  ? Color(0xFFA2DED0)
+                                  : Colors.white),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Generate Description",
+                            style: GoogleFonts.poppins(
+                              color: isSummaryClicked
+                                  ? Color(0xFFA2DED0)
+                                  : Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   Text("Book cover:",
                       style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
                   Center(
-                      child: bookCoverUrl != null
-                          ? Image.network(bookCoverUrl!,
-                              height: 180, fit: BoxFit.cover)
-                          : Icon(Icons.image, size: 100, color: Colors.grey)),
-                  const SizedBox(height: 10),
+                    child: bookCoverUrl != null
+                        ? Image.network(bookCoverUrl!,
+                            height: 180, fit: BoxFit.cover)
+                        : const Icon(Icons.image,
+                            size: 100, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ElevatedButton(
-                          onPressed: pickImage, child: Text("Upload")),
+                      GestureDetector(
+                        onTap: pickImage,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2A3B4D),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.upload_file,
+                                  color: isUploadClicked
+                                      ? Color(0xFFA2DED0)
+                                      : Colors.white),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Upload",
+                                style: GoogleFonts.poppins(
+                                  color: isUploadClicked
+                                      ? Color(0xFFA2DED0)
+                                      : Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: isGeneratingCover ? null : generateAICover,
-                        child: isGeneratingCover
-                            ? CircularProgressIndicator(color: Colors.white)
-                            : Text("AI Generate"),
+                      GestureDetector(
+                        onTap: isGeneratingCover ? null : generateAICover,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2A3B4D),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: isGeneratingCover
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2),
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.auto_awesome,
+                                        color: isAIGenerateClicked
+                                            ? Color(0xFFA2DED0)
+                                            : Colors.white),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "AI Generate",
+                                      style: GoogleFonts.poppins(
+                                        color: isAIGenerateClicked
+                                            ? Color(0xFFA2DED0)
+                                            : Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
                       ),
                     ],
                   ),

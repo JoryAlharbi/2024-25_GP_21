@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:rawae_gp24/PublishThread.dart';
 import 'writing.dart'; // Make sure to import your writing.dart file
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -535,7 +536,7 @@ class _StoryViewState extends State<StoryView> {
                       child: Container(
                         height: 50,
                         decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 42, 60, 76),
+                          color: Color(0xFF2A3B4D),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Padding(
@@ -585,19 +586,29 @@ class _StoryViewState extends State<StoryView> {
                               bool isCreator = writerId ==
                                   FirebaseAuth.instance.currentUser!.uid;
                               if (isCreator) {
-                                return ElevatedButton(
-                                  onPressed: () =>
-                                      onEndThread(context, writerId),
-                                  style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Colors.red, // Background color
-                                      foregroundColor:
-                                          Colors.white, // Text color
+                                return SizedBox(
+                                  width: 74,
+                                  height: 48,
+                                  child: ElevatedButton(
+                                    onPressed: () =>
+                                        onEndThread(context, writerId),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 235, 32, 18),
+                                      foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              6) // Button corner radius
-                                          )),
-                                  child: Text('End'),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'End',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
                                 );
                               }
                             }
