@@ -203,6 +203,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
           'status': 'in_progress',
           'threadID': DateTime.now().millisecondsSinceEpoch,
           'isWriting': false,
+          'readers': [],
         });
 
         Navigator.pushReplacement(

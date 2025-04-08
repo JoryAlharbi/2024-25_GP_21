@@ -113,8 +113,11 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.search_rounded, color: Color(0xFF9DB2CE)),
             iconSize: 31,
             onPressed: () {
-              Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (context) => SearchPage()));
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => SearchPage(status: "in_progress"),
+                ),
+              );
             },
           ),
         ],

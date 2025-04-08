@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:rawae_gp24/book.dart';
 import 'package:rawae_gp24/bookmark.dart';
 import 'package:rawae_gp24/genre_library.dart';
 import 'package:rawae_gp24/homepage.dart';
 import 'package:rawae_gp24/makethread.dart';
 import 'package:rawae_gp24/profile_page.dart';
-import 'package:rawae_gp24/search.dart';
 import 'package:rawae_gp24/custom_navigation_bar.dart'; // Import CustomNavigationBar
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'SearchPage.dart';
 
 class LibraryPage extends StatelessWidget {
   final List<Map<String, dynamic>> genres = [
@@ -17,61 +18,61 @@ class LibraryPage extends StatelessWidget {
       'id': 'EUw4wq33ai6Xxe6jbDUY',
       'name': 'Fantasy',
       'image': 'assets/fantasy.png',
-      'color': Color(0xFFFF69B4),
+      'color': Color(0xFFFF5371FF),
     },
     {
       'id': 'XJDqFYj72YT0hBL25yOb',
       'name': 'Drama',
       'image': 'assets/drama.png',
-      'color': Color(0xFFFF69B4),
+      'color': Color(0xFFFF914D),
     },
     {
       'id': 'fkO0jS1GlUQcWb5yeCOq',
       'name': 'Thriller',
       'image': 'assets/Thriller.png',
-      'color': Color(0xFFFF69B4),
+      'color': Color(0xFFFF0097B2),
     },
     {
       'id': 'KyMtx16Rq28JCMrKKzF7',
       'name': 'Romance',
       'image': 'assets/romance.png',
-      'color': Color(0xFFFF69B4),
+      'color': Color(0xFFFF65C3),
     },
     {
       'id': '2NlCMfmRJAUaLADs8t6Q',
       'name': 'Comedy',
       'image': 'assets/comedy.png',
-      'color': Color(0xFFFF69B4),
+      'color': Color(0xFFFFDD59),
     },
     {
       'id': 'XJpqFJy72Y7bh0L25y0b',
       'name': 'Crime Fiction',
       'image': 'assets/crime_fiction.png',
-      'color': Color(0xFFFF69B4),
+      'color': Color(0xFFFFCB6CE6),
     },
     {
       'id': 'awLGlCFxrS60Kvzq2eq6',
       'name': 'Horror',
       'image': 'assets/horror.png',
-      'color': Color(0xFFFF69B4),
+      'color': Color(0xFFFF3231),
     },
     {
       'id': 'YRdkEdiEZ9NZeQIMDTi',
       'name': 'Adventure',
       'image': 'assets/adventure.png',
-      'color': Color(0xFFFF69B4),
+      'color': Color(0xFFFF7ED857),
     },
     {
       'id': 'jBZ5tvemmCEpG5NHTyaj',
       'name': 'Mystery',
       'image': 'assets/Mystery.png',
-      'color': Color(0xFFFF69B4),
+      'color': Color(0xFFFF2360B2),
     },
     {
       'id': 'qCmOjByIJWjGeLjUMfb4',
       'name': 'Historical',
       'image': 'assets/Historical.png',
-      'color': Color(0xFFFF69B4),
+      'color': Color(0xFFFFE75E07),
     },
   ];
 
@@ -162,7 +163,13 @@ class LibraryPage extends StatelessWidget {
                       icon: const Icon(Icons.search, color: Color(0xFF9DB2CE)),
                       iconSize: 30,
                       onPressed: () {
-                        // Add search functionality if needed
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SearchPage(
+                                status: "Published"), // capital P
+                          ),
+                        );
                       },
                     ),
                   ],
@@ -268,7 +275,11 @@ class _FlippableGenreCardState extends State<FlippableGenreCard>
     _animation = Tween<double>(begin: 0, end: pi).animate(_controller);
 
     fetchMostViewedBook();
-    maybeFlip();
+
+    // Randomly flip only ~30% of cards
+    if (Random().nextDouble() < 0.3) {
+      maybeFlip();
+    }
   }
 
   Future<void> fetchMostViewedBook() async {
@@ -290,30 +301,44 @@ class _FlippableGenreCardState extends State<FlippableGenreCard>
     }
   }
 
-  void maybeFlip() {
-    Future.delayed(Duration(milliseconds: Random().nextInt(4000)), () {
-      if (mounted) {
-        _controller.forward();
-        setState(() {
-          isFlipped = true;
-        });
-      }
-    });
-  }
+  void maybeFlip() async {
+    while (mounted) {
+      // Wait a random time before flipping
+      await Future.delayed(
+          Duration(milliseconds: Random().nextInt(4000) + 3000));
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+      // Only flip randomly 30% of the time
+      if (!mounted || Random().nextDouble() > 0.3) continue;
+
+      // Flip to back
+      await _controller.forward();
+      setState(() {
+        isFlipped = true;
+      });
+
+      // Stay flipped for 2.5 seconds
+      await Future.delayed(const Duration(milliseconds: 2500));
+
+      if (!mounted) return;
+
+      // Flip back to front
+      await _controller.reverse();
+      setState(() {
+        isFlipped = false;
+      });
+    }
   }
 
   Widget _buildFront() {
     return Container(
-      color: widget.backgroundColor,
+      decoration: BoxDecoration(
+        color: widget.backgroundColor,
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(widget.frontImagePath, height: 60),
+          Image.asset(widget.frontImagePath, height: 160),
           const SizedBox(height: 12),
         ],
       ),
@@ -321,26 +346,43 @@ class _FlippableGenreCardState extends State<FlippableGenreCard>
   }
 
   Widget _buildBack() {
-    return Container(
-      color: widget.backgroundColor,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (bookCoverUrl != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child:
-                  Image.network(bookCoverUrl!, height: 80, fit: BoxFit.cover),
+    return Transform(
+      alignment: Alignment.center,
+      transform: Matrix4.rotationY(pi),
+      child: Container(
+        decoration: BoxDecoration(
+          color: widget.backgroundColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (bookCoverUrl != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Image.network(bookCoverUrl!,
+                    height: 100, fit: BoxFit.cover),
+              ),
+            const SizedBox(height: 8),
+            Text(
+              bookTitle ?? '',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          const SizedBox(height: 8),
-          Text(
-            bookTitle ?? '',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, color: Colors.white),
-          )
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
