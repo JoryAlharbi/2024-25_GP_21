@@ -9,10 +9,14 @@ import 'dart:io';
 import 'dart:convert';
 import 'threads.dart';
 import 'writing.dart';
+import 'package:introduction_screen/introduction_screen.dart'; 
+import 'TutorialService.dart';
+
 
 class CoverTypeToggle extends StatelessWidget {
   final bool value;
   final Function(bool) onChanged;
+  
 
   const CoverTypeToggle({
     Key? key,
@@ -83,6 +87,11 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
   String? _generatedImageUrl;
   bool _useGeneration = false; // Toggle between upload and generate
 
+  final GlobalKey _titleKey = GlobalKey();
+  final GlobalKey _genreKey = GlobalKey();
+  final GlobalKey _coverKey = GlobalKey();
+  final GlobalKey _createButtonKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -94,7 +103,19 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
     setState(() {
       availableGenres = snapshot.docs;
     });
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (TutorialService.isActive && TutorialService.currentStep == 1) {
+        TutorialService.continueThreadTutorial(
+          context,
+          titleKey: _titleKey,
+          genreKey: _genreKey,
+          coverKey: _coverKey,
+          createButtonKey: _createButtonKey,
+        );
+      }
+    });
   }
+  
 
   Future<String?> _generateCoverWithDalle() async {
     setState(() => _isGenerating = true);
@@ -277,6 +298,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                     ),
                   )
                 : ElevatedButton(
+                  key: _createButtonKey,
                     onPressed: _isUploading || _isGenerating
                         ? null
                         : () async {
@@ -325,6 +347,7 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                 ),
               ),
               TextFormField(
+                key: _titleKey,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
                   hintText: 'Title',
@@ -348,7 +371,10 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              buildGenreChips(),
+                Container(
+                key: _genreKey, // Add this key for tutorial targeting
+                child: buildGenreChips(),
+              ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -376,98 +402,99 @@ class _MakeThreadPageState extends State<MakeThreadPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
-              if (!_useGeneration)
-                GestureDetector(
-                  onTap: () async {
-                    final ImagePicker picker = ImagePicker();
-                    final XFile? image =
-                        await picker.pickImage(source: ImageSource.gallery);
-                    if (image != null) {
-                      setState(() {
-                        _bookCover = image;
-                      });
-                    }
-                  },
-                  child: Container(
-                    height: 150,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2A3B4D),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: _bookCover != null
-                        ? ClipRRect(
+                  const SizedBox(height: 18),
+              Container(
+                key: _coverKey, // Add this key for tutorial targeting
+                child: !_useGeneration
+                    ? GestureDetector(
+                        onTap: () async {
+                          final ImagePicker picker = ImagePicker();
+                          final XFile? image =
+                              await picker.pickImage(source: ImageSource.gallery);
+                          if (image != null) {
+                            setState(() {
+                              _bookCover = image;
+                            });
+                          }
+                        },
+                        child: Container(
+                          height: 150,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2A3B4D),
                             borderRadius: BorderRadius.circular(10),
-                            child: Image.file(
-                              File(_bookCover!.path),
-                              fit: BoxFit.contain,
-                            ),
-                          )
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.upload_file,
-                                  color: Color(0xFF9DB2CE), size: 40),
-                              const SizedBox(height: 10),
-                              Text(
-                                '                     Upload Cover                     ',
-                                style: GoogleFonts.poppins(
-                                    color: const Color(0xFF9DB2CE)),
-                              ),
-                            ],
                           ),
-                  ),
-                )
-              else
-                GestureDetector(
-                  onTap: () async {
-                    // Trigger DALL-E API call when the user taps on the generated image section
-                    if (_useGeneration && !_isGenerating) {
-                      String? generatedImageUrl =
-                          await _generateCoverWithDalle();
-                      if (generatedImageUrl != null) {
-                        setState(() {
-                          _generatedImageUrl = generatedImageUrl;
-                        });
-                      }
-                    }
-                  },
-                  child: Container(
-                    height: 150,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2A3B4D),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: _generatedImageUrl != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.network(
-                              _generatedImageUrl!,
-                              fit: BoxFit.contain,
-                            ),
-                          )
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (_isGenerating)
-                                const CircularProgressIndicator(
-                                  color: Color(0xFF9DB2CE),
-                                )
-                              else ...[
-                                const Icon(Icons.auto_awesome,
-                                    color: Color(0xFF9DB2CE), size: 40),
-                                const SizedBox(height: 10),
-                                Text(
-                                  '                   Generate Cover                   ',
-                                  style: GoogleFonts.poppins(
-                                    color: const Color(0xFF9DB2CE),
+                          child: _bookCover != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.file(
+                                    File(_bookCover!.path),
+                                    fit: BoxFit.contain,
                                   ),
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.upload_file,
+                                        color: Color(0xFF9DB2CE), size: 40),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      '                     Upload Cover                     ',
+                                      style: GoogleFonts.poppins(
+                                          color: const Color(0xFF9DB2CE)),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ],
+                        ),
+                      )
+                    : GestureDetector(
+                        onTap: () async {
+                          if (_useGeneration && !_isGenerating) {
+                            String? generatedImageUrl =
+                                await _generateCoverWithDalle();
+                            if (generatedImageUrl != null) {
+                              setState(() {
+                                _generatedImageUrl = generatedImageUrl;
+                              });
+                            }
+                          }
+                        },
+                        child: Container(
+                          height: 150,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2A3B4D),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                  ),
-                ),
+                          child: _generatedImageUrl != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    _generatedImageUrl!,
+                                    fit: BoxFit.contain,
+                                  ),
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    if (_isGenerating)
+                                      const CircularProgressIndicator(
+                                        color: Color(0xFF9DB2CE),
+                                      )
+                                    else ...[
+                                      const Icon(Icons.auto_awesome,
+                                          color: Color(0xFF9DB2CE), size: 40),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        '                   Generate Cover                   ',
+                                        style: GoogleFonts.poppins(
+                                          color: const Color(0xFF9DB2CE),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                        ),
+                      ),
+              ),
               const SizedBox(height: 20),
             ],
           ),

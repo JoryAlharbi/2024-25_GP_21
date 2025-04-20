@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'TutorialService.dart'; // Import your TutorialService
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class WritingPage extends StatefulWidget {
   final String threadId;
@@ -19,6 +22,11 @@ class _WritingPageState extends State<WritingPage> {
       FirebaseAuth.instance.currentUser!.uid; // Current User ID
   bool _isLoading = false;
   String? idea; // Nullable String to hold the generated idea
+
+  final GlobalKey _textFieldKey = GlobalKey();
+  final GlobalKey _ideaButtonKey = GlobalKey();
+  final GlobalKey _doneButtonKey = GlobalKey();
+
 
   Future<List<String>> fetchThreadParts() async {
     try {
@@ -94,13 +102,24 @@ class _WritingPageState extends State<WritingPage> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _textController = TextEditingController();
-    fetchThreadParts(); // Fetch parts on widget load
-  }
+ @override
+void initState() {
+  super.initState();
+  print("WritingPage initState called");
+  _textController = TextEditingController();
+  // TEMP: Reset the writing tutorial so it always shows during testing
+   SharedPreferences.getInstance().then((prefs) async {
+    await prefs.setBool('writing_tutorial_completed', false); // 🔁 TEMP RESET
 
+    // Now trigger the tutorial
+    TutorialService.startWritingTutorial(
+      context,
+      textFieldKey: _textFieldKey,
+      ideaButtonKey: _ideaButtonKey,
+      doneButtonKey: _doneButtonKey,
+    );
+  });
+}
   @override
   void dispose() {
     _textController.dispose();
@@ -225,6 +244,8 @@ class _WritingPageState extends State<WritingPage> {
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: ElevatedButton(
+             key: _doneButtonKey, // Add key for tutorial
+
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD35400),
                 shape: RoundedRectangleBorder(
@@ -308,6 +329,8 @@ class _WritingPageState extends State<WritingPage> {
             userData['profileImageUrl'] ?? 'assets/default.png';
 
         return Container(
+          // Add key for tutorial
+
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
@@ -342,6 +365,7 @@ class _WritingPageState extends State<WritingPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
+         key: _textFieldKey, // Add key for tutorial
         padding: const EdgeInsets.symmetric(vertical: 12.0),
         decoration: BoxDecoration(
           color: const Color(0xFF313E4F),
@@ -385,6 +409,8 @@ class _WritingPageState extends State<WritingPage> {
                 },
               ),
               IconButton(
+                key: _ideaButtonKey, // Add key for tutorial
+
                 icon: const Icon(Icons.auto_awesome_outlined,
                     color: Color(0xFFA2DED0)),
                 onPressed: _isLoading ? null : generateIdea,

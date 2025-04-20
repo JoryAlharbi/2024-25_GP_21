@@ -7,6 +7,8 @@ import 'custom_navigation_bar.dart';
 import 'genre_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'SearchPage.dart';
+import 'package:introduction_screen/introduction_screen.dart'; 
+import 'TutorialService.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,6 +21,16 @@ class _HomePageState extends State<HomePage> {
   String? selectedGenreName;
   int selectedIndex = 0;
   String? selectedGenreRef; // Track the selected genre reference for filtering
+    final GlobalKey _fabKey = GlobalKey();
+ @override
+  void initState() {
+    super.initState();
+    // Start the tutorial after the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      TutorialService.startHomeTutorial(context, _fabKey);
+    });
+  }
+
 
   Future<String> _getGenreNames(List<dynamic> genreRefs) async {
     List<String> genreNames = [];
@@ -279,6 +291,7 @@ class _HomePageState extends State<HomePage> {
           width: 60,
           height: 60,
           child: FloatingActionButton(
+            key: _fabKey, // Add this key for the tutorial
             onPressed: () {
               Navigator.push(
                 context,
