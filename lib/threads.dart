@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rawae_gp24/PublishThread.dart';
+import 'package:rawae_gp24/homepage.dart';
 import 'writing.dart'; // Make sure to import your writing.dart file
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'; //for the norifications!!
@@ -183,9 +184,14 @@ class _StoryViewState extends State<StoryView> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1B2835),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: const Color(0xFF9DB2CE),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF9DB2CE)),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+              (Route<dynamic> route) => false,
+            );
+          },
         ),
         title: StreamBuilder<DocumentSnapshot>(
           stream: FirebaseFirestore.instance

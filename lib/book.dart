@@ -270,9 +270,9 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
               Text(
                 "Description: ${bookData!['description'] ?? 'Not available.'}",
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   color: Colors.white70,
-                  fontSize: 14,
+                  fontSize: 13,
                 ),
               ),
               const SizedBox(height: 20),

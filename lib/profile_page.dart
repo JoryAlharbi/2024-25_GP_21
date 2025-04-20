@@ -96,8 +96,7 @@ class _ProfilePageState extends State<ProfilePage> {
           .get();
       if (snapshot.exists) {
         setState(() {
-          profileImageUrl = snapshot.data()?['profileImageUrl'] ??
-              'assets/default.png'; // Fallback to default image
+          profileImageUrl = snapshot.data()?['profileImageUrl'];
           username = snapshot.data()?['username'];
         });
       }
@@ -115,7 +114,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // Select and upload a new profile picture
+// Select and upload a new profile picture
   Future<void> selectProfilePicture() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -125,21 +124,42 @@ class _ProfilePageState extends State<ProfilePage> {
       final user = FirebaseAuth.instance.currentUser;
 
       if (user != null) {
-        final storageRef = FirebaseStorage.instance
-            .ref()
-            .child('profile_pictures/${user.uid}.jpg');
-        await storageRef.putFile(file);
+        try {
+          // Upload the image to Firebase Storage
+          final storageRef = FirebaseStorage.instance
+              .ref()
+              .child('profile_pictures/${user.uid}.jpg');
+          final uploadTask = storageRef.putFile(file);
 
-        final downloadUrl = await storageRef.getDownloadURL();
-        await FirebaseFirestore.instance
-            .collection('Writer')
-            .doc(user.uid)
-            .update({'profileImageUrl': downloadUrl});
+          // Check the upload task status
+          await uploadTask.whenComplete(() async {
+            if (uploadTask.snapshot.state == TaskState.success) {
+              // Get the download URL for the uploaded image
+              final downloadUrl = await storageRef.getDownloadURL();
 
-        setState(() {
-          profileImageUrl = downloadUrl;
-        });
+              // Update the Firestore document with the new image URL
+              await FirebaseFirestore.instance
+                  .collection('Writer')
+                  .doc(user.uid)
+                  .update({'profileImageUrl': downloadUrl});
+
+              setState(() {
+                profileImageUrl = downloadUrl; // Update UI with new image URL
+              });
+            } else {
+              // Handle failure (optional)
+              print("Image upload failed.");
+            }
+          });
+        } catch (e) {
+          print("Error uploading profile image: $e");
+          // Handle any errors (e.g., network issues, file permissions, etc.)
+        }
+      } else {
+        print("User not logged in.");
       }
+    } else {
+      print("No image selected.");
     }
   }
 

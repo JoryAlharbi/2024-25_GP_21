@@ -15,6 +15,7 @@ class BookmarkPage extends StatefulWidget {
 
 class _BookmarkPageState extends State<BookmarkPage> {
   List<Map<String, String>> bookmarkedBooks = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -67,6 +68,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
 
       setState(() {
         bookmarkedBooks = books;
+        isLoading = false;
       });
 
       print("✅ Bookmarked Books Count: ${bookmarkedBooks.length}");
@@ -103,71 +105,79 @@ class _BookmarkPageState extends State<BookmarkPage> {
               const SizedBox(
                   height: 20), // ✅ Controlled spacing below "Bookmarked"
               Expanded(
-                child: bookmarkedBooks.isEmpty
+                child: isLoading
                     ? const Center(
-                        child: Text(
-                          "No bookmarks yet",
-                          style: TextStyle(color: Colors.white60),
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFD35400),
                         ),
                       )
-                    : GridView.builder(
-                        padding: EdgeInsets.zero,
-                        itemCount: bookmarkedBooks.length,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 19.0,
-                          crossAxisSpacing: 22.0,
-                          childAspectRatio: 0.7,
-                        ),
-                        itemBuilder: (context, index) {
-                          final book = bookmarkedBooks[index];
+                    : bookmarkedBooks.isEmpty
+                        ? const Center(
+                            child: Text(
+                              "No bookmarks yet",
+                              style: TextStyle(color: Colors.white60),
+                            ),
+                          )
+                        : GridView.builder(
+                            padding: EdgeInsets.zero,
+                            itemCount: bookmarkedBooks.length,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 19.0,
+                              crossAxisSpacing: 22.0,
+                              childAspectRatio: 0.7,
+                            ),
+                            itemBuilder: (context, index) {
+                              final book = bookmarkedBooks[index];
 
-                          return GestureDetector(
-                            onTap: () {
-                              // Navigate to BookDetailsPage when a book cover is clicked
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BookDetailsPage(
-                                      threadID: book['threadID']!),
+                              return GestureDetector(
+                                onTap: () {
+                                  // Navigate to BookDetailsPage when a book cover is clicked
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => BookDetailsPage(
+                                          threadID: book['threadID']!),
+                                    ),
+                                  );
+                                },
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      height: 190,
+                                      width: 132,
+                                      decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(4.0),
+                                        image: book['image']!.isNotEmpty
+                                            ? DecorationImage(
+                                                image: NetworkImage(
+                                                    book['image']!),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : const DecorationImage(
+                                                image: AssetImage(
+                                                    'assets/placeholder_book.png'),
+                                                fit: BoxFit.cover,
+                                              ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8.0),
+                                    Text(
+                                      book['title']!,
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
                               );
                             },
-                            child: Column(
-                              children: [
-                                Container(
-                                  height: 190,
-                                  width: 132,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(4.0),
-                                    image: book['image']!.isNotEmpty
-                                        ? DecorationImage(
-                                            image: NetworkImage(book['image']!),
-                                            fit: BoxFit.cover,
-                                          )
-                                        : const DecorationImage(
-                                            image: AssetImage(
-                                                'assets/placeholder_book.png'),
-                                            fit: BoxFit.cover,
-                                          ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8.0),
-                                Text(
-                                  book['title']!,
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
+                          ),
               ),
             ],
           ),

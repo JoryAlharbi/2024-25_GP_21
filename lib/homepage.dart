@@ -7,8 +7,6 @@ import 'custom_navigation_bar.dart';
 import 'genre_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'SearchPage.dart';
-import 'package:introduction_screen/introduction_screen.dart'; 
-import 'TutorialService.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -121,6 +119,56 @@ class _HomePageState extends State<HomePage> {
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
+          // 🔔 Notification Bell with Red Dot
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('Thread')
+                .where('status', isEqualTo: 'in_progress')
+                .where('bellClickers',
+                    arrayContains: FirebaseAuth.instance.currentUser?.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              bool showRedDot = false;
+
+              if (snapshot.hasData) {
+                for (var doc in snapshot.data!.docs) {
+                  final isWriting = doc['isWriting'] ?? false;
+                  if (!isWriting) {
+                    showRedDot = true;
+                    break;
+                  }
+                }
+              }
+
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none_rounded,
+                        color: Color(0xFF9DB2CE)),
+                    iconSize: 30,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const NotificationsPage()),
+                      );
+                    },
+                  ),
+                  if (showRedDot)
+                    const Positioned(
+                      right: 6,
+                      top: 6,
+                      child: CircleAvatar(
+                        radius: 6,
+                        backgroundColor: Colors.red,
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+
+          // 🔍 Search Icon
           IconButton(
             icon: const Icon(Icons.search_rounded, color: Color(0xFF9DB2CE)),
             iconSize: 31,
