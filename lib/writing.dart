@@ -44,18 +44,22 @@ class _WritingPageState extends State<WritingPage> {
   }
 
   Future<String?> _generateIdeaFromAPI(String combinedParts) async {
-    const apiUrl =
-        'http://10.0.2.2:5000/generate-idea'; // Replace with your actual endpoint
+    const apiUrl = 'http://10.0.2.2:5000/generate-idea';
+
     try {
+      print('Sending POST to $apiUrl with body: ${jsonEncode({
+            'thread_text': combinedParts
+          })}');
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'thread_text': combinedParts}),
       );
 
+      print('Response status: ${response.statusCode}, body: ${response.body}');
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['idea']; // Adjust based on your API's response structure
+        return data['idea'];
       } else {
         print('Failed to generate idea: ${response.statusCode}');
         return null;
@@ -108,6 +112,12 @@ class _WritingPageState extends State<WritingPage> {
       return;
     }
 
+    // Clean input to remove any prompt-like prefixes
+    String inputText = _textController.text;
+    if (inputText.contains("Rephrase this sentence")) {
+      inputText = inputText.split(":").last.trim();
+    }
+
     setState(() {
       _isLoading = true;
     });
@@ -117,13 +127,13 @@ class _WritingPageState extends State<WritingPage> {
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
-        body: json.encode({"text": _textController.text}),
+        body: json.encode({"text": inputText}),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _textController.text = data['enhanced_text'] ?? _textController.text;
+          _textController.text = data['enhanced_text'] ?? inputText;
           _textController.selection = TextSelection.fromPosition(
             TextPosition(offset: _textController.text.length),
           );
