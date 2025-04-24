@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'TutorialService.dart'; // Import your TutorialService
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class WritingPage extends StatefulWidget {
   final String threadId;
 
@@ -26,7 +25,6 @@ class _WritingPageState extends State<WritingPage> {
   final GlobalKey _textFieldKey = GlobalKey();
   final GlobalKey _ideaButtonKey = GlobalKey();
   final GlobalKey _doneButtonKey = GlobalKey();
-
 
   Future<List<String>> fetchThreadParts() async {
     try {
@@ -102,24 +100,73 @@ class _WritingPageState extends State<WritingPage> {
     }
   }
 
- @override
-void initState() {
-  super.initState();
-  print("WritingPage initState called");
-  _textController = TextEditingController();
-  // TEMP: Reset the writing tutorial so it always shows during testing
-   SharedPreferences.getInstance().then((prefs) async {
-    await prefs.setBool('writing_tutorial_completed', false); // 🔁 TEMP RESET
+  Future<void> enhanceWriting() async {
+    if (_textController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter text to enhance")),
+      );
+      return;
+    }
 
-    // Now trigger the tutorial
-    TutorialService.startWritingTutorial(
-      context,
-      textFieldKey: _textFieldKey,
-      ideaButtonKey: _ideaButtonKey,
-      doneButtonKey: _doneButtonKey,
-    );
-  });
-}
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final url = Uri.parse("http://10.0.2.2:5000/api/enhance");
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"text": _textController.text}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _textController.text = data['enhanced_text'] ?? _textController.text;
+          _textController.selection = TextSelection.fromPosition(
+            TextPosition(offset: _textController.text.length),
+          );
+        });
+      } else {
+        final errorData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorData['error'] ?? "Failed to enhance text"),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to connect to the server")),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    print("WritingPage initState called");
+    _textController = TextEditingController();
+    // TEMP: Reset the writing tutorial so it always shows during testing
+    SharedPreferences.getInstance().then((prefs) async {
+      await prefs.setBool('writing_tutorial_completed', false); // 🔁 TEMP RESET
+
+      // Now trigger the tutorial
+      TutorialService.startWritingTutorial(
+        context,
+        textFieldKey: _textFieldKey,
+        ideaButtonKey: _ideaButtonKey,
+        doneButtonKey: _doneButtonKey,
+      );
+    });
+  }
+
   @override
   void dispose() {
     _textController.dispose();
@@ -244,7 +291,7 @@ void initState() {
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: ElevatedButton(
-             key: _doneButtonKey, // Add key for tutorial
+              key: _doneButtonKey, // Add key for tutorial
 
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD35400),
@@ -365,7 +412,7 @@ void initState() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
-         key: _textFieldKey, // Add key for tutorial
+        key: _textFieldKey, // Add key for tutorial
         padding: const EdgeInsets.symmetric(vertical: 12.0),
         decoration: BoxDecoration(
           color: const Color(0xFF313E4F),
@@ -404,9 +451,7 @@ void initState() {
             children: [
               IconButton(
                 icon: const Icon(Icons.auto_fix_high, color: Color(0xFFA2DED0)),
-                onPressed: () {
-                  // Add action for the undo button
-                },
+                onPressed: _isLoading ? null : enhanceWriting,
               ),
               IconButton(
                 key: _ideaButtonKey, // Add key for tutorial
