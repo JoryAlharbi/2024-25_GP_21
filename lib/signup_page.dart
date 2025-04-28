@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'homepage.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
@@ -81,6 +82,10 @@ class _SignUpPageState extends State<SignUpPage> {
         setState(() {
           _isSuccessful = true;
         });
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('show_home_tutorial', true);
+
+        
 
         await Future.delayed(Duration(seconds: 2));
         Navigator.pushReplacement(

@@ -326,6 +326,8 @@ class TutorialService {
     required GlobalKey textFieldKey,
     required GlobalKey ideaButtonKey,
     required GlobalKey doneButtonKey,
+    required GlobalKey enhanceWritingButtonKey,
+
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final tutorialCompleted = prefs.getBool(_writingTutorialKey) ?? false;
@@ -454,6 +456,47 @@ class TutorialService {
           ),
         ],
       ),
+           TargetFocus(
+      identify: "enhance_writing_button",
+      keyTarget: enhanceWritingButtonKey, // New target key
+      alignSkip: Alignment.bottomRight,
+      enableOverlayTab: false,
+      shape: ShapeLightFocus.RRect,
+      radius: 10,
+      contents: [
+        TargetContent(
+          align: ContentAlign.bottom,
+          builder: (context, controller) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              constraints: const BoxConstraints(maxWidth: 300),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Enhance Your Writing",
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Tap here to Enhance your writing. This feature helps refine and enhance your narrative.",
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    ),
       TargetFocus(
         identify: "done_button",
         keyTarget: doneButtonKey,

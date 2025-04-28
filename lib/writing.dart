@@ -25,6 +25,7 @@ class _WritingPageState extends State<WritingPage> {
   final GlobalKey _textFieldKey = GlobalKey();
   final GlobalKey _ideaButtonKey = GlobalKey();
   final GlobalKey _doneButtonKey = GlobalKey();
+  final GlobalKey  _enhanceWritingButtonKey=GlobalKey();
 
   Future<List<String>> fetchThreadParts() async {
     try {
@@ -172,6 +173,7 @@ class _WritingPageState extends State<WritingPage> {
         context,
         textFieldKey: _textFieldKey,
         ideaButtonKey: _ideaButtonKey,
+        enhanceWritingButtonKey : _enhanceWritingButtonKey,
         doneButtonKey: _doneButtonKey,
       );
     });
@@ -460,6 +462,7 @@ class _WritingPageState extends State<WritingPage> {
           Row(
             children: [
               IconButton(
+                key:  _enhanceWritingButtonKey,
                 icon: const Icon(Icons.auto_fix_high, color: Color(0xFFA2DED0)),
                 onPressed: _isLoading ? null : enhanceWriting,
               ),

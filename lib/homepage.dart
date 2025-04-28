@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'threads.dart';
 import 'makethread.dart';
 import 'custom_navigation_bar.dart';
@@ -27,10 +28,22 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     // Start the tutorial after the first frame is rendered
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      TutorialService.startHomeTutorial(context, _fabKey);
-    });
+    _checkAndShowTutorial();
+  });
   }
 
+Future<void> _checkAndShowTutorial() async {
+  final prefs = await SharedPreferences.getInstance();
+  final shouldShowTutorial = prefs.getBool('show_home_tutorial') ?? false;
+
+  if (shouldShowTutorial) {
+    // Start the tutorial
+    TutorialService.startHomeTutorial(context, _fabKey);
+
+    // After showing once, remove the flag so it won't show again
+    await prefs.setBool('show_home_tutorial', false);
+  }
+}
   Future<String> _getGenreNames(List<dynamic> genreRefs) async {
     List<String> genreNames = [];
     for (var genreRef in genreRefs) {
